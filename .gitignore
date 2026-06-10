@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pkl
+*.pyc
+*.pyo
+data/processed/
+models/checkpoints/
+.streamlit/secrets.toml
+.venv/
+.idea/
+*.egg-info/

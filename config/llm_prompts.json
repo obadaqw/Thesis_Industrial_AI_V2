@@ -1,0 +1,5 @@
+"""
+Module: llm_prompts.json
+Responsibility: Logic implementation for llm_prompts.
+Reference: Thesis Architecture Document.
+"""

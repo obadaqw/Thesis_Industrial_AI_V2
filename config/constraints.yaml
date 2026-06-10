@@ -1,0 +1,58 @@
+# Thesis V2 - Physics Constraints Engine
+# Auto-generated from: raw_data.csv
+# DEFINITION:
+#   These are the hard safety limits for the Injection Molding Machine.
+#   The Genetic Algorithm will NEVER optimize parameters outside these bounds.
+
+Melt temperature:
+  min: 81.747
+  max: 155.032
+  step: 0.01
+Mold temperature:
+  min: 78.409
+  max: 82.159
+  step: 0.01
+time_to_fill:
+  min: 6.084
+  max: 11.232
+  step: 0.01
+ZDx - Plasticizing time:
+  min: 2.78
+  max: 6.61
+  step: 0.01
+ZUx - Cycle time:
+  min: 74.78
+  max: 75.79
+  step: 0.01
+SKx - Closing force:
+  min: 876.7
+  max: 930.6
+  step: 0.01
+SKs - Clamping force peak value:
+  min: 894.8
+  max: 946.5
+  step: 0.01
+Ms - Torque peak value current cycle:
+  min: 94.2
+  max: 130.3
+  step: 0.1
+Mm - Torque mean value current cycle:
+  min: 76.5
+  max: 114.9
+  step: 0.01
+APSs - Specific back pressure peak value:
+  min: 144.8
+  max: 150.5
+  step: 0.01
+APVs - Specific injection pressure peak value:
+  min: 780.5
+  max: 943.0
+  step: 0.01
+CPn - Screw position at the end of hold pressure:
+  min: 8.33
+  max: 9.06
+  step: 0.01
+SVo - Shot volume:
+  min: 18.51
+  max: 19.23
+  step: 0.01
