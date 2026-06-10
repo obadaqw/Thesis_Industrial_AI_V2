@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from counterfactual_rca import CounterfactualRCA
+from telegram_notifier import TelegramNotifier
 
 st.set_page_config(page_title="RCA Investigator", page_icon="🕵️", layout="wide")
 
@@ -30,7 +31,7 @@ TIER_COLOR  = {0: "#00FFCC", 1: "#00BFFF", 2: "#FFA500", 3: "#FF4B4B"}
 
 @st.cache_resource(show_spinner="Initializing CounterfactualRCA (training MLP validator)…")
 def load_rca():
-    return CounterfactualRCA()
+    return CounterfactualRCA(), TelegramNotifier()
 
 
 @st.cache_data
@@ -44,7 +45,7 @@ def load_val_data():
 
 
 try:
-    rca_engine = load_rca()
+    rca_engine, notifier = load_rca()
     scaler, feature_names, X_val_scaled, y_val = load_val_data()
 except Exception as e:
     st.error(f"❌ Engine Error: {e}")
@@ -63,6 +64,12 @@ with st.sidebar:
 
     analyze_btn = st.button("🔍 Run Counterfactual Analysis", type="primary",
                             use_container_width=True)
+
+    st.markdown("---")
+    if notifier.enabled:
+        st.success("📱 Telegram: active")
+    else:
+        st.caption("📱 Telegram: not configured (see .env)")
 
     st.markdown("---")
     st.markdown("""
@@ -95,6 +102,15 @@ if analyze_btn:
     adj     = result['adjustments']
     color   = TIER_COLOR[tier]
     health  = TIER_HEALTH[tier]
+
+    # Telegram: alert on defect + send RCA summary (tier 1, 2, or 3)
+    if pred not in (1, 2):
+        notifier.send_defect_alert(sample_id, pred, conf)
+    if tier >= 1:
+        notifier.send_rca_alert(
+            sample_id, tier, adj, vok,
+            result.get('cf_confidence', 0.0)
+        )
 
     # ── KPI row ───────────────────────────────────────────────────────────
     k1, k2, k3, k4 = st.columns(4)

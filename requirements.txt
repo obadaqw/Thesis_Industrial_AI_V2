@@ -10,3 +10,5 @@ joblib
 groq
 pyyaml
 python-dotenv
+requests
+lime

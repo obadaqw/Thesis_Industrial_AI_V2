@@ -13,6 +13,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from digital_twin import DigitalTwin
 from xai_engine import XAIEngine
+from telegram_notifier import TelegramNotifier
 
 st.set_page_config(page_title="Digital Twin", page_icon="🏭", layout="wide")
 
@@ -23,10 +24,10 @@ st.markdown("### Live OEE & Production State Monitoring")
 # --- INITIALIZE ---
 @st.cache_resource
 def load_twin():
-    return DigitalTwin(), XAIEngine()
+    return DigitalTwin(), XAIEngine(), TelegramNotifier()
 
 
-twin_engine, xai_engine = load_twin()
+twin_engine, xai_engine, notifier = load_twin()
 
 # Load Data for Simulation Stream
 data_path = os.path.join("data", "processed", "X_test.csv")
@@ -43,10 +44,17 @@ with col_ctrl:
     st.markdown("#### ⚙️ Simulation Control")
     is_running = st.toggle("🔴 RUN TWIN", value=False)
     speed = st.slider("Simulation Speed (sec)", 0.1, 2.0, 0.5)
+    oee_threshold = st.slider("OEE Alert Threshold", 0.5, 0.95, 0.70, 0.05)
 
     if st.button("Reset Machine State"):
         twin_engine.reset_machine()
+        st.session_state.pop("oee_alerted", None)
         st.success("Reset!")
+
+    if notifier.enabled:
+        st.success("📱 Telegram: active")
+    else:
+        st.caption("📱 Telegram: not configured")
 
 # --- LIVE DASHBOARD ---
 placeholder = st.empty()
@@ -64,6 +72,18 @@ if is_running:
 
         # 3. Update Twin State
         state = twin_engine.update_metrics(pred)
+
+        # 3b. Telegram OEE alert — fire once when OEE first drops below threshold
+        if (state['total_cycles'] > 10 and
+                state['oee'] < oee_threshold and
+                not st.session_state.get("oee_alerted", False)):
+            notifier.send_oee_alert(
+                state['oee'], oee_threshold,
+                state['total_cycles'], state['good_cycles']
+            )
+            st.session_state["oee_alerted"] = True
+        elif state['oee'] >= oee_threshold:
+            st.session_state["oee_alerted"] = False
 
         # 4. Render UI
         with placeholder.container():

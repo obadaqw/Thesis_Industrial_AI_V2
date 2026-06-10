@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from llm_wrapper import LLMWrapper
 from rca_surrogate import RCASurrogate
 from counterfactual_rca import CounterfactualRCA
+from telegram_notifier import TelegramNotifier
 
 st.set_page_config(page_title="Smart Reports", page_icon="📝", layout="wide")
 
@@ -20,7 +21,7 @@ st.markdown("### Automated Technical Reporting — Llama 3 on Groq + Counterfact
 def load_engines():
     scaler        = joblib.load(os.path.join("models", "checkpoints", "scaler.pkl"))
     feature_names = joblib.load(os.path.join("models", "checkpoints", "feature_names.pkl"))
-    return LLMWrapper(), RCASurrogate(), CounterfactualRCA(), scaler, feature_names
+    return LLMWrapper(), RCASurrogate(), CounterfactualRCA(), TelegramNotifier(), scaler, feature_names
 
 
 @st.cache_data
@@ -29,7 +30,7 @@ def load_val_data():
 
 
 try:
-    llm_engine, rca_engine, cf_engine, scaler, feature_names = load_engines()
+    llm_engine, rca_engine, cf_engine, notifier, scaler, feature_names = load_engines()
     X_val_scaled = load_val_data()
 except Exception as e:
     st.error(f"Engine init failed: {e}")
@@ -106,3 +107,13 @@ with col2:
                 report_text,
                 f"shift_report_cycle_{sid}.txt"
             )
+
+            if notifier.enabled:
+                if st.button("📱 Send Report to Telegram"):
+                    ok = notifier.send_shift_report(report_text, cycle_id=sid)
+                    if ok:
+                        st.success("✅ Report sent to Telegram!")
+                    else:
+                        st.error("❌ Telegram send failed — check token/chat_id in .env")
+            else:
+                st.caption("📱 Telegram not configured — add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to .env")
