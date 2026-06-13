@@ -123,7 +123,7 @@ if run_btn:
             legend=dict(orientation="h", y=-0.25),
             margin=dict(l=10, r=10, t=10, b=10)
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with col_table:
         st.markdown("#### Delta Contribution Ranking")
@@ -132,7 +132,7 @@ if run_btn:
             display_df[col] = display_df[col].round(4)
         st.dataframe(
             display_df.style.background_gradient(subset=['Delta_Contribution'], cmap='Reds'),
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
 
@@ -165,13 +165,13 @@ if run_btn:
                     font=dict(color="white"), height=350,
                     margin=dict(l=10, r=10, t=10, b=10)
                 )
-                st.plotly_chart(fig_lime, use_container_width=True)
+                st.plotly_chart(fig_lime, width='stretch')
 
             with lc2:
                 st.dataframe(
                     top_lime[['Feature', 'LIME_Coefficient', 'Direction']].style
                         .background_gradient(subset=['LIME_Coefficient'], cmap='RdYlGn'),
-                    use_container_width=True, hide_index=True
+                    width='stretch', hide_index=True
                 )
         except Exception as ex:
             st.warning(f"LIME explanation unavailable: {ex}")

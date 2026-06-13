@@ -38,7 +38,7 @@ def load_data():
     X_train_real = pd.DataFrame(scaler.inverse_transform(X_train_scaled), columns=feature_names)
 
     # AI predictions on validation set
-    y_pred = model.predict(X_val_scaled.values)
+    y_pred = model.predict(X_val_scaled)
 
     # Constraints (USL / LSL)
     with open(os.path.join(base, "config", "constraints.yaml")) as f:
@@ -162,7 +162,7 @@ with tab1:
         font=dict(color="white"), height=400,
         margin=dict(l=10, r=80, t=20, b=10), showlegend=False
     )
-    st.plotly_chart(fig_cpk, use_container_width=True)
+    st.plotly_chart(fig_cpk, width='stretch')
 
     # Detailed table with colour styling
     def _style_cpk(val):
@@ -175,9 +175,9 @@ with tab1:
 
     st.dataframe(
         cap_df.style
-            .applymap(_style_cpk,     subset=["Cp", "Cpk"])
-            .applymap(_style_status,  subset=["Status"]),
-        use_container_width=True, hide_index=True
+            .map(_style_cpk,     subset=["Cp", "Cpk"])
+            .map(_style_status,  subset=["Status"]),
+        width='stretch', hide_index=True
     )
 
     # Gauge summary
@@ -204,7 +204,7 @@ with tab1:
     )
     gc1, gc2, gc3 = st.columns([1, 2, 1])
     with gc2:
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(fig_gauge, width='stretch')
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — SPC Control Charts
@@ -312,7 +312,7 @@ with tab2:
         legend=dict(orientation="h", y=-0.15),
         margin=dict(l=10, r=80, t=50, b=10)
     )
-    st.plotly_chart(fig_spc, use_container_width=True)
+    st.plotly_chart(fig_spc, width='stretch')
 
     # OOC summary row
     mc1, mc2, mc3, mc4 = st.columns(4)
@@ -335,7 +335,7 @@ with tab2:
                          "OOC Signals": ooc_n,
                          "OOC Rate": f"{ooc_n/len(v):.1%}"})
     ooc_df = pd.DataFrame(ooc_rows).sort_values("OOC Signals", ascending=False)
-    st.dataframe(ooc_df, use_container_width=True, hide_index=True)
+    st.dataframe(ooc_df, width='stretch', hide_index=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 3 — Non-Conformance Analysis
@@ -361,7 +361,7 @@ with tab3:
             height=340, margin=dict(l=10, r=10, t=20, b=10),
             legend=dict(orientation="h")
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
 
     with nc2:
         st.markdown("##### AI Model Predictions vs Actual")
@@ -379,7 +379,7 @@ with tab3:
             paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"),
             height=340, margin=dict(l=10, r=10, t=20, b=10)
         )
-        st.plotly_chart(fig_cm, use_container_width=True)
+        st.plotly_chart(fig_cm, width='stretch')
 
     # FPY trend (rolling window)
     st.markdown("---")
@@ -410,7 +410,7 @@ with tab3:
         font=dict(color="white"), height=350,
         margin=dict(l=10, r=80, t=20, b=10)
     )
-    st.plotly_chart(fig_fpy, use_container_width=True)
+    st.plotly_chart(fig_fpy, width='stretch')
 
     # Non-conformance per class breakdown table
     st.markdown("---")
@@ -430,7 +430,7 @@ with tab3:
                 "Sub-optimal — process adjustment advised"
             )
         })
-    st.dataframe(pd.DataFrame(nc_data), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(nc_data), width='stretch', hide_index=True)
 
     # Model accuracy for non-conformance detection
     st.markdown("---")

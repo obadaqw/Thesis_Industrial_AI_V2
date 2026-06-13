@@ -135,8 +135,8 @@ with col2:
 
 
             st.dataframe(
-                comparison_df.style.applymap(highlight_change, subset=['Change']),
-                use_container_width=True
+                comparison_df.style.map(highlight_change, subset=['Change']),
+                width='stretch'
             )
 
             # 2. Download Button

@@ -144,7 +144,7 @@ if analyze_btn:
                           margin=dict(l=20, r=20, t=50, b=10),
                           paper_bgcolor="rgba(0,0,0,0)",
                           font=dict(color="white"))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         vok_str = "✅ Confirmed" if vok else ("⚠️ Unconfirmed" if tier < 3 else "N/A")
         st.markdown(f"**Independent Validator:** {vok_str}")
@@ -174,9 +174,9 @@ if analyze_btn:
 
             st.dataframe(
                 adj_df.style
-                    .applymap(_color_direction, subset=["direction"])
-                    .applymap(_color_delta,    subset=["delta"]),
-                use_container_width=True,
+                    .map(_color_direction, subset=["direction"])
+                    .map(_color_delta,    subset=["delta"]),
+                width='stretch',
                 hide_index=True
             )
 

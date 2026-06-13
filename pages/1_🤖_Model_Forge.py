@@ -126,7 +126,7 @@ if os.path.exists(model_path):
             y=["Waste", "Acceptable", "Target", "Inefficient"]
         )
         fig_cm.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
-        st.plotly_chart(fig_cm, use_container_width=True)
+        st.plotly_chart(fig_cm, width='stretch')
 
     with tab2:
         if hasattr(model, "feature_importances_"):
@@ -143,7 +143,7 @@ if os.path.exists(model_path):
                 color='Importance', color_continuous_scale='Teal'  # FIXED: 'Cyan' -> 'Teal'
             )
             fig_imp.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
-            st.plotly_chart(fig_imp, use_container_width=True)
+            st.plotly_chart(fig_imp, width='stretch')
         else:
             st.info(
                 "ℹ️ This algorithm (e.g., SVM/MLP) works as a 'Black Box' and does not provide simple feature importance. Use the XAI Lab for insights.")
