@@ -3,7 +3,7 @@ role_manager.py — Three-role view system (Decision #15).
 
 Roles:
   Operator        — Production floor: Digital Twin + alerts
-  AI Engineer     — ML analysis: XAI, RCA, Model Forge, Optimization
+  AI Engineer     — ML analysis: XAI, RCA, Model Forge, Drift
   Quality Manager — Compliance: ISO 9001, Reports, RCA summary
 
 Usage in any page:
@@ -25,7 +25,7 @@ ROLES = {
         "color":       "#00FFCC",
         "description": "ML engineer — analyses models and XAI explanations",
         "pages":       {"Model Forge", "XAI Lab", "RCA Investigator",
-                        "Optimization Sandbox", "Drift Monitor", "Cycle History"},
+                        "Drift Monitor", "Cycle History"},
         "can_train":   True,
     },
     "📋 Quality Manager": {

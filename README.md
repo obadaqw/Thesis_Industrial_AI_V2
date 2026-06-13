@@ -9,9 +9,9 @@ A production-grade Streamlit application that applies Explainable AI (XAI) to in
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       Streamlit UI (9 pages)                │
+│                       Streamlit UI (8 pages)                │
 │  Model Forge · XAI Lab · RCA Investigator · Digital Twin    │
-│  Optimization Sandbox · Smart Reports · ISO 9001 Dashboard  │
+│  Smart Reports · ISO 9001 Dashboard                         │
 │  Drift Monitor · Cycle History                              │
 └────────────────────────┬────────────────────────────────────┘
                          │
@@ -23,7 +23,6 @@ A production-grade Streamlit application that applies Explainable AI (XAI) to in
 │  xai_engine.py         SHAP TreeExplainer + LIME (cached)  │
 │  counterfactual_rca.py 3-tier CF engine + MLP validator     │
 │  rca_surrogate.py      Z-score component health scoring     │
-│  optimizer_genetic.py  Genetic algorithm repair recipe      │
 │  digital_twin.py       OEE simulation (A × P × Q)          │
 │  drift_detector.py     PSI + Page-Hinkley concept drift     │
 │  iso9001_metrics.py    Cp/Cpk process capability            │
@@ -32,7 +31,6 @@ A production-grade Streamlit application that applies Explainable AI (XAI) to in
 │  cycle_store.py        SQLite audit trail                   │
 │  experiment_tracker.py JSON experiment history              │
 │  role_manager.py       3-role access gate                   │
-│  platform_server.py    FastAPI REST API (port 8502)         │
 │  config.py             Unified secret resolution            │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -86,7 +84,7 @@ Open http://localhost:8501
 docker compose up --build
 ```
 
-App at http://localhost:8501 · FastAPI docs at http://localhost:8502/docs
+App at http://localhost:8501
 
 ### Streamlit Cloud
 
@@ -118,11 +116,10 @@ App at http://localhost:8501 · FastAPI docs at http://localhost:8502/docs
 | 2 | 🧠 XAI Lab | AI Engineer |
 | 3 | 🕵️ RCA Investigator | AI Engineer · Quality Manager |
 | 4 | 🏭 Digital Twin | Operator |
-| 5 | 🧪 Optimization Sandbox | AI Engineer |
-| 6 | 📑 Smart Reports | Operator · Quality Manager |
-| 7 | 📊 ISO 9001 Dashboard | Quality Manager |
-| 8 | 📡 Drift Monitor | AI Engineer · Quality Manager |
-| 9 | 📋 Cycle History | AI Engineer · Quality Manager |
+| 5 | 📑 Smart Reports | Operator · Quality Manager |
+| 6 | 📊 ISO 9001 Dashboard | Quality Manager |
+| 7 | 📡 Drift Monitor | AI Engineer · Quality Manager |
+| 8 | 📋 Cycle History | AI Engineer · Quality Manager · Operator |
 
 ---
 
@@ -139,24 +136,6 @@ pytest -m integration
 pytest
 ```
 
-129 tests · 0 failures.
-
----
-
-## REST API
-
-FastAPI starts automatically on port 8502 when the Streamlit app launches.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Liveness check |
-| POST | `/predict` | Run model inference |
-| GET | `/oee` | Current OEE state |
-| POST | `/oee/update` | Log a new cycle |
-| POST | `/rca` | Trigger RCA analysis |
-
-Interactive docs: http://localhost:8502/docs
-
 ---
 
 ## Project Structure
@@ -164,7 +143,7 @@ Interactive docs: http://localhost:8502/docs
 ```
 Thesis_Industrial_AI_V2/
 ├── app.py                    # Entry point
-├── pages/                    # Streamlit multi-page app (9 pages)
+├── pages/                    # Streamlit multi-page app (8 pages)
 ├── src/                      # Core ML + business logic
 ├── data/
 │   ├── raw/                  # Original dataset

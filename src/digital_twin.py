@@ -27,7 +27,9 @@ class DigitalTwin:
     def update_metrics(self, prediction_class):
         """
         Updates the OEE metrics based on the latest AI prediction.
-        Input: prediction_class (3 = Target/Good, others = Bad)
+        Conforming classes: 1 (Acceptable) and 2 (Target) → good cycle.
+        Non-conforming classes: 0 (Waste) and 3 (Inefficient) → bad cycle.
+        Consistent with the ISO 9001 FPY definition and the CF acceptance threshold.
         """
         self.state["status"] = "RUNNING"
         self.state["total_cycles"] += 1
@@ -80,25 +82,23 @@ if __name__ == "__main__":
     twin = DigitalTwin()
 
     # Simulate 10 Cycles
-    # 7 conforming (Class 2 = Target) and 3 non-conforming (Class 0 = Waste)
-    print("   Running 10 simulated cycles (7 conforming class-2, 3 non-conforming class-0)...")
+    # 6 × Target (class 2) + 1 × Acceptable (class 1) + 3 × Waste (class 0)
+    # Both class 1 and class 2 are conforming → 7 good, 3 bad, quality = 70%
+    outcomes = [2, 2, 2, 2, 2, 2, 1, 0, 0, 0]
+    print("   Running 10 simulated cycles "
+          "(6×Target, 1×Acceptable = 7 conforming; 3×Waste = 3 non-conforming)...")
 
-    for i in range(10):
-        if i < 7:
-            outcome = 2  # Good (original quality 3 = Target)
-        else:
-            outcome = 0  # Bad (original quality 1 = Waste)
-
+    for outcome in outcomes:
         state = twin.update_metrics(outcome)
 
     print("\n📊 Final Machine State:")
     print(f"   Total Cycles: {state['total_cycles']}")
-    print(f"   Good Cycles:  {state['good_cycles']} (Expected: 7)")
+    print(f"   Good Cycles:  {state['good_cycles']} (Expected: 7 — class 1 and 2 both conforming)")
     print(f"   Quality:      {state['quality']:.2%} (Expected: 70%)")
     print(f"   OEE Score:    {state['oee']:.2%}")
 
     # Simple Assert
     if state['quality'] == 0.7:
-        print("\n✅ TEST PASSED: Quality calculation is correct.")
+        print("\n✅ TEST PASSED: Quality calculation is correct (Acceptable + Target both conforming).")
     else:
         print("\n❌ TEST FAILED: Math error.")

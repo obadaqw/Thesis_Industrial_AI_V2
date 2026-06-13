@@ -11,9 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Streamlit default port; FastAPI background server on 8502
 EXPOSE 8501
-EXPOSE 8502
 
 ENV PYTHONUNBUFFERED=1
 

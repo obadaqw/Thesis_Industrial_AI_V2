@@ -23,10 +23,11 @@ class TestGoodBadCycles:
         assert twin.state["good_cycles"] == 0
         assert twin.state["bad_cycles"]  == 1
 
-    def test_class1_increments_bad(self, twin):
-        # Acceptable (class 1) is NOT Target — counts as bad for OEE quality
+    def test_class1_increments_good(self, twin):
+        # Acceptable (class 1) is conforming — counts as good for OEE quality
         twin.update_metrics(1)
-        assert twin.state["bad_cycles"] == 1
+        assert twin.state["good_cycles"] == 1
+        assert twin.state["bad_cycles"]  == 0
 
     def test_class3_increments_bad(self, twin):
         twin.update_metrics(3)

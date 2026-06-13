@@ -63,13 +63,6 @@ def _seed_demo_cycles():
 
 _bootstrap()
 
-# Start background API server
-try:
-    from platform_server import start_background
-    start_background(port=8502)
-except Exception:
-    pass
-
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Digital Shadow V2",
@@ -107,7 +100,6 @@ except Exception:
 st.sidebar.title("🏭 Digital Shadow V2")
 st.sidebar.markdown("---")
 st.sidebar.success("**System:** Online 🟢")
-st.sidebar.caption("API: http://localhost:8502/docs")
 
 # ── Load live metrics (safe — all wrapped in try/except) ──────────────────────
 import numpy as np
@@ -211,7 +203,6 @@ with left:
         ("🧠", "XAI Lab",              "SHAP + LIME differential diagnosis",             "✅"),
         ("🕵️", "RCA Investigator",    "3-tier counterfactual root-cause analysis",      "✅"),
         ("🏭", "Digital Twin",         "OEE simulation & live cycle monitoring",         "✅"),
-        ("🧪", "Optimization Sandbox", "Genetic algorithm repair recipe generation",     "✅"),
         ("📑", "Smart Reports",        "Llama 3.3 / Groq automated shift reports",       "✅"),
         ("📊", "ISO 9001 Dashboard",   "Cp/Cpk · SPC · non-conformance register",        "✅"),
         ("📡", "Drift Monitor",        "PSI + Page-Hinkley concept drift detection",     "✅"),
@@ -257,8 +248,8 @@ st.markdown("---")
 # ── Tech stack footer ─────────────────────────────────────────────────────────
 st.markdown(
     "<div style='text-align:center; color:#555; font-size:0.8em; padding:8px 0'>"
-    "Random Forest · SHAP · LIME · Genetic Algorithm · Groq/Llama-3.3 · "
-    "FastAPI · SQLite · Telegram · Streamlit · Docker"
+    "Random Forest · SHAP · LIME · Groq/Llama-3.3 · "
+    "SQLite · Telegram · Streamlit · Docker"
     "<br>v2.0 — Master's Thesis 2026"
     "</div>",
     unsafe_allow_html=True
