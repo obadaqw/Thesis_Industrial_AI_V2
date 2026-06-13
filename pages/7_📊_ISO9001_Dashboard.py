@@ -11,8 +11,12 @@ from plotly.subplots import make_subplots
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from iso9001_metrics import compute_capability, cpk_status, compute_all_capabilities
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="ISO 9001 Dashboard", page_icon="📊", layout="wide")
+
+render_role_selector()
+render_access_gate("ISO 9001 Dashboard")
 
 st.title("📊 ISO 9001 Quality Management Dashboard")
 st.markdown("### Statistical Process Control · Process Capability · Non-Conformance Analysis")

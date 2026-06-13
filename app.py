@@ -1,5 +1,15 @@
 import streamlit as st
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+# Start background API server (non-blocking daemon thread)
+try:
+    from platform_server import start_background
+    start_background(port=8502)
+except Exception:
+    pass
 
 # 1. PAGE CONFIGURATION (Must be the first command)
 st.set_page_config(
@@ -30,11 +40,18 @@ def load_css():
 
 load_css()
 
-# 3. SIDEBAR HEADER
+# 3. SIDEBAR — role selector + status
+try:
+    from role_manager import render_role_selector
+    render_role_selector()
+except Exception:
+    pass
+
 st.sidebar.image("https://img.icons8.com/color/96/000000/industrial-robot.png", width=80)
 st.sidebar.title("🏭 Digital Shadow")
 st.sidebar.markdown("---")
 st.sidebar.info("**Status:** System Online 🟢")
+st.sidebar.caption("API: http://localhost:8502/docs")
 
 # 4. MAIN WELCOME SCREEN
 st.title("🏭 Intelligent Quality Control Center")

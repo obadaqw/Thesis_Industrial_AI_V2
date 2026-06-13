@@ -14,3 +14,5 @@ requests
 lime
 pytest
 pytest-cov
+fastapi
+uvicorn

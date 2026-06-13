@@ -9,6 +9,8 @@ import plotly.graph_objects as go
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from counterfactual_rca import CounterfactualRCA
 from telegram_notifier import TelegramNotifier
+from role_manager import render_role_selector, render_access_gate
+import cycle_store
 
 st.set_page_config(page_title="RCA Investigator", page_icon="🕵️", layout="wide")
 
@@ -18,6 +20,9 @@ st.markdown("""
     .tier-badge  { padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 1.1em; display: inline-block; }
     </style>
 """, unsafe_allow_html=True)
+
+render_role_selector()
+render_access_gate("RCA Investigator")
 
 st.title("🕵️ RCA Investigator — Counterfactual Analysis")
 st.markdown("### 3-Tier Root-Cause Analysis with SHAP + LIME + NN-Anchoring")
@@ -102,6 +107,20 @@ if analyze_btn:
     adj     = result['adjustments']
     color   = TIER_COLOR[tier]
     health  = TIER_HEALTH[tier]
+
+    # Persist cycle to history DB
+    try:
+        cycle_store.log_cycle(
+            cycle_id=int(sample_id),
+            prediction=pred,
+            confidence=conf,
+            rca_tier=tier,
+            rca_status=status,
+            cf_confidence=result.get('cf_confidence', 0.0),
+            validator_ok=bool(vok)
+        )
+    except Exception:
+        pass
 
     # Telegram: alert on defect + send RCA summary (tier 1, 2, or 3)
     if pred not in (1, 2):

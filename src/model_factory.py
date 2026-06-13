@@ -17,6 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 from sklearn.metrics import classification_report, accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+import experiment_tracker
 
 # ==========================================
 # CONFIGURATION
@@ -111,6 +112,16 @@ def train_model(algo_name="RF"):  # RF is the thesis-selected champion
     joblib.dump(model, history_path)
 
     print(f"💾 Model saved as 'current_model.pkl' (Active) and '{algo_name}_model.pkl' (Archive)")
+
+    # Log experiment for comparison dashboard
+    try:
+        hyperparams = {k: v for k, v in model.get_params().items()
+                       if not callable(v)}
+        experiment_tracker.log(algo_name, cv_scores.mean(), cv_scores.std(),
+                               acc, f1, hyperparams)
+        print("📋 Experiment logged to models/experiments.json")
+    except Exception as ex:
+        print(f"   ⚠️ Experiment logging failed (non-fatal): {ex}")
 
 
 if __name__ == "__main__":

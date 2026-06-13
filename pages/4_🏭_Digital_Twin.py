@@ -14,8 +14,12 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from digital_twin import DigitalTwin
 from xai_engine import XAIEngine
 from telegram_notifier import TelegramNotifier
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="Digital Twin", page_icon="🏭", layout="wide")
+
+render_role_selector()
+render_access_gate("Digital Twin")
 
 st.title("🏭 Digital Twin Simulation")
 st.markdown("### Live OEE & Production State Monitoring")

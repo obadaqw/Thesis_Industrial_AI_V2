@@ -7,8 +7,12 @@ import plotly.graph_objects as go
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from xai_engine import XAIEngine
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="XAI Lab", page_icon="🧠", layout="wide")
+
+render_role_selector()
+render_access_gate("XAI Lab")
 
 st.title("🧠 XAI Differential Diagnosis Lab")
 st.markdown("### SHAP-Based Defect vs Golden Sample Comparison")

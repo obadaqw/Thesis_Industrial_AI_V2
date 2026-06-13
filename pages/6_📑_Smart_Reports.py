@@ -10,8 +10,12 @@ from llm_wrapper import LLMWrapper
 from rca_surrogate import RCASurrogate
 from counterfactual_rca import CounterfactualRCA
 from telegram_notifier import TelegramNotifier
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="Smart Reports", page_icon="📝", layout="wide")
+
+render_role_selector()
+render_access_gate("Smart Reports")
 
 st.title("📝 Generative AI Shift Reports")
 st.markdown("### Automated Technical Reporting — Llama 3 on Groq + Counterfactual Context")

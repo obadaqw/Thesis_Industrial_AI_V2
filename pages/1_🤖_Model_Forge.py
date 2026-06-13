@@ -16,6 +16,8 @@ from sklearn.metrics import confusion_matrix, classification_report
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from model_factory import train_model
+import experiment_tracker
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="Model Forge", page_icon="🤖", layout="wide")
 
@@ -40,6 +42,8 @@ def local_css():
 
 
 local_css()
+render_role_selector()
+render_access_gate("Model Forge")
 
 st.title("🤖 Model Forge & AutoML")
 st.markdown("### Train, Benchmark, and Validate Industrial AI Models")
@@ -109,7 +113,7 @@ if os.path.exists(model_path):
     st.markdown("---")
 
     # --- ROW 2: DEEP DIVE VISUALS ---
-    tab1, tab2, tab3 = st.tabs(["📊 Confusion Matrix", "📉 Feature Importance", "📑 Class Report"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Confusion Matrix", "📉 Feature Importance", "📑 Class Report", "🏅 Experiment History"])
 
     with tab1:
         st.markdown("#### Where is the model making mistakes?")
@@ -153,6 +157,47 @@ if os.path.exists(model_path):
         report = classification_report(y_val, y_pred, output_dict=True)
         df_report = pd.DataFrame(report).transpose()
         st.dataframe(df_report.style.highlight_max(axis=0, color='darkgreen'))
+
+    with tab4:
+        st.markdown("#### All Training Runs — Experiment History")
+        exp_df = experiment_tracker.load_df()
+        if exp_df.empty:
+            st.info("No experiments logged yet. Train a model to start tracking.")
+        else:
+            champion = experiment_tracker.get_champion()
+            st.success(
+                f"🏆 Champion: **{champion['algo']}** — "
+                f"Val Acc: {champion['val_acc']:.2%} | "
+                f"CV: {champion['cv_mean']:.4f} ± {champion['cv_std']:.4f}"
+            )
+
+            def _hl_best(val):
+                if isinstance(val, float) and val == exp_df["val_acc"].max():
+                    return "background-color: #003a20; font-weight: bold"
+                return ""
+
+            st.dataframe(
+                exp_df.style
+                    .format({"cv_mean": "{:.4f}", "cv_std": "{:.4f}",
+                             "val_acc": "{:.2%}", "val_f1":  "{:.4f}"})
+                    .map(_hl_best, subset=["val_acc"]),
+                width='stretch', hide_index=True
+            )
+
+            fig_hist = px.bar(
+                exp_df.sort_values("val_acc"),
+                x="algo", y="val_acc", color="algo",
+                text=exp_df.sort_values("val_acc")["val_acc"].apply(lambda v: f"{v:.2%}"),
+                title="Validation Accuracy by Algorithm",
+                color_discrete_sequence=px.colors.qualitative.Set2
+            )
+            fig_hist.add_hline(y=0.90, line_dash="dash", line_color="white",
+                               annotation_text="90% target")
+            fig_hist.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="white"), height=350, showlegend=False
+            )
+            st.plotly_chart(fig_hist, width='stretch')
 
 else:
     st.warning("⚠️ No trained model found. Click 'Train New Model' in the sidebar.")

@@ -14,8 +14,12 @@ import joblib
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
 from optimizer_genetic import GeneticOptimizer
+from role_manager import render_role_selector, render_access_gate
 
 st.set_page_config(page_title="Optimization Sandbox", page_icon="🧪", layout="wide")
+
+render_role_selector()
+render_access_gate("Optimization Sandbox")
 
 st.markdown("""
     <style>
