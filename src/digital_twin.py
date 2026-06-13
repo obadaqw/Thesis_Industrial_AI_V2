@@ -33,8 +33,9 @@ class DigitalTwin:
         self.state["total_cycles"] += 1
 
         # 1. Update Counts (Quality)
-        # Model class 2 = original quality 3 (Target). Class 3 = Inefficient.
-        if prediction_class == 2:
+        # Conforming = {Acceptable (1), Target (2)}, consistent with the
+        # ISO dashboard FPY definition and the CF acceptance threshold.
+        if prediction_class in (1, 2):
             self.state["good_cycles"] += 1
         else:
             self.state["bad_cycles"] += 1
@@ -79,8 +80,8 @@ if __name__ == "__main__":
     twin = DigitalTwin()
 
     # Simulate 10 Cycles
-    # We will force 7 Good cycles (Class 2 = original quality 3) and 3 Bad cycles (Class 0)
-    print("   Running 10 simulated cycles (7 Good, 3 Bad)...")
+    # 7 conforming (Class 2 = Target) and 3 non-conforming (Class 0 = Waste)
+    print("   Running 10 simulated cycles (7 conforming class-2, 3 non-conforming class-0)...")
 
     for i in range(10):
         if i < 7:

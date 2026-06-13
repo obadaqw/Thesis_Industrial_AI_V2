@@ -79,8 +79,10 @@ def _cpk_status_emoji(val):
 # ── Build capability table ────────────────────────────────────────────────────
 
 cap_rows = []
+skipped_feats = []
 for feat in feature_names:
     if feat not in constraints:
+        skipped_feats.append(feat)
         continue
     lsl = constraints[feat]["min"]
     usl = constraints[feat]["max"]
@@ -97,6 +99,12 @@ for feat in feature_names:
     })
 
 cap_df = pd.DataFrame(cap_rows)
+
+if skipped_feats:
+    st.caption(
+        f"⚠️ {len(skipped_feats)} feature(s) missing from constraints.yaml "
+        f"(excluded from capability analysis): {', '.join(skipped_feats)}"
+    )
 
 # ── Overall KPIs ──────────────────────────────────────────────────────────────
 
@@ -145,7 +153,8 @@ with tab1:
     fig_cpk.add_trace(go.Bar(
         x=cap_df["Feature"], y=cap_df["Cpk"],
         marker_color=colors, name="Cpk",
-        text=cap_df["Cpk"].astype(str), textposition="outside"
+        text=cap_df["Cpk"].apply(lambda v: "—" if pd.isna(v) else str(round(v, 3))),
+        textposition="outside"
     ))
     fig_cpk.add_hline(y=1.33, line_dash="dash", line_color="#00CC88",
                       annotation_text="Capable (1.33)", annotation_position="right")
@@ -428,13 +437,20 @@ with tab3:
     st.dataframe(pd.DataFrame(nc_data), width='stretch', hide_index=True)
 
     # Model accuracy for non-conformance detection
+    # Non-conforming group = {Waste (0), Inefficient (3)}
+    # TP = predicted non-conforming AND actually non-conforming (group membership, not exact class)
     st.markdown("---")
-    precision_nc = int(np.sum((y_pred == y_val) & np.isin(y_val, [0, 3]))) / max(1, int(np.isin(y_val, [0, 3]).sum()))
-    recall_nc    = int(np.sum((y_pred == y_val) & np.isin(y_val, [0, 3]))) / max(1, int(np.isin(y_val, [0, 3]).sum()))
-    a1, a2, a3 = st.columns(3)
+    tp_nc        = int(np.sum(np.isin(y_pred, [0, 3]) & np.isin(y_val, [0, 3])))
+    precision_nc = tp_nc / max(1, int(np.isin(y_pred, [0, 3]).sum()))
+    recall_nc    = tp_nc / max(1, int(np.isin(y_val,  [0, 3]).sum()))
+    a1, a2, a3, a4 = st.columns(4)
     a1.metric("Overall Validation Accuracy",
               f"{(y_pred == y_val).mean():.1%}")
-    a2.metric("Non-Conformance Detection Rate",
-              f"{precision_nc:.1%}")
-    a3.metric("Conforming Part Yield (AI)",
-              f"{(np.isin(y_pred, [1,2])).mean():.1%}")
+    a2.metric("Non-Conformance Precision",
+              f"{precision_nc:.1%}",
+              help="TP / all cycles predicted as non-conforming")
+    a3.metric("Non-Conformance Recall",
+              f"{recall_nc:.1%}",
+              help="TP / all actual non-conforming cycles")
+    a4.metric("Conforming Part Yield (AI)",
+              f"{np.isin(y_pred, [1, 2]).mean():.1%}")

@@ -1,3 +1,13 @@
+"""
+rca_surrogate.py — Statistical Anomaly Monitor (sensor / hardware fault detection).
+
+Uses z-scores from training statistics to flag sensors that are statistically
+out-of-range for the current production cycle.  Complements counterfactual_rca.py:
+where this module identifies *which hardware component* is anomalous, the
+counterfactual engine computes *what parameter adjustment* would restore quality.
+Tier-3 escalations from the counterfactual engine typically correspond to cycles
+where this module reports multiple critical anomalies.
+"""
 import pandas as pd
 import numpy as np
 import joblib
@@ -33,7 +43,7 @@ class RCASurrogate:
     }
 
     def __init__(self):
-        print("🕵️ Initializing RCA Surrogate...")
+        print("🔍 Initializing Statistical Anomaly Monitor...")
         try:
             self.feature_names = joblib.load(os.path.join(MODELS_DIR, "feature_names.pkl"))
             # Use training-set mean/std for z-score computation.
@@ -41,9 +51,9 @@ class RCASurrogate:
             stats = joblib.load(os.path.join(MODELS_DIR, "train_stats.pkl"))
             self.train_mean = stats['mean'].values
             self.train_std  = stats['std'].values
-            print("✅ RCA Surrogate Ready.")
+            print("✅ Statistical Anomaly Monitor ready.")
         except Exception as e:
-            print(f"❌ RCA Init Failed: {e}")
+            print(f"❌ Statistical Anomaly Monitor init failed: {e}")
             self.feature_names = None
 
     def analyze_cycle(self, cycle_data_real):

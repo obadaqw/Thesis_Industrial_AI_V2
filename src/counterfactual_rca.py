@@ -1,5 +1,11 @@
 """
-counterfactual_rca.py  —  Layer 3: 3-Tier Counterfactual Root-Cause Analysis
+counterfactual_rca.py — Counterfactual RCA: 3-Tier parameter-correction engine.
+
+Distinct from rca_surrogate.py (Statistical Anomaly Monitor): that module flags
+*which sensors / hardware components* deviate statistically; this module computes
+*which parameter adjustments* would move a defective cycle into the conforming
+region.  Tier-3 escalations here correspond to cycles where the anomaly monitor
+typically reports structural / multi-sensor faults beyond correctable bounds.
 
 Design decisions implemented:
   #7  SHAP SELECTS which features to adjust (top-k by |SHAP value for Target class|).

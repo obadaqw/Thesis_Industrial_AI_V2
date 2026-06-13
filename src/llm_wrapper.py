@@ -78,13 +78,10 @@ Use professional industrial terminology. Be specific about parameter values.
             try:
                 # UPDATED MODEL NAME: Llama 3.3 70B (Versatile)
                 chat_completion = self.client.chat.completions.create(
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": prompt,
-                        }
-                    ],
+                    messages=[{"role": "user", "content": prompt}],
                     model="llama-3.3-70b-versatile",
+                    temperature=0.2,
+                    max_tokens=800,
                 )
                 return chat_completion.choices[0].message.content
 

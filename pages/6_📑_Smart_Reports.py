@@ -88,6 +88,10 @@ with col1:
 with col2:
     st.markdown("#### 2. Generate Report")
     st.caption("Report is grounded in live RCA + counterfactual parameter adjustments.")
+    st.caption(
+        "💡 **Statistical Anomaly Monitor** flags sensor faults · "
+        "**Counterfactual RCA** prescribes parameter corrections"
+    )
 
     if st.button("📄 Draft Engineer's Report", type="primary"):
         if "rca_result" not in st.session_state:
@@ -100,24 +104,32 @@ with col2:
                     oee_context,
                     cf_result=st.session_state.get("cf_result")
                 )
+            # Persist so the display + Telegram button survive reruns
+            st.session_state["report_text"] = report_text
+            st.session_state["report_sid"]  = st.session_state.get("last_sample", sample_id)
 
-            st.markdown("### 🤖 AI Generated Report")
-            st.markdown("---")
-            st.markdown(report_text)
+    # Render report + action buttons OUTSIDE the draft-button block so they
+    # persist across reruns (a nested st.button loses its click on rerun).
+    if "report_text" in st.session_state:
+        report_text = st.session_state["report_text"]
+        sid         = st.session_state["report_sid"]
 
-            sid = st.session_state.get("last_sample", sample_id)
-            st.download_button(
-                "💾 Download Report (TXT)",
-                report_text,
-                f"shift_report_cycle_{sid}.txt"
-            )
+        st.markdown("### 🤖 AI Generated Report")
+        st.markdown("---")
+        st.markdown(report_text)
 
-            if notifier.enabled:
-                if st.button("📱 Send Report to Telegram"):
-                    ok = notifier.send_shift_report(report_text, cycle_id=sid)
-                    if ok:
-                        st.success("✅ Report sent to Telegram!")
-                    else:
-                        st.error("❌ Telegram send failed — check token/chat_id in .env")
-            else:
-                st.caption("📱 Telegram not configured — add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to .env")
+        st.download_button(
+            "💾 Download Report (TXT)",
+            report_text,
+            f"shift_report_cycle_{sid}.txt"
+        )
+
+        if notifier.enabled:
+            if st.button("📱 Send Report to Telegram"):
+                ok = notifier.send_shift_report(report_text, cycle_id=sid)
+                if ok:
+                    st.success("✅ Report sent to Telegram!")
+                else:
+                    st.error("❌ Telegram send failed — check token/chat_id in .env")
+        else:
+            st.caption("📱 Telegram not configured — add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to .env")
