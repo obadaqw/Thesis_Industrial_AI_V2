@@ -18,7 +18,7 @@ ROLES = {
     "👷 Operator": {
         "color":       "#00BFFF",
         "description": "Production floor — monitors live machine state",
-        "pages":       {"Digital Twin", "Smart Reports"},
+        "pages":       {"Digital Twin", "Smart Reports", "Cycle History"},
         "can_train":   False,
     },
     "🤖 AI Engineer": {
