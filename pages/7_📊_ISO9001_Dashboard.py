@@ -10,6 +10,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
+from iso9001_metrics import compute_capability, cpk_status, compute_all_capabilities
 
 st.set_page_config(page_title="ISO 9001 Dashboard", page_icon="📊", layout="wide")
 
@@ -58,15 +59,6 @@ CLASS_COLORS = {0: "#FF4B4B", 1: "#FFA500", 2: "#00FFCC", 3: "#9B59B6"}
 
 # ── Capability helpers ────────────────────────────────────────────────────────
 
-def compute_capability(series, usl, lsl):
-    mu  = series.mean()
-    sig = series.std(ddof=1)
-    if sig == 0:
-        return np.nan, np.nan
-    cp  = (usl - lsl) / (6 * sig)
-    cpk = min((usl - mu) / (3 * sig), (mu - lsl) / (3 * sig))
-    return round(cp, 3), round(cpk, 3)
-
 def cpk_color(val):
     if pd.isna(val) or val < 1.0:
         return "#FF4B4B"
@@ -74,12 +66,11 @@ def cpk_color(val):
         return "#FFA500"
     return "#00CC88"
 
-def cpk_status(val):
-    if pd.isna(val) or val < 1.0:
-        return "❌ Not Capable"
-    if val < 1.33:
-        return "⚠️ Marginal"
-    return "✅ Capable"
+def _cpk_status_emoji(val):
+    s = cpk_status(val)
+    if s == "Capable":   return "✅ Capable"
+    if s == "Marginal":  return "⚠️ Marginal"
+    return "❌ Not Capable"
 
 # ── Build capability table ────────────────────────────────────────────────────
 
@@ -98,7 +89,7 @@ for feat in feature_names:
         "Std":      round(X_val[feat].std(ddof=1), 4),
         "Cp":       cp,
         "Cpk":      cpk,
-        "Status":   cpk_status(cpk),
+        "Status":   _cpk_status_emoji(cpk),
     })
 
 cap_df = pd.DataFrame(cap_rows)

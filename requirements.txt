@@ -12,3 +12,5 @@ pyyaml
 python-dotenv
 requests
 lime
+pytest
+pytest-cov

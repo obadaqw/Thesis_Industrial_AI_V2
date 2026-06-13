@@ -1,0 +1,123 @@
+name: CI — Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup ──────────────────────────────────────────────────
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # ── 3. Install dependencies ──────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      # ── 4. Create runtime directories ────────────────────────────────────
+      - name: Create required directories
+        run: |
+          mkdir -p models/checkpoints data/processed data/golden_store logs
+
+      # ── 5. Run data pipeline ─────────────────────────────────────────────
+      - name: Run data pipeline
+        run: python src/data_pipeline.py
+
+      # ── 6. Train champion model (RF) ─────────────────────────────────────
+      - name: Train Random Forest model
+        run: python src/model_factory.py --algo RF
+
+      # ── 7. Regenerate golden store ───────────────────────────────────────
+      - name: Regenerate golden store (Target-class samples)
+        run: |
+          python - <<'EOF'
+          import pandas as pd, numpy as np, os, joblib
+
+          PROC = "data/processed"
+          GOLDEN = "data/golden_store"
+          os.makedirs(GOLDEN, exist_ok=True)
+
+          feature_names = joblib.load("models/checkpoints/feature_names.pkl")
+
+          X_val   = pd.read_csv(f"{PROC}/X_val.csv")
+          y_val_r = pd.read_csv(f"{PROC}/y_val.csv").values.ravel()
+          y_val   = y_val_r - 1 if y_val_r.min() > 0 else y_val_r
+
+          X_train   = pd.read_csv(f"{PROC}/X_train.csv")
+          y_train_r = pd.read_csv(f"{PROC}/y_train.csv").values.ravel()
+          y_train   = y_train_r - 1 if y_train_r.min() > 0 else y_train_r
+
+          golden_val   = X_val[y_val == 2]
+          golden_train = X_train[y_train == 2]
+          n_needed = max(0, 100 - len(golden_val))
+          if n_needed > 0:
+              np.random.seed(42)
+              idx = np.random.choice(len(golden_train), size=min(n_needed, len(golden_train)), replace=False)
+              golden = pd.concat([golden_val, golden_train.iloc[idx]], ignore_index=True)
+          else:
+              golden = golden_val.copy()
+          golden.to_csv(f"{GOLDEN}/golden_samples.csv", index=False)
+          print(f"Golden store: {len(golden)} samples saved.")
+          EOF
+
+      # ── 8. Run unit tests (fast — no model loading) ───────────────────────
+      - name: Run unit tests
+        env:
+          GROQ_API_KEY: ""
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
+        run: |
+          pytest tests/ -v --tb=short -m "unit" \
+            --cov=src --cov-report=term-missing \
+            --cov-report=xml:coverage-unit.xml
+
+      # ── 9. Run integration tests (loads models) ───────────────────────────
+      - name: Run integration tests
+        env:
+          GROQ_API_KEY: ""
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
+        run: |
+          pytest tests/ -v --tb=short -m "integration" \
+            --cov=src --cov-append \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-full.xml \
+            --cov-report=html:tests/coverage_html
+
+      # ── 10. Upload coverage artifact ──────────────────────────────────────
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-html
+          path: tests/coverage_html/
+          retention-days: 14
+
+      # ── 11. Coverage summary in PR ────────────────────────────────────────
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          pytest tests/ --tb=no -q \
+            --cov=src --cov-report=term-missing 2>&1 | \
+            grep -E "TOTAL|%" | tail -20 >> $GITHUB_STEP_SUMMARY || true
