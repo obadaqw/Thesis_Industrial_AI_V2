@@ -1,8 +1,32 @@
 import streamlit as st
 import os
 import sys
+import subprocess
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+# ── First-boot initializer ────────────────────────────────────────────────────
+# Runs data pipeline + trains RF champion if checkpoints are missing.
+# Executes before any st.* call so it's safe to block here.
+def _bootstrap():
+    _root = os.path.dirname(os.path.abspath(__file__))
+    _model = os.path.join(_root, "models", "checkpoints", "current_model.pkl")
+    if os.path.exists(_model):
+        return
+    _src = os.path.join(_root, "src")
+    print("⚙️  First boot — running data pipeline...", flush=True)
+    subprocess.run(
+        [sys.executable, os.path.join(_src, "data_pipeline.py")],
+        check=True, cwd=_root
+    )
+    print("⚙️  First boot — training RF champion...", flush=True)
+    subprocess.run(
+        [sys.executable, os.path.join(_src, "model_factory.py"), "--algo", "RF"],
+        check=True, cwd=_root
+    )
+    print("✅  First boot complete.", flush=True)
+
+_bootstrap()
 
 # Start background API server (non-blocking daemon thread)
 try:
