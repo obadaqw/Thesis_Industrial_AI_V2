@@ -40,6 +40,7 @@ class XAIEngine:
             discretize_continuous=False,
             random_state=42
         )
+        self._lime_cache: dict = {}
         print("✅ XAI Engine ready (SHAP TreeExplainer + LIME TabularExplainer).")
 
     # ------------------------------------------------------------------
@@ -76,6 +77,20 @@ class XAIEngine:
     # LIME
     # ------------------------------------------------------------------
 
+    def _lime_raw(self, row_df, label: int, num_samples: int):
+        """Run LIME and return raw coeff list, with result cached by sample hash."""
+        key = (tuple(row_df.values.ravel().round(8)), label, num_samples)
+        if key not in self._lime_cache:
+            exp = self.lime_explainer.explain_instance(
+                row_df.values[0],
+                self.model.predict_proba,
+                num_features=len(self.feature_names),
+                labels=[label],
+                num_samples=num_samples,
+            )
+            self._lime_cache[key] = exp.as_list(label=label)
+        return self._lime_cache[key]
+
     def get_lime_directions(self, row_df, top_feature_names, label=2, num_samples=2000):
         """
         LIME role: give the DIRECTION of adjustment for a set of features.
@@ -86,38 +101,20 @@ class XAIEngine:
         Falls back to 0.0 for features LIME did not include (caller should
         use SHAP sign as fallback).
         """
-        exp = self.lime_explainer.explain_instance(
-            row_df.values[0],
-            self.model.predict_proba,
-            num_features=len(self.feature_names),
-            labels=[label],
-            num_samples=num_samples
-        )
-
-        # Build name→coefficient map; feature names are returned as-is
-        # when discretize_continuous=False.
-        raw_list = exp.as_list(label=label)
+        raw_list = self._lime_raw(row_df, label, num_samples)
         coeff_map = {}
         for fname_expr, coeff in raw_list:
-            # Match exact name or substring (guard against edge-case formatting)
             for fname in self.feature_names:
                 if fname == fname_expr or fname in fname_expr:
                     coeff_map[fname] = float(coeff)
                     break
-
         return {f: coeff_map.get(f, 0.0) for f in top_feature_names}
 
     def get_full_lime_explanation(self, row_df, label=2, num_samples=2000):
         """Return full LIME explanation as a sorted DataFrame for display."""
-        exp = self.lime_explainer.explain_instance(
-            row_df.values[0],
-            self.model.predict_proba,
-            num_features=len(self.feature_names),
-            labels=[label],
-            num_samples=num_samples
-        )
+        raw_list = self._lime_raw(row_df, label, num_samples)
         rows = []
-        for fname_expr, coeff in exp.as_list(label=label):
+        for fname_expr, coeff in raw_list:
             matched = next((f for f in self.feature_names
                             if f == fname_expr or f in fname_expr), fname_expr)
             rows.append({'Feature': matched, 'LIME_Coefficient': round(float(coeff), 5)})

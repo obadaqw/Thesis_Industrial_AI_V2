@@ -14,9 +14,11 @@ They never raise exceptions — safe to call from any page.
 """
 
 import os
+import threading
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from config import get_secret
 
 load_dotenv()
 
@@ -27,15 +29,16 @@ _MAX_LEN = 4096
 class TelegramNotifier:
 
     def __init__(self):
-        self.token   = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-        self.chat_id = os.environ.get("TELEGRAM_CHAT_ID",   "").strip()
+        self.token   = get_secret("TELEGRAM_BOT_TOKEN")
+        self.chat_id = get_secret("TELEGRAM_CHAT_ID")
         self.enabled = bool(self.token and self.chat_id)
         status = "ready ✅" if self.enabled else "disabled (token/chat_id not set)"
         print(f"📱 TelegramNotifier {status}")
 
     # ── Core send ──────────────────────────────────────────────────────────
 
-    def _send(self, text: str, parse_mode: str = "HTML") -> bool:
+    def _send_sync(self, text: str, parse_mode: str = "HTML") -> bool:
+        """Blocking HTTP send — used internally and for send_test_message."""
         if not self.enabled:
             return False
         try:
@@ -51,6 +54,15 @@ class TelegramNotifier:
             return r.status_code == 200
         except Exception:
             return False
+
+    def _send(self, text: str, parse_mode: str = "HTML") -> bool:
+        """Fire-and-forget: launches a daemon thread, returns True immediately."""
+        if not self.enabled:
+            return False
+        threading.Thread(
+            target=self._send_sync, args=(text, parse_mode), daemon=True
+        ).start()
+        return True
 
     # ── Notification types ─────────────────────────────────────────────────
 
@@ -135,8 +147,9 @@ class TelegramNotifier:
         return self._send(text)
 
     def send_test_message(self) -> bool:
+        """Blocking send so the UI gets immediate success/failure feedback."""
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return self._send(
+        return self._send_sync(
             f"✅ <b>Thesis Industrial AI V2</b>\n"
             f"Telegram notifications connected.\n"
             f"<i>{ts}</i>"

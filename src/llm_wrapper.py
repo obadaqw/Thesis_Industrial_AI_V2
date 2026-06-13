@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+from config import get_secret
 
 load_dotenv()
 
@@ -9,7 +10,7 @@ class LLMWrapper:
     def __init__(self):
         print("🤖 Initializing LLM Wrapper (Groq Adapter)...")
 
-        self.api_key = os.environ.get("GROQ_API_KEY", "")
+        self.api_key = get_secret("GROQ_API_KEY")
 
         self.client = None
         self.use_real_ai = False
