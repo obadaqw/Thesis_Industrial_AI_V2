@@ -25,14 +25,14 @@ ROLES = {
         "color":       "#00FFCC",
         "description": "ML engineer — analyses models and XAI explanations",
         "pages":       {"Model Forge", "XAI Lab", "RCA Investigator",
-                        "Optimization Sandbox", "Drift Monitor"},
+                        "Optimization Sandbox", "Drift Monitor", "Cycle History"},
         "can_train":   True,
     },
     "📋 Quality Manager": {
         "color":       "#FFA500",
         "description": "QA — oversees compliance and shift reporting",
         "pages":       {"ISO 9001 Dashboard", "Smart Reports",
-                        "RCA Investigator", "Drift Monitor"},
+                        "RCA Investigator", "Drift Monitor", "Cycle History"},
         "can_train":   False,
     },
 }
