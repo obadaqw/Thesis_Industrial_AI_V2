@@ -82,12 +82,11 @@ with tab1:
             df["rca_tier"]
             .map(TIER_LABELS)
             .value_counts()
-            .reset_index()
-            .rename(columns={"index": "Tier", "rca_tier": "Count",
-                             "count": "Count"})
+            .rename_axis("Tier")
+            .reset_index(name="Count")
         )
         fig_tier = px.pie(
-            tier_df, names="rca_tier", values="Count",
+            tier_df, names="Tier", values="Count",
             hole=0.45,
             color_discrete_sequence=["#00CC88", "#00BFFF", "#FFA500", "#FF4B4B"]
         )
