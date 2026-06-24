@@ -1,0 +1,23 @@
+{
+  "total_non_conforming": 147,
+  "tier_counts": {
+    "tier1_resolved": 144,
+    "tier2_resolved": 0,
+    "tier3_escalated": 0,
+    "errors": 0
+  },
+  "resolution_rate": 0.9796,
+  "tier1_pct": 0.9796,
+  "tier2_pct": 0.0,
+  "tier3_pct": 0.0,
+  "validator_confirmed": 16,
+  "validator_unconfirmed": 128,
+  "validator_rate": 0.1111,
+  "top_adjusted_features": {
+    "Melt temperature": 59,
+    "APVs - Specific injection pressure peak value": 57,
+    "SKx - Closing force": 25,
+    "SKs - Clamping force peak value": 1,
+    "Ms - Torque peak value current cycle": 1
+  }
+}

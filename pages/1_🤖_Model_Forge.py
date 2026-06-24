@@ -53,14 +53,16 @@ with st.sidebar:
     st.header("⚙️ Configuration")
     model_choice = st.selectbox(
         "Select Architecture",
-        ["XGB", "RF", "MLP", "SVM", "KNN", "GB"],
+        ["RF", "XGB", "MLP", "SVM", "KNN", "GB", "DT"],
         index=0,
-        help="XGBoost (XGB) is currently the Thesis Champion."
+        help="RF (Random Forest) is the thesis-selected champion — "
+             "highest accuracy and Waste recall, TreeSHAP compatible."
     )
 
     st.info("""
     **Model Guide:**
-    * **XGB/RF:** Best for Tabular Data (High Accuracy).
+    * **RF:** 🏆 Thesis Champion — highest accuracy and Waste recall, TreeSHAP compatible.
+    * **XGB:** Strong alternative for Tabular Data (High Accuracy).
     * **MLP:** Neural Network (Good for complex patterns).
     * **SVM:** Good for small datasets.
     """)

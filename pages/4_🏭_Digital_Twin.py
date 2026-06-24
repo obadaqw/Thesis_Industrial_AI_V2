@@ -24,6 +24,8 @@ render_access_gate("Digital Twin")
 st.title("🏭 Digital Twin Simulation")
 st.markdown("### Live OEE & Production State Monitoring")
 
+CLASS_NAMES = {0: "Waste", 1: "Acceptable", 2: "Target", 3: "Inefficient"}
+
 
 # --- INITIALIZE ---
 @st.cache_resource
@@ -98,11 +100,11 @@ if is_running:
             m3.metric("Performance", f"{state['performance']:.1%}")
             m4.metric("Quality", f"{state['quality']:.1%}")
 
-            # Status Bar (model class 2 = original quality 3 = Target)
+            # Status Bar — class-name based; no 1-based "Original Quality" arithmetic
             if pred == 2:
-                st.success(f"Cycle #{i}: PRODUCING TARGET PARTS (Original Quality 3)")
+                st.success(f"Cycle #{i}: ✅ CONFORMING — {CLASS_NAMES[pred]}")
             else:
-                st.error(f"Cycle #{i}: DEFECT PRODUCED (Model Class {pred} → Original Quality {pred+1})")
+                st.error(f"Cycle #{i}: ❌ NON-CONFORMING — {CLASS_NAMES[pred]}")
 
             # Production Counters
             st.markdown("---")
