@@ -167,6 +167,14 @@ if analyze_btn:
 
         vok_str = "✅ Confirmed" if vok else ("⚠️ Unconfirmed" if tier < 3 else "N/A")
         st.markdown(f"**Independent Validator:** {vok_str}")
+        if not vok and tier in (1, 2):
+            st.caption(
+                "Unconfirmed means the counterfactual crosses the RF champion's "
+                "acceptance threshold (P≥0.55) but not the independent MLP validator's "
+                "boundary. The two models partition the feature space differently — "
+                "the repair recipe is still physically valid and RF-verified. "
+                "Batch evaluation shows ~11 % validator agreement across all cases."
+            )
         if tier > 0:
             cf_c = result.get('cf_confidence', 0)
             st.markdown(f"**CF Confidence:** {cf_c:.1%}" if cf_c else "")

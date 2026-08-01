@@ -41,8 +41,8 @@ except Exception as e:
 
 CLASS_NAMES = {0: "Waste", 1: "Acceptable", 2: "Target ✅", 3: "Inefficient"}
 
-defect_indices = np.where(y_val != 2)[0]
-golden_indices = np.where(y_val == 2)[0]
+defect_indices = np.where(~np.isin(y_val, [1, 2]))[0]   # non-conforming: Waste=0 or Inefficient=3
+golden_indices = np.where(y_val == 2)[0]               # Target class only as reference
 
 if len(defect_indices) == 0 or len(golden_indices) == 0:
     st.error("Not enough labelled samples in validation set.")
@@ -52,14 +52,14 @@ if len(defect_indices) == 0 or len(golden_indices) == 0:
 with st.sidebar:
     st.header("🔬 Sample Selection")
     defect_id = st.selectbox(
-        "Defective Sample (cycle index)",
+        "Non-Conforming Sample (cycle index)",
         defect_indices,
-        format_func=lambda i: f"Cycle {i} — Quality {y_val[i]+1}: {CLASS_NAMES[y_val[i]]}"
+        format_func=lambda i: f"Cycle {i} — Class {y_val[i]}: {CLASS_NAMES[y_val[i]]}"
     )
     golden_id = st.selectbox(
         "Golden Reference Sample (cycle index)",
         golden_indices,
-        format_func=lambda i: f"Cycle {i} — Quality 3: Target"
+        format_func=lambda i: f"Cycle {i} — Class 2: Target ✅"
     )
     run_btn = st.button("🔍 Run Differential Diagnosis", type="primary", use_container_width=True)
 
@@ -88,8 +88,8 @@ if run_btn:
 
     # KPI row
     c1, c2, c3 = st.columns(3)
-    c1.error(f"🔴 Defect — Quality {defect_pred+1}: {CLASS_NAMES[defect_pred]}  \n**Confidence:** {defect_conf:.1%}")
-    c2.success(f"🟢 Golden — Quality {golden_pred+1}: {CLASS_NAMES[golden_pred]}  \n**Confidence:** {golden_conf:.1%}")
+    c1.error(f"🔴 Non-Conforming — Class {defect_pred}: {CLASS_NAMES[defect_pred]}  \n**Confidence:** {defect_conf:.1%}")
+    c2.success(f"🟢 Golden — Class {golden_pred}: {CLASS_NAMES[golden_pred]}  \n**Confidence:** {golden_conf:.1%}")
     top_cause = report.iloc[0]['Feature']
     top_delta = report.iloc[0]['Delta_Contribution']
     c3.warning(f"🏆 Top Root Cause  \n**{top_cause}**  \nΔ = {top_delta:.4f}")

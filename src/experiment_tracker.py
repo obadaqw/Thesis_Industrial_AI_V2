@@ -53,8 +53,8 @@ def load_df() -> pd.DataFrame:
 
 
 def get_champion() -> dict:
-    """Return the run with the highest validation accuracy."""
+    """Return the run with the highest 5-fold CV mean accuracy (thesis selection criterion)."""
     runs = _load_raw()
     if not runs:
         return {}
-    return max(runs, key=lambda r: r["val_acc"])
+    return max(runs, key=lambda r: r["cv_mean"])
