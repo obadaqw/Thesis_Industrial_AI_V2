@@ -57,8 +57,45 @@ except Exception as e:
     st.error(f"Load failed: {e}")
     st.stop()
 
+st.info(
+    "**Baseline note:** The validation set was produced by stratified random split "
+    "from the same 1,451-cycle dataset as the training set. Feature distributions are "
+    "therefore expected to be nearly identical, and PSI values close to zero are the "
+    "anticipated baseline — not a sign of a deficient detector. The synthetic drift "
+    "injection panel in the sidebar demonstrates detector sensitivity to controlled "
+    "distribution shifts of k × σ magnitude."
+)
+
+# ── Sidebar — Synthetic drift injection ──────────────────────────────────────
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("🧪 Synthetic Drift Injection")
+    st.caption(
+        "Shift selected features by k × σ to validate PSI detector sensitivity. "
+        "This does not affect stored data — demonstration only."
+    )
+    drift_feats = st.multiselect(
+        "Features to shift", feature_names, default=[]
+    )
+    k_sigma = st.slider("Shift magnitude k (× σ)", min_value=0.0, max_value=3.0,
+                        value=0.0, step=0.5)
+    inject_btn = st.button("Inject & Recompute PSI", use_container_width=True)
+
+# Apply synthetic drift if requested
+if inject_btn and drift_feats and k_sigma > 0:
+    X_current = X_val.copy()
+    for feat in drift_feats:
+        sigma = float(X_train[feat].std())
+        X_current[feat] = (X_current[feat] + k_sigma * sigma).clip(-1.0, 1.0)
+    st.warning(
+        f"Synthetic drift applied: {len(drift_feats)} feature(s) shifted by "
+        f"{k_sigma:.1f} × σ. PSI results below reflect the injected distribution."
+    )
+else:
+    X_current = X_val
+
 # ── Compute PSI ───────────────────────────────────────────────────────────────
-psi_df = detector.compute_all_psi(X_val)
+psi_df = detector.compute_all_psi(X_current)
 overall = detector.overall_status(psi_df)
 n_critical = int((psi_df["PSI"] >= PSI_CRITICAL).sum())
 n_moderate = int(((psi_df["PSI"] >= PSI_MODERATE) & (psi_df["PSI"] < PSI_CRITICAL)).sum())
@@ -144,7 +181,7 @@ with tab2:
 
     feat = st.selectbox("Select Feature", feature_names, key="dist_feat")
     train_vals = X_train[feat].values
-    curr_vals  = X_val[feat].values
+    curr_vals  = X_current[feat].values
 
     x_range = np.linspace(
         min(train_vals.min(), curr_vals.min()),
@@ -154,7 +191,7 @@ with tab2:
     kde_train = gaussian_kde(train_vals)(x_range)
     kde_curr  = gaussian_kde(curr_vals)(x_range)
 
-    psi_val = detector.feature_psi(feat, X_val)
+    psi_val = detector.feature_psi(feat, X_current)
 
     fig_dist = go.Figure()
     fig_dist.add_trace(go.Scatter(

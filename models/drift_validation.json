@@ -1,0 +1,418 @@
+[
+  {
+    "feature": "Melt temperature",
+    "k_sigma": 0,
+    "sigma": 0.170499,
+    "shift": 0.0,
+    "psi": 0.0259,
+    "status": "stable"
+  },
+  {
+    "feature": "Melt temperature",
+    "k_sigma": 1,
+    "sigma": 0.170499,
+    "shift": 0.170499,
+    "psi": 8.2883,
+    "status": "critical"
+  },
+  {
+    "feature": "Melt temperature",
+    "k_sigma": 2,
+    "sigma": 0.170499,
+    "shift": 0.340998,
+    "psi": 8.2883,
+    "status": "critical"
+  },
+  {
+    "feature": "Melt temperature",
+    "k_sigma": 3,
+    "sigma": 0.170499,
+    "shift": 0.511497,
+    "psi": 8.2883,
+    "status": "critical"
+  },
+  {
+    "feature": "Mold temperature",
+    "k_sigma": 0,
+    "sigma": 0.255916,
+    "shift": 0.0,
+    "psi": 0.0406,
+    "status": "stable"
+  },
+  {
+    "feature": "Mold temperature",
+    "k_sigma": 1,
+    "sigma": 0.255916,
+    "shift": 0.255916,
+    "psi": 2.1087,
+    "status": "critical"
+  },
+  {
+    "feature": "Mold temperature",
+    "k_sigma": 2,
+    "sigma": 0.255916,
+    "shift": 0.511831,
+    "psi": 5.1307,
+    "status": "critical"
+  },
+  {
+    "feature": "Mold temperature",
+    "k_sigma": 3,
+    "sigma": 0.255916,
+    "shift": 0.767747,
+    "psi": 6.8035,
+    "status": "critical"
+  },
+  {
+    "feature": "time_to_fill",
+    "k_sigma": 0,
+    "sigma": 0.647763,
+    "shift": 0.0,
+    "psi": 0.0195,
+    "status": "stable"
+  },
+  {
+    "feature": "time_to_fill",
+    "k_sigma": 1,
+    "sigma": 0.647763,
+    "shift": 0.647763,
+    "psi": 7.6032,
+    "status": "critical"
+  },
+  {
+    "feature": "time_to_fill",
+    "k_sigma": 2,
+    "sigma": 0.647763,
+    "shift": 1.295526,
+    "psi": 7.5715,
+    "status": "critical"
+  },
+  {
+    "feature": "time_to_fill",
+    "k_sigma": 3,
+    "sigma": 0.647763,
+    "shift": 1.943289,
+    "psi": 7.614,
+    "status": "critical"
+  },
+  {
+    "feature": "ZDx - Plasticizing time",
+    "k_sigma": 0,
+    "sigma": 0.23526,
+    "shift": 0.0,
+    "psi": 0.0512,
+    "status": "stable"
+  },
+  {
+    "feature": "ZDx - Plasticizing time",
+    "k_sigma": 1,
+    "sigma": 0.23526,
+    "shift": 0.23526,
+    "psi": 2.9142,
+    "status": "critical"
+  },
+  {
+    "feature": "ZDx - Plasticizing time",
+    "k_sigma": 2,
+    "sigma": 0.23526,
+    "shift": 0.470521,
+    "psi": 7.6622,
+    "status": "critical"
+  },
+  {
+    "feature": "ZDx - Plasticizing time",
+    "k_sigma": 3,
+    "sigma": 0.23526,
+    "shift": 0.705781,
+    "psi": 8.2924,
+    "status": "critical"
+  },
+  {
+    "feature": "ZUx - Cycle time",
+    "k_sigma": 0,
+    "sigma": 0.859163,
+    "shift": 0.0,
+    "psi": 0.0362,
+    "status": "stable"
+  },
+  {
+    "feature": "ZUx - Cycle time",
+    "k_sigma": 1,
+    "sigma": 0.859163,
+    "shift": 0.859163,
+    "psi": 6.0487,
+    "status": "critical"
+  },
+  {
+    "feature": "ZUx - Cycle time",
+    "k_sigma": 2,
+    "sigma": 0.859163,
+    "shift": 1.718325,
+    "psi": 5.7814,
+    "status": "critical"
+  },
+  {
+    "feature": "ZUx - Cycle time",
+    "k_sigma": 3,
+    "sigma": 0.859163,
+    "shift": 2.577488,
+    "psi": 8.1222,
+    "status": "critical"
+  },
+  {
+    "feature": "SKx - Closing force",
+    "k_sigma": 0,
+    "sigma": 0.429145,
+    "shift": 0.0,
+    "psi": 0.0573,
+    "status": "stable"
+  },
+  {
+    "feature": "SKx - Closing force",
+    "k_sigma": 1,
+    "sigma": 0.429145,
+    "shift": 0.429145,
+    "psi": 1.5497,
+    "status": "critical"
+  },
+  {
+    "feature": "SKx - Closing force",
+    "k_sigma": 2,
+    "sigma": 0.429145,
+    "shift": 0.85829,
+    "psi": 4.2614,
+    "status": "critical"
+  },
+  {
+    "feature": "SKx - Closing force",
+    "k_sigma": 3,
+    "sigma": 0.429145,
+    "shift": 1.287435,
+    "psi": 7.3632,
+    "status": "critical"
+  },
+  {
+    "feature": "SKs - Clamping force peak value",
+    "k_sigma": 0,
+    "sigma": 0.420008,
+    "shift": 0.0,
+    "psi": 0.0133,
+    "status": "stable"
+  },
+  {
+    "feature": "SKs - Clamping force peak value",
+    "k_sigma": 1,
+    "sigma": 0.420008,
+    "shift": 0.420008,
+    "psi": 2.9266,
+    "status": "critical"
+  },
+  {
+    "feature": "SKs - Clamping force peak value",
+    "k_sigma": 2,
+    "sigma": 0.420008,
+    "shift": 0.840016,
+    "psi": 3.9492,
+    "status": "critical"
+  },
+  {
+    "feature": "SKs - Clamping force peak value",
+    "k_sigma": 3,
+    "sigma": 0.420008,
+    "shift": 1.260024,
+    "psi": 6.6504,
+    "status": "critical"
+  },
+  {
+    "feature": "Ms - Torque peak value current cycle",
+    "k_sigma": 0,
+    "sigma": 0.274465,
+    "shift": 0.0,
+    "psi": 0.067,
+    "status": "stable"
+  },
+  {
+    "feature": "Ms - Torque peak value current cycle",
+    "k_sigma": 1,
+    "sigma": 0.274465,
+    "shift": 0.274465,
+    "psi": 1.3184,
+    "status": "critical"
+  },
+  {
+    "feature": "Ms - Torque peak value current cycle",
+    "k_sigma": 2,
+    "sigma": 0.274465,
+    "shift": 0.548931,
+    "psi": 3.5151,
+    "status": "critical"
+  },
+  {
+    "feature": "Ms - Torque peak value current cycle",
+    "k_sigma": 3,
+    "sigma": 0.274465,
+    "shift": 0.823396,
+    "psi": 6.7895,
+    "status": "critical"
+  },
+  {
+    "feature": "Mm - Torque mean value current cycle",
+    "k_sigma": 0,
+    "sigma": 0.310187,
+    "shift": 0.0,
+    "psi": 0.0229,
+    "status": "stable"
+  },
+  {
+    "feature": "Mm - Torque mean value current cycle",
+    "k_sigma": 1,
+    "sigma": 0.310187,
+    "shift": 0.310187,
+    "psi": 4.0481,
+    "status": "critical"
+  },
+  {
+    "feature": "Mm - Torque mean value current cycle",
+    "k_sigma": 2,
+    "sigma": 0.310187,
+    "shift": 0.620373,
+    "psi": 5.1212,
+    "status": "critical"
+  },
+  {
+    "feature": "Mm - Torque mean value current cycle",
+    "k_sigma": 3,
+    "sigma": 0.310187,
+    "shift": 0.93056,
+    "psi": 5.2553,
+    "status": "critical"
+  },
+  {
+    "feature": "APSs - Specific back pressure peak value",
+    "k_sigma": 0,
+    "sigma": 0.288251,
+    "shift": 0.0,
+    "psi": 0.0727,
+    "status": "stable"
+  },
+  {
+    "feature": "APSs - Specific back pressure peak value",
+    "k_sigma": 1,
+    "sigma": 0.288251,
+    "shift": 0.288251,
+    "psi": 1.9208,
+    "status": "critical"
+  },
+  {
+    "feature": "APSs - Specific back pressure peak value",
+    "k_sigma": 2,
+    "sigma": 0.288251,
+    "shift": 0.576502,
+    "psi": 5.4031,
+    "status": "critical"
+  },
+  {
+    "feature": "APSs - Specific back pressure peak value",
+    "k_sigma": 3,
+    "sigma": 0.288251,
+    "shift": 0.864753,
+    "psi": 8.2949,
+    "status": "critical"
+  },
+  {
+    "feature": "APVs - Specific injection pressure peak value",
+    "k_sigma": 0,
+    "sigma": 0.359152,
+    "shift": 0.0,
+    "psi": 0.0257,
+    "status": "stable"
+  },
+  {
+    "feature": "APVs - Specific injection pressure peak value",
+    "k_sigma": 1,
+    "sigma": 0.359152,
+    "shift": 0.359152,
+    "psi": 1.944,
+    "status": "critical"
+  },
+  {
+    "feature": "APVs - Specific injection pressure peak value",
+    "k_sigma": 2,
+    "sigma": 0.359152,
+    "shift": 0.718305,
+    "psi": 4.2252,
+    "status": "critical"
+  },
+  {
+    "feature": "APVs - Specific injection pressure peak value",
+    "k_sigma": 3,
+    "sigma": 0.359152,
+    "shift": 1.077457,
+    "psi": 4.8287,
+    "status": "critical"
+  },
+  {
+    "feature": "CPn - Screw position at the end of hold pressure",
+    "k_sigma": 0,
+    "sigma": 0.319785,
+    "shift": 0.0,
+    "psi": 0.0321,
+    "status": "stable"
+  },
+  {
+    "feature": "CPn - Screw position at the end of hold pressure",
+    "k_sigma": 1,
+    "sigma": 0.319785,
+    "shift": 0.319785,
+    "psi": 1.479,
+    "status": "critical"
+  },
+  {
+    "feature": "CPn - Screw position at the end of hold pressure",
+    "k_sigma": 2,
+    "sigma": 0.319785,
+    "shift": 0.63957,
+    "psi": 3.7901,
+    "status": "critical"
+  },
+  {
+    "feature": "CPn - Screw position at the end of hold pressure",
+    "k_sigma": 3,
+    "sigma": 0.319785,
+    "shift": 0.959355,
+    "psi": 4.8616,
+    "status": "critical"
+  },
+  {
+    "feature": "SVo - Shot volume",
+    "k_sigma": 0,
+    "sigma": 0.309007,
+    "shift": 0.0,
+    "psi": 0.0183,
+    "status": "stable"
+  },
+  {
+    "feature": "SVo - Shot volume",
+    "k_sigma": 1,
+    "sigma": 0.309007,
+    "shift": 0.309007,
+    "psi": 1.642,
+    "status": "critical"
+  },
+  {
+    "feature": "SVo - Shot volume",
+    "k_sigma": 2,
+    "sigma": 0.309007,
+    "shift": 0.618015,
+    "psi": 4.894,
+    "status": "critical"
+  },
+  {
+    "feature": "SVo - Shot volume",
+    "k_sigma": 3,
+    "sigma": 0.309007,
+    "shift": 0.927022,
+    "psi": 7.1315,
+    "status": "critical"
+  }
+]
