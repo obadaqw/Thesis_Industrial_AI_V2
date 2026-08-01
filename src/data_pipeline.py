@@ -15,7 +15,7 @@ from sklearn.preprocessing import MinMaxScaler
 # CONFIGURATION
 # ==========================================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DATA_PATH = os.path.join(BASE_DIR, "raw_data.csv")
+RAW_DATA_PATH = os.path.join(BASE_DIR, "data", "raw", "raw_data.csv")
 PROCESSED_DIR = os.path.join(BASE_DIR, "data", "processed")
 MODELS_DIR = os.path.join(BASE_DIR, "models", "checkpoints")
 

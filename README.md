@@ -153,7 +153,8 @@ Thesis_Industrial_AI_V2/
 │   └── checkpoints/          # Trained models + scaler (gitignored)
 ├── tests/                    # pytest suite (unit + integration)
 ├── assets/                   # CSS theme
-├── constraints.yaml          # Physical sensor bounds (USL/LSL)
+├── config/
+│   └── constraints.yaml      # Physical sensor bounds (USL/LSL)
 ├── Dockerfile
 ├── docker-compose.yml
 └── .github/workflows/ci.yml  # GitHub Actions CI
