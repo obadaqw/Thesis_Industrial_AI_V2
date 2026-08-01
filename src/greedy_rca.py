@@ -1,18 +1,24 @@
 """
-greedy_rca.py — Greedy counterfactual baseline for comparison with 3-tier RCA.
+greedy_rca.py — Centroid-ablation baseline for comparison with 3-tier RCA.
 
-The greedy approach adjusts all 13 features simultaneously toward the centroid of
-all conforming training samples, without SHAP feature selection or LIME direction
-guidance. This serves as the ablation baseline in the thesis comparison study:
+This module implements a single-tier counterfactual search that moves all features
+simultaneously toward the centroid of conforming training samples, without SHAP
+feature selection or LIME direction guidance. It serves as a centroid-ablation
+baseline in the thesis comparison study:
 
-  3-tier RCA     → SHAP selects (top-5/7) · LIME directs · NN-anchored fallback
-  Greedy (this)  → all features · centroid direction · single tier
+  3-tier RCA     → SHAP selects top-k features · LIME gives adjustment direction
+                   · NN-anchored centroid fallback (Tier 2)
+  Ablation (this)→ all features adjusted toward global conforming centroid
+                   · no feature selection · no local explanation
 
-Same acceptance criterion (P(Acc)+P(Target) ≥ confidence_threshold) and physical
-bounds (clip to scaled space [-1, 1]) are applied so comparisons are fair.
+The acceptance criterion (P(Acceptable) + P(Target) >= confidence_threshold) and
+physical bounds (clip to scaled space [-1, 1]) are identical to those of the
+3-tier engine. Matching acceptance criteria is a design requirement: without it,
+differing resolution rates would reflect threshold differences rather than the
+effect of feature selection and directional guidance.
 
 Output schema matches CounterfactualRCA.analyze() exactly so compare_rca_methods.py
-can treat both interchangeably.
+can treat both methods interchangeably.
 """
 
 import numpy as np

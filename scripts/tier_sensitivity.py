@@ -2,22 +2,21 @@
 tier_sensitivity.py — Sweep confidence_threshold and max_iter to characterise
 how sensitive the 3-tier cascade resolution rate is to these hyper-parameters.
 
-Threshold sweep: {0.55, 0.65, 0.75, 0.85, 0.95}
-MAX_ITER sweep:  {10, 25, 50, 150}
+Usage:
+    python scripts/tier_sensitivity.py --split val   # default
+    python scripts/tier_sensitivity.py --split test
 
-For efficiency the RCA engine is instantiated once per configuration; the XAI
-engine (SHAP + LIME) and MLP validator are reused across configurations via the
-shared CounterfactualRCA instance (re-instantiated only when threshold changes,
-since that affects _is_accepted; max_iter is changed in-place).
+Threshold sweep : {0.55, 0.65, 0.75, 0.85, 0.95} with max_iter fixed at 150.
+MAX_ITER sweep  : {10, 25, 50, 150} with threshold fixed at 0.55.
 
-Results saved to:
-  models/tier_sensitivity.json
-  models/tier_sensitivity.csv
+Output files (never overwrite existing):
+  models/tier_sensitivity_{split}.json
+  models/tier_sensitivity_{split}.csv
 
-Run time: ~20–60 min depending on hardware (9 configs × ~147 samples × LIME).
+Run time: ~20–120 min depending on hardware and split size.
 """
 
-import os, sys, json, time
+import argparse, os, sys, json, time
 import numpy as np
 import pandas as pd
 import joblib
@@ -35,7 +34,6 @@ MAX_ITER_SWEEP  = [10, 25, 50, 150]
 
 
 def run_config(rca, X_scaled, y, scaler, feature_names):
-    """Evaluate one RCA configuration. Returns (total, resolved, t1, t2, t3, val_rate)."""
     nc_idx = np.where(~np.isin(y, list(TARGET_CLASSES)))[0]
     t1 = t2 = t3 = err = validated = 0
 
@@ -74,74 +72,71 @@ def run_config(rca, X_scaled, y, scaler, feature_names):
     }
 
 
-def main():
+def main(split: str = "val") -> None:
+    out_json = os.path.join(BASE, "models", f"tier_sensitivity_{split}.json")
+    out_csv  = os.path.join(BASE, "models", f"tier_sensitivity_{split}.csv")
+
+    if split == "val":
+        x_file, y_file = "X_val.csv", "y_val.csv"
+    elif split == "test":
+        x_file, y_file = "X_test.csv", "y_test.csv"
+    else:
+        raise ValueError(f"--split must be 'val' or 'test', got '{split}'")
+
+    print(f"=== Tier sensitivity sweep — split: {split} ===")
     print("Loading data...")
     scaler        = joblib.load(os.path.join(CKPT, "scaler.pkl"))
     feature_names = joblib.load(os.path.join(CKPT, "feature_names.pkl"))
-    X_scaled      = pd.read_csv(os.path.join(PROC, "X_val.csv"))
-    y_raw         = pd.read_csv(os.path.join(PROC, "y_val.csv")).values.ravel()
+    X_scaled      = pd.read_csv(os.path.join(PROC, x_file))
+    y_raw         = pd.read_csv(os.path.join(PROC, y_file)).values.ravel()
     y             = y_raw - 1 if y_raw.min() > 0 else y_raw
 
-    records = []
-    t_global = time.time()
+    records   = []
+    t_global  = time.time()
 
-    # ── Part A: threshold sweep (max_iter fixed at default 150) ──────────────
-    print("\n=== Part A: confidence_threshold sweep (max_iter=150) ===")
+    print(f"\n=== Part A: confidence_threshold sweep (max_iter=150, {split}) ===")
     for thresh in THRESHOLD_SWEEP:
         print(f"\n  threshold={thresh:.2f} ...", flush=True)
         rca = CounterfactualRCA(confidence_threshold=thresh, max_iter=150)
         t0  = time.time()
         stats = run_config(rca, X_scaled, y, scaler, feature_names)
         elapsed = time.time() - t0
-        row = {
-            "sweep":                "threshold",
-            "confidence_threshold": thresh,
-            "max_iter":             150,
-            **stats,
-            "elapsed_s": round(elapsed, 1),
-        }
-        records.append(row)
+        records.append({
+            "split": split, "sweep": "threshold",
+            "confidence_threshold": thresh, "max_iter": 150,
+            **stats, "elapsed_s": round(elapsed, 1),
+        })
         print(f"    resolution={stats['resolution_rate']:.1%}  "
-              f"validator={stats['validator_rate']:.1%}  "
-              f"({elapsed:.0f}s)")
+              f"validator={stats['validator_rate']:.1%}  ({elapsed:.0f}s)")
 
-    # ── Part B: max_iter sweep (threshold fixed at default 0.55) ─────────────
-    print("\n=== Part B: max_iter sweep (threshold=0.55) ===")
+    print(f"\n=== Part B: max_iter sweep (threshold=0.55, {split}) ===")
     for mi in MAX_ITER_SWEEP:
         if mi == 150:
-            # Already have this row from Part A (threshold=0.55)
-            continue
+            continue  # already captured in Part A
         print(f"\n  max_iter={mi} ...", flush=True)
         rca = CounterfactualRCA(confidence_threshold=0.55, max_iter=mi)
         t0  = time.time()
         stats = run_config(rca, X_scaled, y, scaler, feature_names)
         elapsed = time.time() - t0
-        row = {
-            "sweep":                "max_iter",
-            "confidence_threshold": 0.55,
-            "max_iter":             mi,
-            **stats,
-            "elapsed_s": round(elapsed, 1),
-        }
-        records.append(row)
+        records.append({
+            "split": split, "sweep": "max_iter",
+            "confidence_threshold": 0.55, "max_iter": mi,
+            **stats, "elapsed_s": round(elapsed, 1),
+        })
         print(f"    resolution={stats['resolution_rate']:.1%}  "
-              f"validator={stats['validator_rate']:.1%}  "
-              f"({elapsed:.0f}s)")
+              f"validator={stats['validator_rate']:.1%}  ({elapsed:.0f}s)")
 
     total_elapsed = time.time() - t_global
 
-    # ── Save ─────────────────────────────────────────────────────────────────
-    out_json = os.path.join(BASE, "models", "tier_sensitivity.json")
-    out_csv  = os.path.join(BASE, "models", "tier_sensitivity.csv")
-
     with open(out_json, "w") as f:
-        json.dump({"records": records, "total_elapsed_s": round(total_elapsed, 1)}, f, indent=2)
+        json.dump({"split": split, "records": records,
+                   "total_elapsed_s": round(total_elapsed, 1)}, f, indent=2)
 
     df = pd.DataFrame(records)
     df.to_csv(out_csv, index=False)
 
     print("\n" + "=" * 60)
-    print("  SENSITIVITY SWEEP — SUMMARY")
+    print(f"  SENSITIVITY SWEEP — {split.upper()} SPLIT")
     print("=" * 60)
     print(df[["sweep", "confidence_threshold", "max_iter",
               "resolution_rate", "validator_rate", "tier3"]].to_string(index=False))
@@ -152,4 +147,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Tier cascade sensitivity sweep")
+    parser.add_argument(
+        "--split", choices=["val", "test"], default="val",
+        help="Data split to evaluate (default: val)"
+    )
+    args = parser.parse_args()
+    main(args.split)

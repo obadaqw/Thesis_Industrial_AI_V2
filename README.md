@@ -39,14 +39,14 @@ A production-grade Streamlit application that applies Explainable AI (XAI) to in
 - **Champion:** Random Forest — `n_estimators=151, max_depth=79, criterion='entropy'`
 - **Classes:** 0=Waste · 1=Acceptable · 2=Target · 3=Inefficient
 - **Scaler:** MinMaxScaler fitted on training data only (range −1 to 1)
-- **Validation accuracy:** ≥ 90%
+- **Held-out test accuracy:** 93.81% (n=291, from `models/test_evaluation.json`)
 
 #### Hyperparameter Provenance
-The RF champion hyperparameters are adopted verbatim from **Polenta et al. (2022),
-Table 5** and are not tuned in this work. They are retained to reproduce the
-reference benchmark; the thesis contribution is the XAI and RCA layer built on
-top of it. See [`docs/hyperparameter_provenance.md`](docs/hyperparameter_provenance.md)
-for the full mapping table.
+The RF champion hyperparameters are adapted from **Polenta et al. (2022)**
+(DOI: 10.3390/info13060272), Table 5, with documented deviations required by the
+scikit-learn implementation and TreeSHAP compatibility. They are not tuned in this
+work. See [`docs/hyperparameter_provenance.md`](docs/hyperparameter_provenance.md)
+for the full mapping table and deviation justifications.
 
 ### 3-Tier Counterfactual RCA
 | Tier | Method | Threshold |

@@ -1,0 +1,9 @@
+{
+  "n_estimators": 151,
+  "max_depth_configured": 79,
+  "max_depth_realised": 20,
+  "mean_depth_realised": 12.04,
+  "median_depth_realised": 12.0,
+  "min_depth_realised": 9,
+  "binding": false
+}

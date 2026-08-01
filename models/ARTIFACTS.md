@@ -43,10 +43,14 @@ Located in `models/checkpoints/` (gitignored):
 
 | File | Description | Script |
 |------|-------------|--------|
-| `tier_sensitivity.json` | Resolution/validator rates vs threshold {0.55..0.95} and max_iter {10..150} | `scripts/tier_sensitivity.py` |
-| `tier_sensitivity.csv` | Same, CSV format | `scripts/tier_sensitivity.py` |
-| `rca_comparison.json` | 3-tier RCA vs greedy baseline: resolution, proximity, sparsity | `scripts/compare_rca_methods.py` |
-| `rca_comparison.csv` | Per-sample comparison detail | `scripts/compare_rca_methods.py` |
+| `tier_sensitivity_val.json` | Resolution/validator rates vs threshold {0.55..0.95} and max_iter {10..150} — val split | `scripts/tier_sensitivity.py --split val` |
+| `tier_sensitivity_val.csv` | Same, CSV format | `scripts/tier_sensitivity.py --split val` |
+| `tier_sensitivity_test.json` | Same sweep on held-out test split | `scripts/tier_sensitivity.py --split test` |
+| `tier_sensitivity_test.csv` | Same, CSV format | `scripts/tier_sensitivity.py --split test` |
+| `rca_comparison_val.json` | 3-tier RCA vs centroid-ablation baseline — val split (with McNemar's test) | `scripts/compare_rca_methods.py --split val` |
+| `rca_comparison_val.csv` | Per-sample comparison detail — val split | `scripts/compare_rca_methods.py --split val` |
+| `rca_comparison_test.json` | Same comparison on held-out test split | `scripts/compare_rca_methods.py --split test` |
+| `rca_comparison_test.csv` | Per-sample comparison detail — test split | `scripts/compare_rca_methods.py --split test` |
 
 ## Drift Validation
 
@@ -61,8 +65,10 @@ Located in `models/checkpoints/` (gitignored):
 |--------|-------|--------|
 | RF CV mean accuracy (5-fold) | 94.71% | `experiments.json` |
 | RF test-set accuracy | 93.81% (n=291) | `test_evaluation.json` |
-| RCA resolution rate (val) | 98.0% | `rca_evaluation.json` |
+| RCA resolution rate (val) | 98.0% | `rca_evaluation_val.json` |
 | RCA resolution rate (test) | 95.2% | `rca_evaluation_test.json` |
-| Validator agreement rate (val) | 11.1% | `rca_evaluation.json` |
+| Validator agreement rate (val) | 11.1% | `rca_evaluation_val.json` |
 | Validator agreement rate (test) | 6.4% | `rca_evaluation_test.json` |
+| 3-tier vs ablation sparsity (val) | 4.9 vs 12.4 features | `rca_comparison_val.json` |
+| McNemar p-value (val split) | 0.625 (not significant) | `rca_comparison_val.json` |
 | PSI trigger magnitude | k = 1σ (all 13 features) | `drift_validation.json` |

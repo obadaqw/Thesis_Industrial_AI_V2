@@ -1,10 +1,15 @@
 """
-Tests for the trained Random Forest model — verifies hyperparameters adopted
+Tests for the trained Random Forest model — verifies hyperparameters adapted
 from Polenta et al. (2022) Table 5, class structure, and performance thresholds.
 
-Hyperparameter source: Polenta et al. (2022), "Machine learning for quality
-prediction in injection moulding", Table 5. These values are NOT tuned in this
-work; they are retained verbatim to reproduce the reference benchmark.
+Hyperparameter source: Polenta, A. et al. (2022). "A Comparison of Machine
+Learning Techniques for the Quality Classification of Molded Products."
+Information, 13(6), 272. DOI: 10.3390/info13060272.
+
+The values are adapted, not adopted verbatim: three hyperparameters (criterion,
+max_depth, ensemble type) deviate from the paper's best configuration due to
+scikit-learn API constraints and TreeSHAP compatibility requirements. The
+deviations are documented in docs/hyperparameter_provenance.md.
 """
 import pytest
 import numpy as np
@@ -13,7 +18,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 @pytest.mark.unit
 class TestRFHyperparameters:
-    """Champion RF must match Polenta et al. (2022) Table 5 specification exactly."""
+    """Champion RF must match the adapted Polenta et al. (2022) Table 5 configuration."""
 
     def test_is_random_forest(self, model):
         assert isinstance(model, RandomForestClassifier)

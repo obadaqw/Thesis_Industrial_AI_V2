@@ -172,8 +172,9 @@ if analyze_btn:
                 "Unconfirmed means the counterfactual crosses the RF champion's "
                 "acceptance threshold (P≥0.55) but not the independent MLP validator's "
                 "boundary. The two models partition the feature space differently — "
-                "the repair recipe is still physically valid and RF-verified. "
-                "Batch evaluation shows ~11 % validator agreement across all cases."
+                "the repair recipe is physically valid and RF-verified. "
+                "Batch evaluation records 11.1% validator agreement on the validation "
+                "split (16/144 cases) and 6.4% on the held-out test split (9/140 cases)."
             )
         if tier > 0:
             cf_c = result.get('cf_confidence', 0)
