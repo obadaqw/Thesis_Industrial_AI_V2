@@ -1,0 +1,148 @@
+sample_idx,true_class,true_label,pred_class,input_conf,tier,status,cf_confidence,validator_ok,n_adjustments,top_feature
+5,3,Inefficient,3,0.0,1,resolved,0.5801,False,5,Melt temperature
+7,3,Inefficient,3,0.0215,1,resolved,0.5884,False,5,Melt temperature
+8,0,Waste,0,0.0674,1,resolved,0.5905,False,5,APVs - Specific injection pressure peak value
+9,3,Inefficient,2,0.9674,0,already_acceptable,0.0,True,0,
+10,3,Inefficient,3,0.0194,1,resolved,0.5546,False,5,Melt temperature
+11,3,Inefficient,3,0.0496,1,resolved,0.6275,False,5,Melt temperature
+13,3,Inefficient,3,0.0257,1,resolved,0.5788,False,5,Melt temperature
+14,0,Waste,0,0.113,1,resolved,0.6219,False,5,APVs - Specific injection pressure peak value
+15,0,Waste,0,0.034,1,resolved,0.6902,False,5,APVs - Specific injection pressure peak value
+17,0,Waste,0,0.0281,1,resolved,0.6152,False,5,APVs - Specific injection pressure peak value
+19,0,Waste,0,0.2563,1,resolved,0.5897,False,5,Melt temperature
+26,3,Inefficient,3,0.0566,1,resolved,0.5768,False,5,Melt temperature
+28,3,Inefficient,3,0.004,1,resolved,0.5523,False,5,Melt temperature
+31,0,Waste,0,0.0502,1,resolved,0.6476,False,5,APVs - Specific injection pressure peak value
+32,3,Inefficient,3,0.0265,1,resolved,0.5731,False,5,Melt temperature
+34,3,Inefficient,3,0.0839,1,resolved,0.5658,False,5,Melt temperature
+37,0,Waste,0,0.0143,1,resolved,0.6504,False,5,APVs - Specific injection pressure peak value
+39,0,Waste,0,0.1567,1,resolved,0.7429,True,5,SKx - Closing force
+40,3,Inefficient,3,0.0055,1,resolved,0.5669,False,5,Melt temperature
+41,0,Waste,0,0.0093,1,resolved,0.6166,False,5,APVs - Specific injection pressure peak value
+42,0,Waste,0,0.0896,1,resolved,0.617,False,5,APVs - Specific injection pressure peak value
+43,0,Waste,0,0.3089,1,resolved,0.5924,False,5,SKx - Closing force
+44,0,Waste,0,0.0403,1,resolved,0.6996,False,5,APVs - Specific injection pressure peak value
+48,3,Inefficient,3,0.0211,1,resolved,0.5759,False,5,SKx - Closing force
+49,3,Inefficient,3,0.0455,1,resolved,0.6205,False,5,Melt temperature
+50,0,Waste,0,0.1668,1,resolved,0.7589,False,5,APVs - Specific injection pressure peak value
+52,0,Waste,0,0.1032,1,resolved,0.7392,False,5,APVs - Specific injection pressure peak value
+53,0,Waste,0,0.0249,1,resolved,0.6194,False,5,APVs - Specific injection pressure peak value
+54,0,Waste,0,0.1446,1,resolved,0.6226,False,5,APVs - Specific injection pressure peak value
+60,0,Waste,0,0.0189,1,resolved,0.5558,False,5,APVs - Specific injection pressure peak value
+62,3,Inefficient,3,0.0279,1,resolved,0.5706,False,5,Melt temperature
+63,3,Inefficient,3,0.0199,1,resolved,0.5735,False,5,Melt temperature
+64,3,Inefficient,3,0.0204,1,resolved,0.6161,False,5,SKx - Closing force
+71,0,Waste,0,0.2313,1,resolved,0.5576,False,5,APVs - Specific injection pressure peak value
+75,0,Waste,0,0.1973,1,resolved,0.7236,False,5,Melt temperature
+76,3,Inefficient,3,0.1087,1,resolved,0.6573,False,5,Melt temperature
+77,0,Waste,0,0.2055,1,resolved,0.6961,False,5,APVs - Specific injection pressure peak value
+79,3,Inefficient,3,0.0077,1,resolved,0.6013,False,5,Melt temperature
+83,3,Inefficient,3,0.0546,1,resolved,0.5848,False,5,Melt temperature
+84,3,Inefficient,3,0.0116,1,resolved,0.57,False,5,Melt temperature
+90,0,Waste,0,0.4053,1,resolved,0.5614,True,5,SKx - Closing force
+94,3,Inefficient,3,0.2227,1,resolved,0.6318,False,5,Mm - Torque mean value current cycle
+95,3,Inefficient,3,0.0298,1,resolved,0.5544,False,5,Melt temperature
+97,0,Waste,0,0.0723,1,resolved,0.5783,True,5,APVs - Specific injection pressure peak value
+99,3,Inefficient,3,0.0674,1,resolved,0.5813,False,5,Melt temperature
+100,0,Waste,0,0.2642,1,resolved,0.6879,True,5,APVs - Specific injection pressure peak value
+101,0,Waste,0,0.2842,1,resolved,0.5523,False,5,APVs - Specific injection pressure peak value
+104,3,Inefficient,3,0.1849,1,resolved,0.5561,False,5,APVs - Specific injection pressure peak value
+107,0,Waste,1,0.5828,0,already_acceptable,0.0,True,0,
+109,3,Inefficient,3,0.0348,1,resolved,0.5736,False,5,Melt temperature
+110,3,Inefficient,3,0.0172,1,resolved,0.5948,False,5,Melt temperature
+112,3,Inefficient,3,0.0243,1,resolved,0.621,False,5,Melt temperature
+114,3,Inefficient,3,0.027,1,resolved,0.611,False,5,SKx - Closing force
+116,3,Inefficient,3,0.0289,1,resolved,0.5606,False,5,Melt temperature
+118,3,Inefficient,3,0.1806,1,resolved,0.5544,False,5,Mold temperature
+121,0,Waste,0,0.0286,1,resolved,0.6688,False,5,APVs - Specific injection pressure peak value
+123,3,Inefficient,3,0.0469,1,resolved,0.5702,False,5,Melt temperature
+124,3,Inefficient,3,0.0459,1,resolved,0.5947,False,5,SKx - Closing force
+126,0,Waste,0,0.1816,1,resolved,0.5693,False,5,APVs - Specific injection pressure peak value
+127,0,Waste,0,0.0337,1,resolved,0.6886,False,5,APVs - Specific injection pressure peak value
+130,0,Waste,0,0.1848,1,resolved,0.6164,False,5,APVs - Specific injection pressure peak value
+134,0,Waste,0,0.1131,1,resolved,0.6202,False,5,Melt temperature
+138,3,Inefficient,3,0.0329,1,resolved,0.5756,False,5,Melt temperature
+140,0,Waste,0,0.0199,1,resolved,0.594,True,5,APVs - Specific injection pressure peak value
+141,0,Waste,0,0.0033,1,resolved,0.6742,False,5,APVs - Specific injection pressure peak value
+144,3,Inefficient,3,0.0108,1,resolved,0.5819,False,5,Melt temperature
+146,0,Waste,0,0.1558,1,resolved,0.826,False,5,Melt temperature
+147,0,Waste,0,0.0613,1,resolved,0.5547,False,5,APVs - Specific injection pressure peak value
+148,0,Waste,0,0.0055,1,resolved,0.8085,False,5,APVs - Specific injection pressure peak value
+149,3,Inefficient,3,0.0306,1,resolved,0.5667,False,5,Melt temperature
+150,0,Waste,0,0.0688,1,resolved,0.5964,False,5,APVs - Specific injection pressure peak value
+151,0,Waste,0,0.111,1,resolved,0.6248,True,5,Melt temperature
+154,3,Inefficient,3,0.0552,1,resolved,0.5597,False,5,Melt temperature
+156,3,Inefficient,3,0.0798,1,resolved,0.5904,False,5,Melt temperature
+158,0,Waste,0,0.1636,1,resolved,0.5603,False,5,APVs - Specific injection pressure peak value
+159,0,Waste,0,0.2772,1,resolved,0.6766,False,5,APVs - Specific injection pressure peak value
+162,3,Inefficient,3,0.011,1,resolved,0.5591,False,5,Melt temperature
+166,3,Inefficient,3,0.0166,1,resolved,0.5713,False,5,Melt temperature
+167,0,Waste,0,0.0286,1,resolved,0.6289,False,5,APVs - Specific injection pressure peak value
+168,0,Waste,0,0.0342,1,resolved,0.6065,False,5,APVs - Specific injection pressure peak value
+169,3,Inefficient,3,0.0521,1,resolved,0.5595,False,5,Melt temperature
+172,0,Waste,0,0.4813,1,resolved,0.5947,False,5,SKx - Closing force
+173,0,Waste,0,0.0472,1,resolved,0.5852,False,5,APVs - Specific injection pressure peak value
+176,0,Waste,0,0.0188,1,resolved,0.5855,False,5,APVs - Specific injection pressure peak value
+177,0,Waste,0,0.0062,1,resolved,0.6167,True,5,APVs - Specific injection pressure peak value
+178,3,Inefficient,3,0.1938,1,resolved,0.599,False,5,SKx - Closing force
+180,3,Inefficient,3,0.0287,1,resolved,0.5767,False,5,Melt temperature
+183,0,Waste,0,0.0132,1,resolved,0.6336,False,5,APVs - Specific injection pressure peak value
+185,3,Inefficient,3,0.0301,1,resolved,0.6008,False,5,SKx - Closing force
+186,3,Inefficient,2,0.952,0,already_acceptable,0.0,True,0,
+190,3,Inefficient,3,0.0522,1,resolved,0.5611,False,5,Melt temperature
+193,3,Inefficient,2,0.9983,0,already_acceptable,0.0,True,0,
+197,3,Inefficient,3,0.0767,1,resolved,0.606,False,5,SKx - Closing force
+198,3,Inefficient,3,0.0607,1,resolved,0.563,False,5,SKx - Closing force
+199,0,Waste,0,0.0371,1,resolved,0.5967,False,5,APVs - Specific injection pressure peak value
+200,3,Inefficient,3,0.1975,1,resolved,0.5512,False,5,SKs - Clamping force peak value
+202,0,Waste,0,0.2409,1,resolved,0.6756,False,5,APVs - Specific injection pressure peak value
+203,0,Waste,0,0.1617,1,resolved,0.72,False,5,Melt temperature
+204,0,Waste,0,0.1404,1,resolved,0.5535,False,5,APVs - Specific injection pressure peak value
+207,0,Waste,0,0.0789,1,resolved,0.7208,False,5,APVs - Specific injection pressure peak value
+211,0,Waste,0,0.0099,1,resolved,0.6118,False,5,APVs - Specific injection pressure peak value
+215,0,Waste,0,0.1539,1,resolved,0.6985,False,5,Melt temperature
+217,0,Waste,0,0.1313,1,resolved,0.5506,False,5,APVs - Specific injection pressure peak value
+218,3,Inefficient,3,0.1769,1,resolved,0.5938,False,5,SKx - Closing force
+219,0,Waste,1,0.6052,0,already_acceptable,0.0,True,0,
+222,0,Waste,0,0.4581,1,resolved,0.5555,False,5,Melt temperature
+225,3,Inefficient,3,0.0523,1,resolved,0.5564,False,5,Melt temperature
+226,0,Waste,0,0.2987,1,resolved,0.6121,True,5,APVs - Specific injection pressure peak value
+228,3,Inefficient,3,0.0741,1,resolved,0.576,False,5,Melt temperature
+229,3,Inefficient,3,0.1115,1,resolved,0.5579,False,5,Melt temperature
+230,0,Waste,0,0.0629,1,resolved,0.7898,False,5,SKx - Closing force
+231,3,Inefficient,3,0.0776,1,resolved,0.5542,False,5,Melt temperature
+232,3,Inefficient,3,0.1962,1,resolved,0.5965,False,5,Melt temperature
+233,0,Waste,0,0.0889,1,resolved,0.6661,False,5,APVs - Specific injection pressure peak value
+236,0,Waste,0,0.0829,1,resolved,0.7554,False,5,APVs - Specific injection pressure peak value
+238,3,Inefficient,3,0.0264,1,resolved,0.6028,False,5,Melt temperature
+239,3,Inefficient,3,0.0432,1,resolved,0.5519,False,5,Melt temperature
+241,3,Inefficient,3,0.0595,1,resolved,0.5523,False,5,Melt temperature
+242,3,Inefficient,3,0.0,1,resolved,0.6145,False,5,Melt temperature
+243,0,Waste,0,0.0077,1,resolved,0.7486,False,5,APVs - Specific injection pressure peak value
+244,3,Inefficient,2,0.8588,0,already_acceptable,0.0,True,0,
+245,3,Inefficient,3,0.0162,1,resolved,0.5599,False,5,SKx - Closing force
+246,3,Inefficient,3,0.0475,1,resolved,0.5593,False,5,Melt temperature
+247,3,Inefficient,3,0.066,1,resolved,0.5838,False,5,Melt temperature
+250,3,Inefficient,3,0.0292,1,resolved,0.5547,False,5,Melt temperature
+251,0,Waste,0,0.2844,1,resolved,0.6152,False,5,SKx - Closing force
+253,0,Waste,0,0.2075,1,resolved,0.59,False,5,APVs - Specific injection pressure peak value
+254,3,Inefficient,3,0.0738,1,resolved,0.557,False,5,Melt temperature
+256,0,Waste,1,0.7054,0,already_acceptable,0.0,True,0,
+258,0,Waste,0,0.0046,1,resolved,0.5567,False,5,APVs - Specific injection pressure peak value
+261,3,Inefficient,3,0.1045,1,resolved,0.5574,False,5,Melt temperature
+262,0,Waste,0,0.1382,1,resolved,0.7212,False,5,APVs - Specific injection pressure peak value
+264,3,Inefficient,3,0.0297,1,resolved,0.5708,False,5,Melt temperature
+267,0,Waste,0,0.0752,1,resolved,0.6628,False,5,APVs - Specific injection pressure peak value
+268,3,Inefficient,3,0.011,1,resolved,0.5909,False,5,Melt temperature
+269,3,Inefficient,3,0.0,1,resolved,0.574,False,5,Melt temperature
+270,3,Inefficient,3,0.0773,1,resolved,0.6092,False,5,Melt temperature
+272,0,Waste,0,0.0866,1,resolved,0.5519,False,5,APVs - Specific injection pressure peak value
+273,0,Waste,0,0.1724,1,resolved,0.6374,False,5,SKx - Closing force
+275,3,Inefficient,3,0.0645,1,resolved,0.5614,False,5,Melt temperature
+279,0,Waste,0,0.3164,1,resolved,0.586,True,5,Melt temperature
+280,0,Waste,0,0.0536,1,resolved,0.6618,False,5,Melt temperature
+282,0,Waste,1,0.5295,1,resolved,0.7046,False,5,APVs - Specific injection pressure peak value
+286,3,Inefficient,3,0.0143,1,resolved,0.5795,False,5,Melt temperature
+288,0,Waste,0,0.0331,1,resolved,0.5832,False,5,APVs - Specific injection pressure peak value
+289,3,Inefficient,3,0.0192,1,resolved,0.5561,False,5,Melt temperature
+290,0,Waste,0,0.1636,1,resolved,0.5658,False,5,Melt temperature
