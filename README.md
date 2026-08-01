@@ -41,6 +41,13 @@ A production-grade Streamlit application that applies Explainable AI (XAI) to in
 - **Scaler:** MinMaxScaler fitted on training data only (range −1 to 1)
 - **Validation accuracy:** ≥ 90%
 
+#### Hyperparameter Provenance
+The RF champion hyperparameters are adopted verbatim from **Polenta et al. (2022),
+Table 5** and are not tuned in this work. They are retained to reproduce the
+reference benchmark; the thesis contribution is the XAI and RCA layer built on
+top of it. See [`docs/hyperparameter_provenance.md`](docs/hyperparameter_provenance.md)
+for the full mapping table.
+
 ### 3-Tier Counterfactual RCA
 | Tier | Method | Threshold |
 |------|--------|-----------|

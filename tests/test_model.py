@@ -1,6 +1,10 @@
 """
-Tests for the trained Random Forest model — verifies thesis-specified
-hyperparameters, class structure, and minimum performance thresholds.
+Tests for the trained Random Forest model — verifies hyperparameters adopted
+from Polenta et al. (2022) Table 5, class structure, and performance thresholds.
+
+Hyperparameter source: Polenta et al. (2022), "Machine learning for quality
+prediction in injection moulding", Table 5. These values are NOT tuned in this
+work; they are retained verbatim to reproduce the reference benchmark.
 """
 import pytest
 import numpy as np
@@ -9,7 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 @pytest.mark.unit
 class TestRFHyperparameters:
-    """The champion RF must match the thesis-tuned specification exactly."""
+    """Champion RF must match Polenta et al. (2022) Table 5 specification exactly."""
 
     def test_is_random_forest(self, model):
         assert isinstance(model, RandomForestClassifier)
@@ -28,6 +32,9 @@ class TestRFHyperparameters:
 
     def test_min_samples_split(self, model):
         assert model.min_samples_split == 4
+
+    def test_max_features(self, model):
+        assert model.max_features == "sqrt"
 
     def test_random_state(self, model):
         assert model.random_state == 42

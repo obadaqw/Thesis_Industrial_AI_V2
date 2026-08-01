@@ -33,10 +33,11 @@ def get_model_architecture(algo_name):
     algo_name = algo_name.upper()
 
     if algo_name == "RF":
-        # Thesis-tuned hyperparameters (selected via stratified 5-fold CV)
+        # Hyperparameters adopted verbatim from Polenta et al. (2022), Table 5.
+        # Not tuned in this work; retained to reproduce the reference benchmark.
         return RandomForestClassifier(
             n_estimators=151, max_depth=79, criterion='entropy',
-            min_samples_leaf=2, min_samples_split=4,
+            min_samples_leaf=2, min_samples_split=4, max_features='sqrt',
             n_jobs=-1, random_state=42
         )
     elif algo_name == "XGB":
