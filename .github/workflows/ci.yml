@@ -80,6 +80,10 @@ jobs:
           print(f"Golden store: {len(golden)} samples saved.")
           EOF
 
+      # ── 7b. Evaluate on held-out test set ───────────────────────────────────
+      - name: Evaluate champion model on test set
+        run: python scripts/evaluate_test_set.py
+
       # ── 8. Run unit tests (fast — no model loading) ───────────────────────
       - name: Run unit tests
         env:
