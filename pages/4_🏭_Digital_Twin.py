@@ -100,8 +100,8 @@ if is_running:
             m3.metric("Performance", f"{state['performance']:.1%}")
             m4.metric("Quality", f"{state['quality']:.1%}")
 
-            # Status Bar — class-name based; no 1-based "Original Quality" arithmetic
-            if pred == 2:
+            # Status Bar — conforming = {1 Acceptable, 2 Target}, matching OEE accounting
+            if pred in (1, 2):
                 st.success(f"Cycle #{i}: ✅ CONFORMING — {CLASS_NAMES[pred]}")
             else:
                 st.error(f"Cycle #{i}: ❌ NON-CONFORMING — {CLASS_NAMES[pred]}")

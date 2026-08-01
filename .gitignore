@@ -9,3 +9,4 @@ models/checkpoints/
 .venv/
 .idea/
 *.egg-info/
+.coverage
