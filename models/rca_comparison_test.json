@@ -1,0 +1,36 @@
+{
+  "split": "test",
+  "3-tier RCA": {
+    "total": 147,
+    "resolved": 140,
+    "resolution_rate": 0.9524,
+    "validator_confirmed": 9,
+    "validator_rate": 0.0643,
+    "mean_proximity": 0.5161,
+    "mean_sparsity": 4.8786,
+    "mean_nn_distance": 0.829,
+    "mcnemar_p": 0.1796875
+  },
+  "Greedy": {
+    "total": 147,
+    "resolved": 140,
+    "resolution_rate": 0.9524,
+    "validator_confirmed": 14,
+    "validator_rate": 0.1,
+    "mean_proximity": 0.6783,
+    "mean_sparsity": 12.3214,
+    "mean_nn_distance": 0.6864,
+    "mcnemar_p": 0.1796875
+  },
+  "mcnemar_test": {
+    "contingency": {
+      "a_both": 14,
+      "b_greedy_only": 7,
+      "c_rca_only": 2,
+      "d_neither": 124
+    },
+    "mcnemar_statistic": 2.0,
+    "mcnemar_p": 0.1796875,
+    "interpretation": "p >= 0.05: validator-rate difference not statistically significant"
+  }
+}

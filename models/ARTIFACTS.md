@@ -71,4 +71,6 @@ Located in `models/checkpoints/` (gitignored):
 | Validator agreement rate (test) | 6.4% | `rca_evaluation_test.json` |
 | 3-tier vs ablation sparsity (val) | 4.9 vs 12.4 features | `rca_comparison_val.json` |
 | McNemar p-value (val split) | 0.625 (not significant) | `rca_comparison_val.json` |
+| 3-tier vs ablation sparsity (test) | 4.9 vs 12.3 features | `rca_comparison_test.json` |
+| McNemar p-value (test split) | 0.180 (not significant) | `rca_comparison_test.json` |
 | PSI trigger magnitude | k = 1σ (all 13 features) | `drift_validation.json` |
