@@ -50,7 +50,20 @@ LIME_SAMPLES         = 2000     # LIME perturbation budget
 
 class CounterfactualRCA:
 
-    def __init__(self):
+    def __init__(
+        self,
+        confidence_threshold: float = CONFIDENCE_THRESHOLD,
+        max_iter: int = MAX_ITER,
+        t1_top_k: int = T1_TOP_K,
+        t2_top_k: int = T2_TOP_K,
+        t2_n_neighbors: int = T2_N_NEIGHBORS,
+    ):
+        self.confidence_threshold = confidence_threshold
+        self.max_iter             = max_iter
+        self.t1_top_k             = t1_top_k
+        self.t2_top_k             = t2_top_k
+        self.t2_n_neighbors       = t2_n_neighbors
+
         print("🔬 Initializing Counterfactual RCA (3-Tier Robust)...")
 
         self.model        = joblib.load(os.path.join(MODELS_DIR, "current_model.pkl"))
@@ -93,7 +106,7 @@ class CounterfactualRCA:
         return float(proba[1] + proba[2])
 
     def _is_accepted(self, x_scaled):
-        return self._confidence(x_scaled) >= CONFIDENCE_THRESHOLD
+        return self._confidence(x_scaled) >= self.confidence_threshold
 
     def _validate(self, x_scaled):
         """Independent MLP validator: True if it also predicts {Acceptable, Target}."""
@@ -125,11 +138,9 @@ class CounterfactualRCA:
         x    = x_scaled.copy()
         x_df = pd.DataFrame([x], columns=self.feature_names)
 
-        # SHAP — select top-T1_TOP_K features by |contribution toward Target|
         shap_vals = self.xai._get_shap_values(x_df)
-        top_idx   = np.argsort(np.abs(shap_vals))[-T1_TOP_K:]
+        top_idx   = np.argsort(np.abs(shap_vals))[-self.t1_top_k:]
 
-        # LIME — direction for Target class (label=2)
         top_names = [self.feature_names[i] for i in top_idx]
         try:
             lime_coeffs = self.xai.get_lime_directions(
@@ -138,7 +149,6 @@ class CounterfactualRCA:
         except Exception:
             lime_coeffs = {}
 
-        # Direction: LIME sign, fallback to SHAP sign
         directions = {}
         for idx in top_idx:
             fname = self.feature_names[idx]
@@ -147,7 +157,7 @@ class CounterfactualRCA:
                 coeff = float(shap_vals[idx])
             directions[idx] = float(np.sign(coeff)) if coeff != 0 else 1.0
 
-        for _ in range(MAX_ITER):
+        for _ in range(self.max_iter):
             for idx, d in directions.items():
                 x[idx] += d * STEP
             x = np.clip(x, -1.0, 1.0)
@@ -160,17 +170,15 @@ class CounterfactualRCA:
     # ── Tier 2: Nearest-neighbour anchored ───────────────────────────────────
 
     def _tier2(self, x_scaled):
-        # 15 nearest good-quality samples → centroid
         dists    = euclidean_distances([x_scaled], self.good_samples)[0]
-        nn_idx   = np.argsort(dists)[:T2_N_NEIGHBORS]
+        nn_idx   = np.argsort(dists)[:self.t2_n_neighbors]
         centroid = self.good_samples[nn_idx].mean(axis=0)
 
-        # Top-7 features with largest gap to centroid
         gap     = np.abs(centroid - x_scaled)
-        top_idx = np.argsort(gap)[-T2_TOP_K:]
+        top_idx = np.argsort(gap)[-self.t2_top_k:]
 
         x = x_scaled.copy()
-        for _ in range(MAX_ITER):
+        for _ in range(self.max_iter):
             for idx in top_idx:
                 d = np.sign(centroid[idx] - x[idx])
                 x[idx] += d * STEP
@@ -223,7 +231,7 @@ class CounterfactualRCA:
                 "prediction": pred, "proba": proba.tolist(), "confidence": conf,
                 "adjustments": adj, "validator_ok": vok,
                 "cf_confidence": round(cf_conf, 4),
-                "message": (f"Tier 1 (SHAP+LIME): {T1_TOP_K} adjustments found. "
+                "message": (f"Tier 1 (SHAP+LIME): {self.t1_top_k} adjustments found. "
                             f"CF confidence={cf_conf:.1%}. "
                             f"Validator: {'✅ Confirmed' if vok else '⚠️ Unconfirmed'}.")
             }
@@ -240,8 +248,8 @@ class CounterfactualRCA:
                 "prediction": pred, "proba": proba.tolist(), "confidence": conf,
                 "adjustments": adj, "validator_ok": vok,
                 "cf_confidence": round(cf_conf, 4),
-                "message": (f"Tier 2 (NN-Anchored, {T2_N_NEIGHBORS} neighbors): "
-                            f"{T2_TOP_K} adjustments found. "
+                "message": (f"Tier 2 (NN-Anchored, {self.t2_n_neighbors} neighbors): "
+                            f"{self.t2_top_k} adjustments found. "
                             f"CF confidence={cf_conf:.1%}. "
                             f"Validator: {'✅ Confirmed' if vok else '⚠️ Unconfirmed'}.")
             }
