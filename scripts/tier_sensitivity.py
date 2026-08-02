@@ -94,6 +94,14 @@ def main(split: str = "val") -> None:
     records   = []
     t_global  = time.time()
 
+    def _flush(total_so_far: float) -> None:
+        """Write current records to disk after each completed config."""
+        with open(out_json, "w") as f:
+            json.dump({"split": split, "records": records,
+                       "total_elapsed_s": round(total_so_far, 1),
+                       "complete": False}, f, indent=2)
+        pd.DataFrame(records).to_csv(out_csv, index=False)
+
     print(f"\n=== Part A: confidence_threshold sweep (max_iter=150, {split}) ===")
     for thresh in THRESHOLD_SWEEP:
         print(f"\n  threshold={thresh:.2f} ...", flush=True)
@@ -108,6 +116,7 @@ def main(split: str = "val") -> None:
         })
         print(f"    resolution={stats['resolution_rate']:.1%}  "
               f"validator={stats['validator_rate']:.1%}  ({elapsed:.0f}s)")
+        _flush(time.time() - t_global)
 
     print(f"\n=== Part B: max_iter sweep (threshold=0.55, {split}) ===")
     for mi in MAX_ITER_SWEEP:
@@ -125,12 +134,14 @@ def main(split: str = "val") -> None:
         })
         print(f"    resolution={stats['resolution_rate']:.1%}  "
               f"validator={stats['validator_rate']:.1%}  ({elapsed:.0f}s)")
+        _flush(time.time() - t_global)
 
     total_elapsed = time.time() - t_global
 
     with open(out_json, "w") as f:
         json.dump({"split": split, "records": records,
-                   "total_elapsed_s": round(total_elapsed, 1)}, f, indent=2)
+                   "total_elapsed_s": round(total_elapsed, 1),
+                   "complete": True}, f, indent=2)
 
     df = pd.DataFrame(records)
     df.to_csv(out_csv, index=False)
