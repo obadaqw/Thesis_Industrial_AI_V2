@@ -1,0 +1,128 @@
+{
+  "full_dataset": {
+    "n_total": 1451,
+    "by_class": {
+      "Waste": {
+        "count": 370,
+        "pct": 25.5
+      },
+      "Acceptable": {
+        "count": 406,
+        "pct": 27.98
+      },
+      "Target": {
+        "count": 310,
+        "pct": 21.36
+      },
+      "Inefficient": {
+        "count": 365,
+        "pct": 25.16
+      }
+    },
+    "conforming": {
+      "count": 716,
+      "pct": 49.35,
+      "definition": "{Acceptable, Target}"
+    },
+    "non_conforming": {
+      "count": 735,
+      "pct": 50.65,
+      "definition": "{Waste, Inefficient}"
+    }
+  },
+  "splits": {
+    "train": {
+      "n_total": 870,
+      "by_class": {
+        "Waste": {
+          "count": 222,
+          "pct": 25.52
+        },
+        "Acceptable": {
+          "count": 243,
+          "pct": 27.93
+        },
+        "Target": {
+          "count": 186,
+          "pct": 21.38
+        },
+        "Inefficient": {
+          "count": 219,
+          "pct": 25.17
+        }
+      },
+      "conforming": {
+        "count": 429,
+        "pct": 49.31,
+        "definition": "{Acceptable, Target}"
+      },
+      "non_conforming": {
+        "count": 441,
+        "pct": 50.69,
+        "definition": "{Waste, Inefficient}"
+      }
+    },
+    "val": {
+      "n_total": 290,
+      "by_class": {
+        "Waste": {
+          "count": 74,
+          "pct": 25.52
+        },
+        "Acceptable": {
+          "count": 81,
+          "pct": 27.93
+        },
+        "Target": {
+          "count": 62,
+          "pct": 21.38
+        },
+        "Inefficient": {
+          "count": 73,
+          "pct": 25.17
+        }
+      },
+      "conforming": {
+        "count": 143,
+        "pct": 49.31,
+        "definition": "{Acceptable, Target}"
+      },
+      "non_conforming": {
+        "count": 147,
+        "pct": 50.69,
+        "definition": "{Waste, Inefficient}"
+      }
+    },
+    "test": {
+      "n_total": 291,
+      "by_class": {
+        "Waste": {
+          "count": 74,
+          "pct": 25.43
+        },
+        "Acceptable": {
+          "count": 82,
+          "pct": 28.18
+        },
+        "Target": {
+          "count": 62,
+          "pct": 21.31
+        },
+        "Inefficient": {
+          "count": 73,
+          "pct": 25.09
+        }
+      },
+      "conforming": {
+        "count": 144,
+        "pct": 49.48,
+        "definition": "{Acceptable, Target}"
+      },
+      "non_conforming": {
+        "count": 147,
+        "pct": 50.52,
+        "definition": "{Waste, Inefficient}"
+      }
+    }
+  }
+}

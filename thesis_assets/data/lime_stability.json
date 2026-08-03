@@ -1,0 +1,40 @@
+{
+  "sample_index_in_test_split": 0,
+  "predicted_class": 2,
+  "n_runs": 10,
+  "coefficient_std_by_feature": {
+    "Melt temperature": 0.0029109766924343807,
+    "Mold temperature": 0.002551140193603675,
+    "time_to_fill": 0.0034541704366592846,
+    "ZDx - Plasticizing time": 0.0026676120635776585,
+    "ZUx - Cycle time": 0.003308654784607574,
+    "SKx - Closing force": 0.0028614271929255993,
+    "SKs - Clamping force peak value": 0.0015018518315803723,
+    "Ms - Torque peak value current cycle": 0.0029906213919338297,
+    "Mm - Torque mean value current cycle": 0.003456532420067876,
+    "APSs - Specific back pressure peak value": 0.0033677589814331524,
+    "APVs - Specific injection pressure peak value": 0.00220562501591441,
+    "CPn - Screw position at the end of hold pressure": 0.004470374876482189,
+    "SVo - Shot volume": 0.003223277686157427
+  },
+  "top5_feature_frequency_across_runs": {
+    "ZUx - Cycle time": 10,
+    "time_to_fill": 10,
+    "ZDx - Plasticizing time": 10,
+    "Mold temperature": 10,
+    "SKx - Closing force": 10
+  },
+  "top5_overlap_with_first_run": [
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "top5_overlap_with_first_run_mean": 5.0
+}

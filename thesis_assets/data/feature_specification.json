@@ -1,0 +1,159 @@
+{
+  "features": {
+    "Melt temperature": {
+      "physical_quantity": "Polymer melt temperature",
+      "unit": "degC",
+      "column": "Melt temperature",
+      "min": 81.747,
+      "max": 155.032,
+      "mean": 106.89204,
+      "median": 106.089,
+      "std": 5.615773,
+      "n": 1451
+    },
+    "Mold temperature": {
+      "physical_quantity": "Mold surface temperature",
+      "unit": "degC",
+      "column": "Mold temperature",
+      "min": 78.409,
+      "max": 82.159,
+      "mean": 81.326023,
+      "median": 81.327,
+      "std": 0.428813,
+      "n": 1451
+    },
+    "time_to_fill": {
+      "physical_quantity": "Cavity filling time",
+      "unit": "s",
+      "column": "time_to_fill",
+      "min": 6.084,
+      "max": 11.232,
+      "mean": 7.459043,
+      "median": 6.968,
+      "std": 1.688106,
+      "n": 1451
+    },
+    "ZDx - Plasticizing time": {
+      "physical_quantity": "Plasticizing (dosing) time",
+      "unit": "s",
+      "column": "ZDx - Plasticizing time",
+      "min": 2.78,
+      "max": 6.61,
+      "mean": 3.234173,
+      "median": 3.1926,
+      "std": 0.34323,
+      "n": 1451
+    },
+    "ZUx - Cycle time": {
+      "physical_quantity": "Total cycle time",
+      "unit": "s",
+      "column": "ZUx - Cycle time",
+      "min": 74.78,
+      "max": 75.79,
+      "mean": 75.218794,
+      "median": 74.83,
+      "std": 0.432761,
+      "n": 1451
+    },
+    "SKx - Closing force": {
+      "physical_quantity": "Mold closing force",
+      "unit": "UNVERIFIED",
+      "column": "SKx - Closing force",
+      "min": 876.7,
+      "max": 930.6,
+      "mean": 901.974834,
+      "median": 902.4,
+      "std": 11.098192,
+      "n": 1451
+    },
+    "SKs - Clamping force peak value": {
+      "physical_quantity": "Clamping force, peak value",
+      "unit": "UNVERIFIED",
+      "column": "SKs - Clamping force peak value",
+      "min": 894.8,
+      "max": 946.5,
+      "mean": 919.351778,
+      "median": 918.8,
+      "std": 10.780023,
+      "n": 1451
+    },
+    "Ms - Torque peak value current cycle": {
+      "physical_quantity": "Screw drive torque, peak value",
+      "unit": "UNVERIFIED",
+      "column": "Ms - Torque peak value current cycle",
+      "min": 94.2,
+      "max": 130.3,
+      "mean": 116.716747,
+      "median": 116.9,
+      "std": 5.029085,
+      "n": 1451
+    },
+    "Mm - Torque mean value current cycle": {
+      "physical_quantity": "Screw drive torque, mean value",
+      "unit": "UNVERIFIED",
+      "column": "Mm - Torque mean value current cycle",
+      "min": 76.5,
+      "max": 114.9,
+      "mean": 104.163904,
+      "median": 105.2,
+      "std": 4.802195,
+      "n": 1451
+    },
+    "APSs - Specific back pressure peak value": {
+      "physical_quantity": "Specific back pressure, peak value",
+      "unit": "UNVERIFIED",
+      "column": "APSs - Specific back pressure peak value",
+      "min": 144.8,
+      "max": 150.5,
+      "mean": 146.230048,
+      "median": 146.1,
+      "std": 0.804894,
+      "n": 1451
+    },
+    "APVs - Specific injection pressure peak value": {
+      "physical_quantity": "Specific injection pressure, peak value",
+      "unit": "UNVERIFIED",
+      "column": "APVs - Specific injection pressure peak value",
+      "min": 780.5,
+      "max": 943.0,
+      "mean": 900.972846,
+      "median": 906.8,
+      "std": 25.519215,
+      "n": 1451
+    },
+    "CPn - Screw position at the end of hold pressure": {
+      "physical_quantity": "Screw position at end of hold (cushion) pressure",
+      "unit": "UNVERIFIED",
+      "column": "CPn - Screw position at the end of hold pressure",
+      "min": 8.33,
+      "max": 9.06,
+      "mean": 8.808863,
+      "median": 8.82,
+      "std": 0.097238,
+      "n": 1451
+    },
+    "SVo - Shot volume": {
+      "physical_quantity": "Shot volume",
+      "unit": "UNVERIFIED",
+      "column": "SVo - Shot volume",
+      "min": 18.51,
+      "max": 19.23,
+      "mean": 18.756285,
+      "median": 18.75,
+      "std": 0.095528,
+      "n": 1451
+    }
+  },
+  "n_features": 13,
+  "units_unverified": [
+    "SKx - Closing force",
+    "SKs - Clamping force peak value",
+    "Ms - Torque peak value current cycle",
+    "Mm - Torque mean value current cycle",
+    "APSs - Specific back pressure peak value",
+    "APVs - Specific injection pressure peak value",
+    "CPn - Screw position at the end of hold pressure",
+    "SVo - Shot volume"
+  ],
+  "source": "data/raw/raw_data.csv (raw, unscaled)"
+}

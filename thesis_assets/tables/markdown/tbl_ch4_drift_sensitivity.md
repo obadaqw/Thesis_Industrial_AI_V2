@@ -1,0 +1,15 @@
+| Feature | PSI (k=0) | PSI (k=1) | PSI (k=2) | PSI (k=3) |
+|---|---|---|---|---|
+| APSs - Specific back pressure peak value | 0.0727 | 1.9208 | 5.4031 | 8.2949 |
+| APVs - Specific injection pressure peak value | 0.0257 | 1.944 | 4.2252 | 4.8287 |
+| CPn - Screw position at the end of hold pressure | 0.0321 | 1.479 | 3.7901 | 4.8616 |
+| Melt temperature | 0.0259 | 8.2883 | 8.2883 | 8.2883 |
+| Mm - Torque mean value current cycle | 0.0229 | 4.0481 | 5.1212 | 5.2553 |
+| Mold temperature | 0.0406 | 2.1087 | 5.1307 | 6.8035 |
+| Ms - Torque peak value current cycle | 0.067 | 1.3184 | 3.5151 | 6.7895 |
+| SKs - Clamping force peak value | 0.0133 | 2.9266 | 3.9492 | 6.6504 |
+| SKx - Closing force | 0.0573 | 1.5497 | 4.2614 | 7.3632 |
+| SVo - Shot volume | 0.0183 | 1.642 | 4.894 | 7.1315 |
+| ZDx - Plasticizing time | 0.0512 | 2.9142 | 7.6622 | 8.2924 |
+| ZUx - Cycle time | 0.0362 | 6.0487 | 5.7814 | 8.1222 |
+| time_to_fill | 0.0195 | 7.6032 | 7.5715 | 7.614 |

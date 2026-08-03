@@ -1,0 +1,118 @@
+{
+  "split": "test",
+  "n_resolved": 140,
+  "n_unresolved": 7,
+  "unresolved_tier_counts": {
+    "0": 7
+  },
+  "unresolved_status_counts": {
+    "already_acceptable": 7
+  },
+  "note": "On the test split, all 7 'unresolved' cases (excluded from the resolved=tier1+tier2 count) are tier-0 'already_acceptable' rows, not tier-3 escalations -- there are zero tier-3 cases in this split. Each of the 7 has a TRUE label of Waste or Inefficient but a model confidence P(Acceptable)+P(Target) already >= 0.55, so the RCA engine never attempts a correction. This reflects disagreement between ground-truth label and model confidence on these specific cycles, not a failure of the counterfactual search.",
+  "confidence_acc_plus_target": {
+    "resolved_mean": 0.094,
+    "resolved_std": 0.1017,
+    "unresolved_mean": 0.81,
+    "unresolved_std": 0.1767,
+    "mannwhitney_u": 980.0,
+    "mannwhitney_p": 8e-06
+  },
+  "nn_distance_to_conforming_manifold": {
+    "definition": "L2 distance (scaled feature space) from the original defective sample to its nearest conforming (Acceptable or Target) training sample",
+    "resolved_mean": 0.6114,
+    "resolved_std": 0.3525,
+    "unresolved_mean": 0.2649,
+    "unresolved_std": 0.1494,
+    "mannwhitney_u": 132.0,
+    "mannwhitney_p": 0.000443
+  },
+  "feature_comparison": {
+    "Melt temperature": {
+      "resolved_mean": 107.2801,
+      "resolved_std": 6.0663,
+      "unresolved_mean": 105.8813,
+      "unresolved_std": 0.2095
+    },
+    "Mold temperature": {
+      "resolved_mean": 81.4673,
+      "resolved_std": 0.4824,
+      "unresolved_mean": 81.0364,
+      "unresolved_std": 0.2147
+    },
+    "time_to_fill": {
+      "resolved_mean": 8.1287,
+      "resolved_std": 2.0589,
+      "unresolved_mean": 6.5669,
+      "unresolved_std": 0.377
+    },
+    "ZDx - Plasticizing time": {
+      "resolved_mean": 3.1344,
+      "resolved_std": 0.3307,
+      "unresolved_mean": 3.3329,
+      "unresolved_std": 0.1584
+    },
+    "ZUx - Cycle time": {
+      "resolved_mean": 75.2231,
+      "resolved_std": 0.4105,
+      "unresolved_mean": 75.3429,
+      "unresolved_std": 0.4956
+    },
+    "SKx - Closing force": {
+      "resolved_mean": 899.8973,
+      "resolved_std": 11.0559,
+      "unresolved_mean": 901.8857,
+      "unresolved_std": 11.4941
+    },
+    "SKs - Clamping force peak value": {
+      "resolved_mean": 915.66,
+      "resolved_std": 11.346,
+      "unresolved_mean": 920.2,
+      "unresolved_std": 9.7276
+    },
+    "Ms - Torque peak value current cycle": {
+      "resolved_mean": 117.3586,
+      "resolved_std": 4.912,
+      "unresolved_mean": 115.4,
+      "unresolved_std": 2.1909
+    },
+    "Mm - Torque mean value current cycle": {
+      "resolved_mean": 104.0396,
+      "resolved_std": 4.9569,
+      "unresolved_mean": 104.5,
+      "unresolved_std": 3.7175
+    },
+    "APSs - Specific back pressure peak value": {
+      "resolved_mean": 146.2293,
+      "resolved_std": 0.8363,
+      "unresolved_mean": 146.3,
+      "unresolved_std": 0.4546
+    },
+    "APVs - Specific injection pressure peak value": {
+      "resolved_mean": 904.9257,
+      "resolved_std": 21.6209,
+      "unresolved_mean": 895.3857,
+      "unresolved_std": 24.1
+    },
+    "CPn - Screw position at the end of hold pressure": {
+      "resolved_mean": 8.8423,
+      "resolved_std": 0.0838,
+      "unresolved_mean": 8.7986,
+      "unresolved_std": 0.0756
+    },
+    "SVo - Shot volume": {
+      "resolved_mean": 18.7322,
+      "resolved_std": 0.0979,
+      "unresolved_mean": 18.7686,
+      "unresolved_std": 0.0749
+    }
+  },
+  "unresolved_sample_indices": [
+    9,
+    107,
+    186,
+    193,
+    219,
+    244,
+    256
+  ]
+}

@@ -1,0 +1,15 @@
+| Parameter | Physical quantity | Unit | Min | Max | Mean | Median | Std |
+|---|---|---|---|---|---|---|---|
+| Melt temperature | Polymer melt temperature | degC | 81.747 | 155.032 | 106.89204 | 106.089 | 5.615773 |
+| Mold temperature | Mold surface temperature | degC | 78.409 | 82.159 | 81.326023 | 81.327 | 0.428813 |
+| time_to_fill | Cavity filling time | s | 6.084 | 11.232 | 7.459043 | 6.968 | 1.688106 |
+| ZDx - Plasticizing time | Plasticizing (dosing) time | s | 2.78 | 6.61 | 3.234173 | 3.1926 | 0.34323 |
+| ZUx - Cycle time | Total cycle time | s | 74.78 | 75.79 | 75.218794 | 74.83 | 0.432761 |
+| SKx - Closing force | Mold closing force | UNVERIFIED | 876.7 | 930.6 | 901.974834 | 902.4 | 11.098192 |
+| SKs - Clamping force peak value | Clamping force, peak value | UNVERIFIED | 894.8 | 946.5 | 919.351778 | 918.8 | 10.780023 |
+| Ms - Torque peak value current cycle | Screw drive torque, peak value | UNVERIFIED | 94.2 | 130.3 | 116.716747 | 116.9 | 5.029085 |
+| Mm - Torque mean value current cycle | Screw drive torque, mean value | UNVERIFIED | 76.5 | 114.9 | 104.163904 | 105.2 | 4.802195 |
+| APSs - Specific back pressure peak value | Specific back pressure, peak value | UNVERIFIED | 144.8 | 150.5 | 146.230048 | 146.1 | 0.804894 |
+| APVs - Specific injection pressure peak value | Specific injection pressure, peak value | UNVERIFIED | 780.5 | 943.0 | 900.972846 | 906.8 | 25.519215 |
+| CPn - Screw position at the end of hold pressure | Screw position at end of hold (cushion) pressure | UNVERIFIED | 8.33 | 9.06 | 8.808863 | 8.82 | 0.097238 |
+| SVo - Shot volume | Shot volume | UNVERIFIED | 18.51 | 19.23 | 18.756285 | 18.75 | 0.095528 |

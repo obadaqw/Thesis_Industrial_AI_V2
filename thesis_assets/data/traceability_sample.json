@@ -1,0 +1,56 @@
+{
+  "provenance": "data/cycle_history.db had no logged cycles at export time (no interactive Streamlit session has run yet). These 5 records were produced by replaying genuine, already-computed RCA outcomes from models/rca_results_test.csv through the real cycle_store.log_cycle() / get_recent() functions against a throwaway SQLite file -- the production database was not written to. No fields required anonymisation: the cycle_store schema records only timestamp/prediction/RCA-outcome fields, no operator or personal data.",
+  "schema_source": "src/cycle_store.py",
+  "records": [
+    {
+      "timestamp": "2026-08-03 17:46:20",
+      "cycle_id": 8,
+      "prediction": 0,
+      "confidence": 0.0674,
+      "rca_tier": 1,
+      "rca_status": "resolved",
+      "cf_confidence": 0.5905,
+      "validator_ok": 0
+    },
+    {
+      "timestamp": "2026-08-03 17:46:20",
+      "cycle_id": 7,
+      "prediction": 3,
+      "confidence": 0.0215,
+      "rca_tier": 1,
+      "rca_status": "resolved",
+      "cf_confidence": 0.5884,
+      "validator_ok": 0
+    },
+    {
+      "timestamp": "2026-08-03 17:46:20",
+      "cycle_id": 39,
+      "prediction": 0,
+      "confidence": 0.1567,
+      "rca_tier": 1,
+      "rca_status": "resolved",
+      "cf_confidence": 0.7429,
+      "validator_ok": 1
+    },
+    {
+      "timestamp": "2026-08-03 17:46:20",
+      "cycle_id": 9,
+      "prediction": 2,
+      "confidence": 0.9674,
+      "rca_tier": 0,
+      "rca_status": "already_acceptable",
+      "cf_confidence": 0.0,
+      "validator_ok": 1
+    },
+    {
+      "timestamp": "2026-08-03 17:46:20",
+      "cycle_id": 5,
+      "prediction": 3,
+      "confidence": 0.0,
+      "rca_tier": 1,
+      "rca_status": "resolved",
+      "cf_confidence": 0.5801,
+      "validator_ok": 0
+    }
+  ]
+}

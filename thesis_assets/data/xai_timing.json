@@ -1,0 +1,12 @@
+{
+  "n_shap_calls": 15,
+  "shap_call_seconds_mean": 0.00177,
+  "shap_call_seconds_std": 0.00023,
+  "n_lime_calls": 30,
+  "lime_call_seconds_mean": 0.02015,
+  "lime_call_seconds_std": 0.02047,
+  "session_definition": "15 unique defect samples, each queried twice in sequence (simulating a user re-opening a previously viewed cycle)",
+  "cache_hit_rate": 0.5,
+  "cache_hits": 15,
+  "cache_misses": 15
+}

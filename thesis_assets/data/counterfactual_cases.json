@@ -1,0 +1,198 @@
+{
+  "split": "test",
+  "cases": {
+    "validator_confirmed": {
+      "sample_index_in_test_split": 39,
+      "tier": 1,
+      "status": "resolved",
+      "message": "Tier 1 (SHAP+LIME): 5 adjustments found. CF confidence=74.3%. Validator: \u2705 Confirmed.",
+      "validator_ok": true,
+      "original": {
+        "feature_values": {
+          "Melt temperature": 105.449,
+          "Mold temperature": 81.402,
+          "time_to_fill": 6.968,
+          "ZDx - Plasticizing time": 4.08,
+          "ZUx - Cycle time": 74.82,
+          "SKx - Closing force": 908.6,
+          "SKs - Clamping force peak value": 918.2,
+          "Ms - Torque peak value current cycle": 118.4,
+          "Mm - Torque mean value current cycle": 106.2,
+          "APSs - Specific back pressure peak value": 147.0,
+          "APVs - Specific injection pressure peak value": 874.6,
+          "CPn - Screw position at the end of hold pressure": 8.84,
+          "SVo - Shot volume": 18.76
+        },
+        "probability_vector": {
+          "Waste": 0.836644591611479,
+          "Acceptable": 0.15011037527593818,
+          "Target": 0.006622516556291391,
+          "Inefficient": 0.006622516556291391
+        },
+        "confidence_acc_plus_target": 0.1567
+      },
+      "counterfactual": {
+        "tier_method": "Tier 1 (SHAP+LIME)",
+        "adjustments": [
+          {
+            "feature": "SKx - Closing force",
+            "current": 908.6,
+            "suggested": 904.424,
+            "delta": -4.176,
+            "direction": "\u2193"
+          },
+          {
+            "feature": "time_to_fill",
+            "current": 6.968,
+            "suggested": 6.5562,
+            "delta": -0.4118,
+            "direction": "\u2193"
+          },
+          {
+            "feature": "Mold temperature",
+            "current": 81.402,
+            "suggested": 81.139,
+            "delta": -0.263,
+            "direction": "\u2193"
+          },
+          {
+            "feature": "ZDx - Plasticizing time",
+            "current": 4.08,
+            "suggested": 4.3032,
+            "delta": 0.2232,
+            "direction": "\u2191"
+          },
+          {
+            "feature": "ZUx - Cycle time",
+            "current": 74.82,
+            "suggested": 74.9008,
+            "delta": 0.0808,
+            "direction": "\u2191"
+          }
+        ],
+        "probability_vector": {
+          "Waste": 0.10596026490066225,
+          "Acceptable": 0.11362346263008516,
+          "Target": 0.6293125197098707,
+          "Inefficient": 0.1511037527593819
+        },
+        "confidence_acc_plus_target": 0.7429
+      },
+      "true_class": 0,
+      "true_label": "Waste"
+    },
+    "validator_unconfirmed": {
+      "sample_index_in_test_split": 5,
+      "tier": 1,
+      "status": "resolved",
+      "message": "Tier 1 (SHAP+LIME): 5 adjustments found. CF confidence=58.0%. Validator: \u26a0\ufe0f Unconfirmed.",
+      "validator_ok": false,
+      "original": {
+        "feature_values": {
+          "Melt temperature": 106.08,
+          "Mold temperature": 81.469,
+          "time_to_fill": 6.084,
+          "ZDx - Plasticizing time": 2.87,
+          "ZUx - Cycle time": 75.67,
+          "SKx - Closing force": 904.4000000000001,
+          "SKs - Clamping force peak value": 919.5,
+          "Ms - Torque peak value current cycle": 123.2,
+          "Mm - Torque mean value current cycle": 106.7,
+          "APSs - Specific back pressure peak value": 145.5,
+          "APVs - Specific injection pressure peak value": 911.3,
+          "CPn - Screw position at the end of hold pressure": 8.96,
+          "SVo - Shot volume": 18.6
+        },
+        "probability_vector": {
+          "Waste": 0.0,
+          "Acceptable": 0.0,
+          "Target": 0.0,
+          "Inefficient": 1.0
+        },
+        "confidence_acc_plus_target": 0.0
+      },
+      "counterfactual": {
+        "tier_method": "Tier 1 (SHAP+LIME)",
+        "adjustments": [
+          {
+            "feature": "Melt temperature",
+            "current": 106.08,
+            "suggested": 100.2172,
+            "delta": -5.8628,
+            "direction": "\u2193"
+          },
+          {
+            "feature": "Mold temperature",
+            "current": 81.469,
+            "suggested": 81.206,
+            "delta": -0.263,
+            "direction": "\u2193"
+          },
+          {
+            "feature": "ZDx - Plasticizing time",
+            "current": 2.87,
+            "suggested": 3.0932,
+            "delta": 0.2232,
+            "direction": "\u2191"
+          },
+          {
+            "feature": "ZUx - Cycle time",
+            "current": 75.67,
+            "suggested": 75.7508,
+            "delta": 0.0808,
+            "direction": "\u2191"
+          },
+          {
+            "feature": "time_to_fill",
+            "current": 6.084,
+            "suggested": 6.084,
+            "delta": 0.0,
+            "direction": "\u2014"
+          }
+        ],
+        "probability_vector": {
+          "Waste": 0.05408388520971303,
+          "Acceptable": 0.10824660990223904,
+          "Target": 0.47188584042888687,
+          "Inefficient": 0.36578366445916105
+        },
+        "confidence_acc_plus_target": 0.5801
+      },
+      "true_class": 3,
+      "true_label": "Inefficient"
+    },
+    "unresolved": {
+      "sample_index_in_test_split": 9,
+      "tier": 0,
+      "status": "already_acceptable",
+      "message": "Part meets quality threshold (P{Acc,Target}=96.7%).",
+      "validator_ok": true,
+      "original": {
+        "feature_values": {
+          "Melt temperature": 105.82800000000002,
+          "Mold temperature": 81.054,
+          "time_to_fill": 6.292,
+          "ZDx - Plasticizing time": 3.41,
+          "ZUx - Cycle time": 75.77,
+          "SKx - Closing force": 894.2,
+          "SKs - Clamping force peak value": 915.8,
+          "Ms - Torque peak value current cycle": 116.0,
+          "Mm - Torque mean value current cycle": 104.0,
+          "APSs - Specific back pressure peak value": 146.4,
+          "APVs - Specific injection pressure peak value": 867.8,
+          "CPn - Screw position at the end of hold pressure": 8.75,
+          "SVo - Shot volume": 18.82
+        },
+        "probability_vector": {
+          "Waste": 0.0,
+          "Acceptable": 0.007726269315673288,
+          "Target": 0.9597130242825607,
+          "Inefficient": 0.032560706401766
+        },
+        "confidence_acc_plus_target": 0.9674
+      },
+      "true_class": 3,
+      "true_label": "Inefficient"
+    }
+  }
+}

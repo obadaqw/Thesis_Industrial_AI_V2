@@ -32,8 +32,6 @@ Located in `models/checkpoints/` (gitignored):
 
 | File | Description | Script |
 |------|-------------|--------|
-| `rca_evaluation.json` | Batch RCA on validation set (original run) | `scripts/evaluate_rca.py` |
-| `rca_results.csv` | Per-sample detail for validation set (original run) | `scripts/evaluate_rca.py` |
 | `rca_evaluation_test.json` | Batch RCA on test set (95.2% resolution, 6.4% validator) | `scripts/evaluate_rca.py --split test` |
 | `rca_results_test.csv` | Per-sample detail for test set | `scripts/evaluate_rca.py --split test` |
 | `rca_evaluation_val.json` | Batch RCA on validation set (split-tagged) | `scripts/evaluate_rca.py --split val` |

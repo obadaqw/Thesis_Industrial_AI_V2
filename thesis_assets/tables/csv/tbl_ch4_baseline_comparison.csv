@@ -1,0 +1,5 @@
+Class,"This work: precision (test, n=291)","Polenta (2022) RF: precision (5-fold CV, n=1451)","This work: recall (test, n=291)","Polenta (2022) RF: recall (5-fold CV, n=1451)",Note
+Waste,0.9459,0.9722,0.9459,0.9459,Protocol difference: this work reports a single held-out test split (n=291); Polenta et al. report samples summed across the 5 folds of stratified 5-fold CV over the full 1451-sample dataset. Not a like-for-like comparison -- see docs/hyperparameter_provenance.md Sec. 5.
+Acceptable,0.9512,0.9511,0.9512,0.9581,
+Target,0.9333,0.9437,0.9032,0.9194,
+Inefficient,0.92,0.9342,0.9452,0.9736,

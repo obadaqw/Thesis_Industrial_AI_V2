@@ -1,0 +1,137 @@
+{
+  "spec_limit_source": "ASSUMED",
+  "spec_limit_provenance": "config/constraints.yaml, which its own header documents as 'Auto-generated from: raw_data.csv' -- these are the OBSERVED min/max of the full historical dataset, not customer or engineering specification limits. Cp/Cpk below are computed against these assumed bounds.",
+  "population": "full raw dataset (n=1451), matching the population the bounds were themselves derived from",
+  "capabilities": [
+    {
+      "Feature": "Melt temperature",
+      "LSL": 81.747,
+      "USL": 155.032,
+      "Mean": 106.892,
+      "Std": 5.6158,
+      "Cp": 2.175,
+      "Cpk": 1.493,
+      "Status": "Capable"
+    },
+    {
+      "Feature": "Mold temperature",
+      "LSL": 78.409,
+      "USL": 82.159,
+      "Mean": 81.326,
+      "Std": 0.4288,
+      "Cp": 1.458,
+      "Cpk": 0.648,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "time_to_fill",
+      "LSL": 6.084,
+      "USL": 11.232,
+      "Mean": 7.459,
+      "Std": 1.6881,
+      "Cp": 0.508,
+      "Cpk": 0.272,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "ZDx - Plasticizing time",
+      "LSL": 2.78,
+      "USL": 6.61,
+      "Mean": 3.2342,
+      "Std": 0.3432,
+      "Cp": 1.86,
+      "Cpk": 0.441,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "ZUx - Cycle time",
+      "LSL": 74.78,
+      "USL": 75.79,
+      "Mean": 75.2188,
+      "Std": 0.4328,
+      "Cp": 0.389,
+      "Cpk": 0.338,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "SKx - Closing force",
+      "LSL": 876.7,
+      "USL": 930.6,
+      "Mean": 901.9748,
+      "Std": 11.0982,
+      "Cp": 0.809,
+      "Cpk": 0.759,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "SKs - Clamping force peak value",
+      "LSL": 894.8,
+      "USL": 946.5,
+      "Mean": 919.3518,
+      "Std": 10.78,
+      "Cp": 0.799,
+      "Cpk": 0.759,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "Ms - Torque peak value current cycle",
+      "LSL": 94.2,
+      "USL": 130.3,
+      "Mean": 116.7167,
+      "Std": 5.0291,
+      "Cp": 1.196,
+      "Cpk": 0.9,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "Mm - Torque mean value current cycle",
+      "LSL": 76.5,
+      "USL": 114.9,
+      "Mean": 104.1639,
+      "Std": 4.8022,
+      "Cp": 1.333,
+      "Cpk": 0.745,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "APSs - Specific back pressure peak value",
+      "LSL": 144.8,
+      "USL": 150.5,
+      "Mean": 146.23,
+      "Std": 0.8049,
+      "Cp": 1.18,
+      "Cpk": 0.592,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "APVs - Specific injection pressure peak value",
+      "LSL": 780.5,
+      "USL": 943.0,
+      "Mean": 900.9728,
+      "Std": 25.5192,
+      "Cp": 1.061,
+      "Cpk": 0.549,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "CPn - Screw position at the end of hold pressure",
+      "LSL": 8.33,
+      "USL": 9.06,
+      "Mean": 8.8089,
+      "Std": 0.0972,
+      "Cp": 1.251,
+      "Cpk": 0.861,
+      "Status": "Not Capable"
+    },
+    {
+      "Feature": "SVo - Shot volume",
+      "LSL": 18.51,
+      "USL": 19.23,
+      "Mean": 18.7563,
+      "Std": 0.0955,
+      "Cp": 1.256,
+      "Cpk": 0.859,
+      "Status": "Not Capable"
+    }
+  ]
+}

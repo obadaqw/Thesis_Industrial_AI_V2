@@ -1,0 +1,10 @@
+Hyperparameter,Polenta et al. (2022),This implementation,Status
+`n_estimators`,151,151,Identical
+`min_samples_leaf`,2,2,Identical
+`min_samples_split`,4,4,Identical
+`criterion`,gain ratio (best config),`'entropy'` (information gain),Deviation — see §1
+`max_depth`,79 (gain ratio row) / 140 (information gain row),79,Deviation — see §2
+Ensemble type,ExtraTrees,`RandomForestClassifier`,Deviation — see §3
+Features per split,int(ln(m)+1) = 3 for m=13,`'sqrt'` → int(√13) = 3,Equivalent — see §4
+Evaluation protocol,"5-fold CV, full dataset",Single held-out split,Deviation — see §5
+`random_state`,Not specified,42,Addition (reproducibility)

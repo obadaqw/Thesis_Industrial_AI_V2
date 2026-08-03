@@ -10,3 +10,4 @@ models/checkpoints/
 .idea/
 *.egg-info/
 .coverage
+.thesis_assets_tmp/

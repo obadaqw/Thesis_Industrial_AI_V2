@@ -1,0 +1,77 @@
+{
+  "parameter_mapping": {
+    "cycle time": "ZUx - Cycle time",
+    "filling time": "time_to_fill",
+    "clamping force": "SKs - Clamping force peak value",
+    "closing force": "SKx - Closing force",
+    "screw position": "CPn - Screw position at the end of hold pressure",
+    "shot volume": "SVo - Shot volume",
+    "mold temperature": "Mold temperature",
+    "plasticizing time": "ZDx - Plasticizing time",
+    "specific injection pressure": "APVs - Specific injection pressure peak value",
+    "torque peak": "Ms - Torque peak value current cycle",
+    "torque mean": "Mm - Torque mean value current cycle",
+    "specific back pressure": "APSs - Specific back pressure peak value",
+    "melt temperature": "Melt temperature"
+  },
+  "shap_importance_by_paper_name": {
+    "cycle time": 0.09987493224779981,
+    "filling time": 0.052185157786933174,
+    "clamping force": 0.03640341850011598,
+    "closing force": 0.04128030631250141,
+    "screw position": 0.01312522865343456,
+    "shot volume": 0.01123965782899652,
+    "mold temperature": 0.030822254548937583,
+    "plasticizing time": 0.06997286032842365,
+    "specific injection pressure": 0.04109685471683836,
+    "torque peak": 0.005698051341452769,
+    "torque mean": 0.007498965914617949,
+    "specific back pressure": 0.003310295789417578,
+    "melt temperature": 0.014936037556847059
+  },
+  "relief_weight": {
+    "cycle time": 1.0,
+    "filling time": 0.5749,
+    "clamping force": 0.1849,
+    "closing force": 0.1793,
+    "screw position": 0.1421,
+    "shot volume": 0.1393,
+    "mold temperature": 0.1325,
+    "plasticizing time": 0.0913,
+    "specific injection pressure": 0.0632,
+    "torque peak": 0.0611,
+    "torque mean": 0.0584,
+    "specific back pressure": 0.0038,
+    "melt temperature": 0.0
+  },
+  "anova_weight": {
+    "cycle time": 1.0,
+    "specific injection pressure": 0.0295,
+    "mold temperature": 0.0289,
+    "filling time": 0.025,
+    "shot volume": 0.0204,
+    "screw position": 0.0202,
+    "plasticizing time": 0.0199,
+    "closing force": 0.0145,
+    "clamping force": 0.0101,
+    "specific back pressure": 0.0032,
+    "torque mean": 0.002,
+    "torque peak": 0.0012,
+    "melt temperature": 0.0
+  },
+  "spearman_shap_vs_relief": {
+    "r": 0.6593,
+    "p": 0.014226
+  },
+  "spearman_shap_vs_anova": {
+    "r": 0.6044,
+    "p": 0.028673
+  },
+  "top1_feature": {
+    "shap": "cycle time",
+    "relief": "cycle time",
+    "anova": "cycle time"
+  },
+  "agreement_note": "SHAP top-ranked parameter is 'cycle time'; Relief top-ranked is 'cycle time'; ANOVA top-ranked is 'cycle time'. Spearman r(SHAP, Relief)=0.659, r(SHAP, ANOVA)=0.604.",
+  "source": "Polenta et al. (2022), Figures 2-3 (Relief/ANOVA weights, reproduced as reference constants)"
+}

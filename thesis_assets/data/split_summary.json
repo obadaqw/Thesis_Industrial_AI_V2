@@ -1,0 +1,20 @@
+{
+  "n_total": 1451,
+  "sizes": {
+    "train": 870,
+    "val": 290,
+    "test": 291
+  },
+  "proportions": {
+    "train": 0.5996,
+    "val": 0.1999,
+    "test": 0.2006
+  },
+  "nominal_split": "60% train / 20% val / 20% test",
+  "random_state": 42,
+  "stratified": true,
+  "stratify_column": "quality",
+  "max_abs_class_proportion_deviation": 0.002,
+  "stratification_confirmed": true,
+  "source_script": "src/data_pipeline.py"
+}

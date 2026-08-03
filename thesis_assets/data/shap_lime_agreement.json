@@ -1,0 +1,310 @@
+{
+  "split": "test",
+  "n_samples": 50,
+  "spearman_r_mean": 0.6333,
+  "spearman_r_std": 0.2047,
+  "top5_overlap_mean": 4.02,
+  "top5_overlap_std": 0.6224,
+  "per_sample": [
+    {
+      "sample_index": 226,
+      "predicted_class": 0,
+      "spearman_r": 0.5714,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 283,
+      "predicted_class": 1,
+      "spearman_r": 0.5824,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 209,
+      "predicted_class": 1,
+      "spearman_r": 0.6758,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 171,
+      "predicted_class": 1,
+      "spearman_r": 0.9396,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 118,
+      "predicted_class": 3,
+      "spearman_r": 0.4725,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 273,
+      "predicted_class": 0,
+      "spearman_r": 0.3736,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 73,
+      "predicted_class": 1,
+      "spearman_r": 0.5385,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 157,
+      "predicted_class": 1,
+      "spearman_r": 0.467,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 129,
+      "predicted_class": 1,
+      "spearman_r": 0.3791,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 45,
+      "predicted_class": 2,
+      "spearman_r": 0.9396,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 135,
+      "predicted_class": 1,
+      "spearman_r": 0.4231,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 15,
+      "predicted_class": 0,
+      "spearman_r": 0.7747,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 152,
+      "predicted_class": 1,
+      "spearman_r": 0.3791,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 217,
+      "predicted_class": 0,
+      "spearman_r": 0.5714,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 92,
+      "predicted_class": 2,
+      "spearman_r": 0.9341,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 12,
+      "predicted_class": 1,
+      "spearman_r": 0.4835,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 245,
+      "predicted_class": 3,
+      "spearman_r": 0.522,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 22,
+      "predicted_class": 0,
+      "spearman_r": 0.5,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 166,
+      "predicted_class": 3,
+      "spearman_r": 0.6264,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 266,
+      "predicted_class": 2,
+      "spearman_r": 0.7802,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 227,
+      "predicted_class": 2,
+      "spearman_r": 0.9505,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 250,
+      "predicted_class": 3,
+      "spearman_r": 0.7253,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 194,
+      "predicted_class": 1,
+      "spearman_r": 0.3022,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 256,
+      "predicted_class": 1,
+      "spearman_r": 0.5495,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 240,
+      "predicted_class": 2,
+      "spearman_r": 0.9505,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 272,
+      "predicted_class": 0,
+      "spearman_r": 0.544,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 8,
+      "predicted_class": 0,
+      "spearman_r": 0.5495,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 168,
+      "predicted_class": 0,
+      "spearman_r": 0.8242,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 275,
+      "predicted_class": 3,
+      "spearman_r": 0.7253,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 156,
+      "predicted_class": 3,
+      "spearman_r": 0.6044,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 224,
+      "predicted_class": 2,
+      "spearman_r": 0.8901,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 182,
+      "predicted_class": 1,
+      "spearman_r": 0.4286,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 175,
+      "predicted_class": 2,
+      "spearman_r": 0.9121,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 5,
+      "predicted_class": 3,
+      "spearman_r": 0.6703,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 205,
+      "predicted_class": 1,
+      "spearman_r": 0.4011,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 103,
+      "predicted_class": 1,
+      "spearman_r": 0.5714,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 212,
+      "predicted_class": 2,
+      "spearman_r": 0.9011,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 248,
+      "predicted_class": 1,
+      "spearman_r": 0.8352,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 219,
+      "predicted_class": 1,
+      "spearman_r": 0.5549,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 237,
+      "predicted_class": 1,
+      "spearman_r": 0.467,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 55,
+      "predicted_class": 2,
+      "spearman_r": 0.9066,
+      "top5_overlap": 5
+    },
+    {
+      "sample_index": 7,
+      "predicted_class": 3,
+      "spearman_r": 0.5659,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 231,
+      "predicted_class": 3,
+      "spearman_r": 0.6703,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 97,
+      "predicted_class": 0,
+      "spearman_r": 0.5549,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 59,
+      "predicted_class": 1,
+      "spearman_r": 0.8791,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 146,
+      "predicted_class": 0,
+      "spearman_r": 0.2747,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 161,
+      "predicted_class": 2,
+      "spearman_r": 0.956,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 81,
+      "predicted_class": 1,
+      "spearman_r": 0.533,
+      "top5_overlap": 4
+    },
+    {
+      "sample_index": 126,
+      "predicted_class": 0,
+      "spearman_r": 0.2253,
+      "top5_overlap": 3
+    },
+    {
+      "sample_index": 110,
+      "predicted_class": 3,
+      "spearman_r": 0.8077,
+      "top5_overlap": 4
+    }
+  ]
+}

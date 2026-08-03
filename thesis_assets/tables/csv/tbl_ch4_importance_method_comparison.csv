@@ -1,0 +1,17 @@
+Parameter (paper name),Column,SHAP importance,Impurity importance,Relief weight,ANOVA weight
+cycle time,ZUx - Cycle time,0.09987,0.21133,1.0,1.0
+plasticizing time,ZDx - Plasticizing time,0.06997,0.1652,0.0913,0.0199
+filling time,time_to_fill,0.05219,0.11838,0.5749,0.025
+closing force,SKx - Closing force,0.04128,0.10011,0.1793,0.0145
+specific injection pressure,APVs - Specific injection pressure peak value,0.0411,0.08976,0.0632,0.0295
+clamping force,SKs - Clamping force peak value,0.0364,0.08627,0.1849,0.0101
+mold temperature,Mold temperature,0.03082,0.07872,0.1325,0.0289
+melt temperature,Melt temperature,0.01494,0.042,0.0,0.0
+screw position,CPn - Screw position at the end of hold pressure,0.01313,0.03064,0.1421,0.0202
+shot volume,SVo - Shot volume,0.01124,0.02833,0.1393,0.0204
+torque mean,Mm - Torque mean value current cycle,0.0075,0.0232,0.0584,0.002
+torque peak,Ms - Torque peak value current cycle,0.0057,0.01609,0.0611,0.0012
+specific back pressure,APSs - Specific back pressure peak value,0.00331,0.00998,0.0038,0.0032
+Spearman r (SHAP vs. impurity),,1.0,p=0.0,,
+Spearman r (SHAP vs. Relief),,0.6593,p=0.014226,,
+Spearman r (SHAP vs. ANOVA),,0.6044,p=0.028673,,

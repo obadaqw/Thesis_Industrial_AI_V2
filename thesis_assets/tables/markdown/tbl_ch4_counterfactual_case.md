@@ -1,0 +1,7 @@
+| Parameter | Original | Suggested | Delta | Direction |
+|---|---|---|---|---|
+| SKx - Closing force | 908.6 | 904.424 | -4.176 | ↓ |
+| time_to_fill | 6.968 | 6.5562 | -0.4118 | ↓ |
+| Mold temperature | 81.402 | 81.139 | -0.263 | ↓ |
+| ZDx - Plasticizing time | 4.08 | 4.3032 | 0.2232 | ↑ |
+| ZUx - Cycle time | 74.82 | 74.9008 | 0.0808 | ↑ |

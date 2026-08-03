@@ -1,0 +1,14 @@
+Rank,Feature,Mean |SHAP|
+1,ZUx - Cycle time,0.09987493224779981
+2,ZDx - Plasticizing time,0.06997286032842365
+3,time_to_fill,0.052185157786933174
+4,SKx - Closing force,0.04128030631250141
+5,APVs - Specific injection pressure peak value,0.04109685471683836
+6,SKs - Clamping force peak value,0.03640341850011598
+7,Mold temperature,0.030822254548937583
+8,Melt temperature,0.014936037556847059
+9,CPn - Screw position at the end of hold pressure,0.01312522865343456
+10,SVo - Shot volume,0.01123965782899652
+11,Mm - Torque mean value current cycle,0.007498965914617949
+12,Ms - Torque peak value current cycle,0.005698051341452769
+13,APSs - Specific back pressure peak value,0.003310295789417578

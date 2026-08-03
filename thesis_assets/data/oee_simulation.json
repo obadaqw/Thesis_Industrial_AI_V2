@@ -1,0 +1,83 @@
+{
+  "scenario_definition": "291 test-split samples replayed through DigitalTwin in index order, using the champion model's own predictions (not ground-truth labels) as the per-cycle outcome -- i.e. what the production line would have shown the operator in real time.",
+  "random_seed": 42,
+  "stochastic_note": "DigitalTwin.update_metrics() draws performance from random.uniform(0.95, 1.0) per cycle and decays availability deterministically; the seed above makes THIS run reproducible, but the module itself is inherently stochastic by design.",
+  "final_state": {
+    "status": "RUNNING",
+    "total_cycles": 291,
+    "good_cycles": 142,
+    "bad_cycles": 149,
+    "availability": 0.9509,
+    "performance": 0.9502,
+    "quality": 0.488,
+    "oee": 0.4409
+  },
+  "history_every_50_cycles": [
+    {
+      "cycle": 50,
+      "status": "RUNNING",
+      "total_cycles": 50,
+      "good_cycles": 23,
+      "bad_cycles": 27,
+      "availability": 0.975,
+      "performance": 0.9682,
+      "quality": 0.46,
+      "oee": 0.4343
+    },
+    {
+      "cycle": 100,
+      "status": "RUNNING",
+      "total_cycles": 100,
+      "good_cycles": 51,
+      "bad_cycles": 49,
+      "availability": 0.97,
+      "performance": 0.993,
+      "quality": 0.51,
+      "oee": 0.4913
+    },
+    {
+      "cycle": 150,
+      "status": "RUNNING",
+      "total_cycles": 150,
+      "good_cycles": 75,
+      "bad_cycles": 75,
+      "availability": 0.965,
+      "performance": 0.9656,
+      "quality": 0.5,
+      "oee": 0.4659
+    },
+    {
+      "cycle": 200,
+      "status": "RUNNING",
+      "total_cycles": 200,
+      "good_cycles": 100,
+      "bad_cycles": 100,
+      "availability": 0.96,
+      "performance": 0.9918,
+      "quality": 0.5,
+      "oee": 0.4761
+    },
+    {
+      "cycle": 250,
+      "status": "RUNNING",
+      "total_cycles": 250,
+      "good_cycles": 122,
+      "bad_cycles": 128,
+      "availability": 0.955,
+      "performance": 0.965,
+      "quality": 0.488,
+      "oee": 0.4497
+    },
+    {
+      "cycle": 291,
+      "status": "RUNNING",
+      "total_cycles": 291,
+      "good_cycles": 142,
+      "bad_cycles": 149,
+      "availability": 0.9509,
+      "performance": 0.9502,
+      "quality": 0.488,
+      "oee": 0.4409
+    }
+  ]
+}
