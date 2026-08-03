@@ -1,0 +1,9 @@
+split,sweep,confidence_threshold,max_iter,total,tier1,tier2,tier3,errors,resolved,resolution_rate,validator_confirmed,validator_rate,elapsed_s
+val,threshold,0.55,150,147,144,0,0,0,144,0.9796,16,0.1111,72.7
+val,threshold,0.65,150,147,142,1,2,0,143,0.9728,15,0.1049,158.7
+val,threshold,0.75,150,147,99,13,33,0,112,0.7619,25,0.2232,462.6
+val,threshold,0.85,150,147,25,18,102,0,43,0.2925,24,0.5581,944.8
+val,threshold,0.95,150,147,0,4,142,0,4,0.0272,4,1.0,1447.7
+val,max_iter,0.55,10,147,76,5,63,0,81,0.551,18,0.2222,69.1
+val,max_iter,0.55,25,147,140,3,1,0,143,0.9728,19,0.1329,69.3
+val,max_iter,0.55,50,147,144,0,0,0,144,0.9796,16,0.1111,74.8

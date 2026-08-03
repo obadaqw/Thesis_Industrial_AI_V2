@@ -92,6 +92,29 @@ def main(split: str = "val") -> None:
     y             = y_raw - 1 if y_raw.min() > 0 else y_raw
 
     records   = []
+    if os.path.exists(out_json):
+        try:
+            with open(out_json) as f:
+                prev = json.load(f)
+            if prev.get("split") == split and not prev.get("complete", False):
+                records = prev.get("records", [])
+        except (json.JSONDecodeError, OSError):
+            pass
+    if not records and os.path.exists(out_csv):
+        # json may have been truncated by a killed process; csv is written
+        # via pandas.to_csv (atomic-ish) so it's the more reliable source.
+        prev_df = pd.read_csv(out_csv)
+        if not prev_df.empty:
+            records = prev_df.to_dict("records")
+    if records:
+        print(f"Resuming: {len(records)} config(s) already completed, skipping those.")
+
+    def _done(sweep: str, thresh: float, mi: int) -> bool:
+        return any(
+            r["sweep"] == sweep and r["confidence_threshold"] == thresh and r["max_iter"] == mi
+            for r in records
+        )
+
     t_global  = time.time()
 
     def _flush(total_so_far: float) -> None:
@@ -104,6 +127,9 @@ def main(split: str = "val") -> None:
 
     print(f"\n=== Part A: confidence_threshold sweep (max_iter=150, {split}) ===")
     for thresh in THRESHOLD_SWEEP:
+        if _done("threshold", thresh, 150):
+            print(f"\n  threshold={thresh:.2f} already completed, skipping.")
+            continue
         print(f"\n  threshold={thresh:.2f} ...", flush=True)
         rca = CounterfactualRCA(confidence_threshold=thresh, max_iter=150)
         t0  = time.time()
@@ -122,6 +148,9 @@ def main(split: str = "val") -> None:
     for mi in MAX_ITER_SWEEP:
         if mi == 150:
             continue  # already captured in Part A
+        if _done("max_iter", 0.55, mi):
+            print(f"\n  max_iter={mi} already completed, skipping.")
+            continue
         print(f"\n  max_iter={mi} ...", flush=True)
         rca = CounterfactualRCA(confidence_threshold=0.55, max_iter=mi)
         t0  = time.time()
