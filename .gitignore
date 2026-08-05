@@ -11,3 +11,16 @@ models/checkpoints/
 *.egg-info/
 .coverage
 .thesis_assets_tmp/
+
+# LaTeX build artifacts (thesis_latex/main.pdf is committed as the compiled reference copy)
+thesis_latex/*.aux
+thesis_latex/*.log
+thesis_latex/*.out
+thesis_latex/*.toc
+thesis_latex/*.lof
+thesis_latex/*.lot
+thesis_latex/*.fls
+thesis_latex/*.fdb_latexmk
+thesis_latex/*.synctex.gz
+thesis_latex/*.bbl
+thesis_latex/*.blg
