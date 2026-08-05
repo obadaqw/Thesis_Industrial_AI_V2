@@ -1,0 +1,115 @@
+% ============================================================
+%  preamble.tex — packages and settings shared by the whole thesis
+%  Compile with XELATEX (not pdflatex). On Overleaf: Menu -> Compiler -> XeLaTeX
+%  Why XeLaTeX: the thesis text contains many raw Unicode symbols
+%  (σ, µ, °, ±, ≥, ≤, →, ↑, ↓, √, Δ, ₀) copied from the drafted chapters.
+%  XeLaTeX renders any Unicode codepoint the loaded font supports, with no
+%  inputenc/fontenc fiddling. pdfLaTeX will choke on several of these.
+% ============================================================
+
+% ---- Page geometry -------------------------------------------------------
+\usepackage[a4paper,margin=1in,bindingoffset=0.5in]{geometry}
+
+% ---- Fonts (XeLaTeX) ------------------------------------------------------
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}      % wide Unicode coverage, Times-like
+\setsansfont{TeX Gyre Heros}
+\setmonofont{DejaVu Sans Mono}[Scale=0.85]
+% DejaVu Sans Mono (not TeX Gyre Cursor) specifically because the code
+% listings in Appendix E contain box-drawing divider comments
+% (# ── Hyper-parameters ── ...) copied verbatim from the real source files;
+% TeX Gyre Cursor is missing those glyphs, DejaVu covers them.
+% If TeX Gyre fonts are unavailable in your Overleaf/local install, also swap:
+%   \setmainfont{DejaVu Serif}    (very broad symbol coverage, safest fallback)
+
+% ---- Maths -----------------------------------------------------------------
+\usepackage{amsmath,amssymb}
+
+% ---- Arabic front-matter support ------------------------------------------
+% DEFAULT APPROACH: include a pre-rendered PDF page for the Arabic abstract
+% (see frontmatter/abstract_ar.tex and frontmatter/abstract_ar.pdf). This is
+% robust and needs nothing else in this preamble.
+\usepackage{pdfpages}
+%
+% ALTERNATIVE: native Arabic via polyglossia+bidi was tried for this skeleton
+% and abandoned deliberately. The `bidi` package (loaded by polyglossia the
+% moment \setotherlanguage{arabic} is used) imposes a strict, semi-documented
+% load order on OTHER packages in this preamble (amsmath and geometry must
+% load BEFORE bidi; caption, hyperref, csquotes must load AFTER it — and the
+% exact set varies by bidi version). Getting every package below into the
+% order bidi wants is fiddly and version-fragile, which is a bad trade for a
+% single abstract page on a first LaTeX project. If you want native Arabic
+% text later (e.g. to also translate other sections), uncomment the four
+% lines below, then re-order the *rest of this file* so every package that
+% conflicts loads on the correct side of \usepackage{polyglossia} — compile,
+% read the "load X before/after bidi" error, move that one package, repeat.
+%
+% \usepackage{polyglossia}
+% \setmainlanguage{english}
+% \setotherlanguage{arabic}
+% \newfontfamily\arabicfont[Script=Arabic]{Amiri}
+
+% ---- Tables ------------------------------------------------------------
+\usepackage{booktabs}      % \toprule \midrule \bottomrule — used by pandoc's table output
+\usepackage{longtable}     % tables that break across pages (Appendix A, D)
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+% ---- Figures ---------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
+
+% ---- Code listings (Appendix E) --------------------------------------------
+\usepackage{listings}
+\usepackage{xcolor}
+\lstdefinestyle{pythonstyle}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{orange!70!black},
+  numbers=left, numberstyle=\tiny\color{gray}, numbersep=8pt,
+  frame=single, breaklines=true, showstringspaces=false,
+  tabsize=4, columns=flexible
+}
+\lstset{style=pythonstyle}
+% (If you prefer real syntax-highlighting fidelity, switch to the `minted`
+%  package instead — needs -shell-escape, which Overleaf enables by default
+%  under Menu -> Settings, but `listings` above needs no extra setup.)
+
+% ---- Cross-referencing ------------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black,
+  urlcolor=blue!50!black, bookmarksnumbered=true
+}
+\usepackage{cleveref}      % \cref{}, \Cref{} — use instead of \ref{} everywhere
+
+% ---- Misc ------------------------------------------------------------------
+\usepackage{csquotes}
+\usepackage[nottoc]{tocbibind}   % puts Bibliography in the ToC automatically
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}   % silences fancyhdr's "headheight too small" warning
+
+% ---- Pandoc compatibility --------------------------------------------------
+% Pandoc emits \tightlist inside compact (no-blank-line) markdown lists.
+% It is not a standard LaTeX command, so every converted chapter needs this.
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% ---- Custom commands used across chapters -----------------------------------
+\newcommand{\rqref}[1]{\textbf{RQ#1}}       % \rqref{4} -> RQ4  (named rqref: \rq is a LaTeX primitive)
+\newcommand{\code}[1]{\texttt{#1}}          % inline code / filenames
+\newcommand{\pct}[1]{#1\%}                  % percentages, keeps % escaping consistent
+
+% ---- Table caption style ----------------------------------------------------
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf,skip=6pt}

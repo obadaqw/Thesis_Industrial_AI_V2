@@ -1,0 +1,1271 @@
+\hypertarget{results-and-evaluation}{%
+\chapter{Results and Evaluation}\label{results-and-evaluation}}
+
+This chapter reports the results produced by the methodology of Chapter 3. Every figure quoted here traces to a named artefact file in the project repository, and every table caption cites the file from which its contents are generated. In accordance with the split discipline of §3.9.5, \textbf{test-split figures are reported as the headline throughout and validation-split figures appear only as comparison}, including --- and especially --- where the test figure is the less flattering of the two.
+
+The chapter proceeds from the least contentious result to the most. §4.2 establishes that the classification task is solved to a standard consistent with the reference benchmark. §4.3 shows that the explanation layer produces stable, externally corroborated attributions. §4.4 shows that the counterfactual engine resolves almost every non-conforming cycle it is given. §4.5 then reports what happens when those resolutions are put to an independent test, and is the centre of the thesis. §4.6 shows that the resulting gap is not fixed but tunable. §4.7 validates the drift detector, §4.8 reports the expert sub-study, and §4.9 maps each research question to its answer.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{experimental-setup}{%
+\section{4.1 Experimental Setup}\label{experimental-setup}}
+
+\hypertarget{computing-environment}{%
+\subsection{4.1.1 Computing Environment}\label{computing-environment}}
+
+All experiments were executed on CPU. No GPU acceleration was used at any stage, which is itself a relevant result for the deployment context of §2.2.5: the entire pipeline, including the counterfactual engine and both sensitivity sweeps, runs on commodity hardware of the kind a small manufacturer already owns.
+
+\textbf{Table 4.1.} Execution environment and software versions.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Component
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Specification
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Processor & \emph{{[}Insert CPU model and core count from the machine used for the final run{]}} \\
+Memory & \emph{{[}Insert RAM{]}} \\
+Operating system & \emph{{[}Insert OS and version{]}} \\
+Python & 3.11 (as pinned in \texttt{Dockerfile}) \\
+scikit-learn, XGBoost, SHAP, LIME, statsmodels & Versions pinned in \texttt{requirements.txt}; reproduced in Appendix D \\
+\end{longtable}
+
+\hypertarget{runtimes}{%
+\subsection{4.1.2 Runtimes}\label{runtimes}}
+
+\textbf{Table 4.2.} Wall-clock runtime of the principal evaluation stages. Source: \texttt{models/tier\_sensitivity\_\{val,test\}.json}, \texttt{scripts/run\_all\_evaluations.sh}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Runtime
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Data pipeline & --- & seconds \\
+Training, six algorithms & train & minutes \\
+RCA batch evaluation & test & \textasciitilde71 s at the default configuration \\
+RCA batch evaluation & val & \textasciitilde73 s at the default configuration \\
+Tier sensitivity sweep, eight configurations & test & 2,873 s (47.9 min) \\
+Tier sensitivity sweep, eight configurations & val & 1,662 s (27.7 min) \\
+Method comparison, both methods & test & \textasciitilde20 min \\
+Method comparison, both methods & val & \textasciitilde20 min \\
+Full pipeline, end to end & all & \textasciitilde3--4 h \\
+\end{longtable}
+
+Two observations. First, the default operating point is fast: 147 non-conforming cycles are analysed in roughly 71 seconds, or approximately 0.48 s per cycle including SHAP attribution, LIME explanation, iterative search, and verification. This is comfortably within the cycle time of an injection molding machine, so per-cycle analysis in production is computationally feasible. Second, runtime rises steeply with the acceptance threshold --- from 71 s at 0.55 to 1,084 s at 0.95 on the test split --- because a stricter criterion forces the search through more iterations and more frequently into Tier 2 before terminating. The cost of demanding a more confident counterfactual is paid in compute as well as in coverage.
+
+\hypertarget{artefact-provenance}{%
+\subsection{4.1.3 Artefact Provenance}\label{artefact-provenance}}
+
+A complete index mapping each result file to the table or figure it supports is maintained in \texttt{models/ARTIFACTS.md} and \texttt{thesis\_assets/MANIFEST.md}, and reproduced in Appendix D. The full set of results in this chapter is regenerated from raw data by \texttt{scripts/run\_all\_evaluations.sh} followed by \texttt{scripts/build\_thesis\_assets.sh}.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{classifier-performance}{%
+\section{4.2 Classifier Performance}\label{classifier-performance}}
+
+\hypertarget{algorithm-comparison}{%
+\subsection{4.2.1 Algorithm Comparison}\label{algorithm-comparison}}
+
+Six candidate algorithms were trained on the training split (n = 870) and evaluated by stratified five-fold cross-validation within that split, as specified in §3.4.2.
+
+\textbf{Table 4.3.} Six-algorithm comparison, ranked by cross-validation mean accuracy. CV statistics from stratified five-fold cross-validation within the training split; validation accuracy and F1 on the validation split (n = 290). Source: \texttt{models/experiments.json}.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Algorithm & CV mean & CV std & Validation accuracy \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Random Forest} & \textbf{0.9471} & 0.0190 & 0.9310 \\
+XGBoost & 0.9425 & 0.0202 & 0.9414 \\
+Gradient Boosting & 0.9379 & 0.0168 & 0.9310 \\
+Multilayer Perceptron & 0.9218 & 0.0240 & 0.8931 \\
+Decision Tree & 0.9023 & 0.0170 & 0.8966 \\
+k-Nearest Neighbours & 0.8839 & 0.0043 & 0.8828 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_algorithm_comparison.pdf}
+\caption{Five-fold stratified cross-validation mean accuracy (± one standard deviation) for the six candidate algorithms, training split, ranked by CV mean. Source: \texttt{figures/ch4/fig\_ch4\_algorithm\_comparison}.}
+\label{fig:ch4-algorithm-comparison}
+\end{figure}
+
+Three observations.
+
+The \textbf{ranking reproduces the reference study's ordering} in its essentials. Polenta et al.~{[}5{]} found random forest strongest, gradient-boosted trees second, and kNN weakest among their six candidates; the same ordering appears here, with XGBoost occupying the position their SVM held. That an independent implementation on a different protocol recovers the same ranking is modest evidence that the ordering reflects a property of the data rather than of either implementation.
+
+The \textbf{top three are closely spaced}. RF, XGB and GB span 0.9379 to 0.9471 --- a range of 0.0092, which is smaller than the cross-validation standard deviation of any of the three. As anticipated in §3.4.4, the defensible reading is that these three are effectively indistinguishable on this dataset, and the claim made here is that Random Forest is an appropriate champion, not that it is uniquely correct.
+
+The \textbf{two criteria disagree}, exactly as §3.4.4 anticipated. XGBoost attains the highest single-split validation accuracy (0.9414 against RF's 0.9310), while Random Forest attains the highest cross-validation mean. The gap on the validation split is 0.0104, or approximately three samples out of 290 --- a difference at the resolution of sampling noise. Selection proceeded on CV mean, and Random Forest is the champion. Had the single split been used, the entire downstream chain would have been built on a different model on the basis of three samples.
+
+kNN's very low CV standard deviation (0.0043) is worth a note: it is the most \emph{consistent} model and the least \emph{accurate}, a reminder that stability and performance are separate properties.
+
+\hypertarget{champion-performance-on-the-held-out-test-split}{%
+\subsection{4.2.2 Champion Performance on the Held-Out Test Split}\label{champion-performance-on-the-held-out-test-split}}
+
+The champion Random Forest was evaluated once on the held-out test split, which participated in no selection decision.
+
+\textbf{Table 4.4.} Champion model performance on the held-out test split. Source: \texttt{models/test\_evaluation.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+N samples
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Accuracy
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+F1 (weighted)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+F1 (macro)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Non-conformance precision
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Non-conformance recall
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+RandomForestClassifier & 291 & 0.9381 & 0.9381 & 0.9369 & 0.9329 & 0.9456 \\
+\end{longtable}
+
+Headline test accuracy is \textbf{93.81\%} on 291 held-out samples. Weighted and macro F1 are 0.9381 and 0.9369 respectively; their near-equality reflects the balanced class distribution established in §3.2.4 and indicates that performance is not being carried by a majority class.
+
+Test accuracy (93.81\%) is 0.90 percentage points below the cross-validation mean (94.71\%) and 0.71 points above validation accuracy (93.10\%). The relationship among the three is unremarkable and is what a well-behaved model on a modest dataset should produce: no evidence of overfitting to the training split, and no evidence that the validation split was anomalously easy or hard.
+
+\textbf{Non-conformance recall is 94.56\%.} This is the operationally central figure identified in §3.9.1: of all genuinely non-conforming cycles in the test split, the model correctly identifies 94.56\% as non-conforming. Non-conformance precision is 93.29\%, so the screening function is roughly symmetric in its error profile.
+
+\hypertarget{per-class-precision-and-recall}{%
+\subsection{4.2.3 Per-Class Precision and Recall}\label{per-class-precision-and-recall}}
+
+\textbf{Table 4.5.} Per-class precision, recall, and support on the held-out test split (n = 291). Source: \texttt{models/test\_evaluation.json}.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Class & Precision & Recall & Support \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Waste & 0.9459 & 0.9459 & 74 \\
+Acceptable & 0.9512 & 0.9512 & 82 \\
+Target & 0.9333 & 0.9032 & 62 \\
+Inefficient & 0.9200 & 0.9452 & 73 \\
+\end{longtable}
+
+\textbf{Recall on the safety-critical \emph{Waste} class is 94.59\%.} Of 74 truly non-compliant lenses in the test split, 70 are correctly identified and 4 are not. Precision on the same class is identical at 94.59\%, so the model is neither systematically over- nor under-calling \emph{Waste}.
+
+The weakest cell in the table is \textbf{recall on \emph{Target} (90.32\%)}, the only value below 0.92. Six of 62 \emph{Target} cycles are missed. The consequence is benign: as the confusion matrix below shows, all six are misclassified as \emph{Inefficient}, which is a confusion between two classes that are both compliant with UNI EN 13201-2:2016. A \emph{Target} part called \emph{Inefficient} is still a saleable part; the error costs a spurious efficiency signal, not a customer defect. The reference study reaches the same conclusion about the relative severity of confusions within the compliant region.
+
+Precision on \emph{Inefficient} (92.00\%) is the lowest precision figure and is the mirror image of the same phenomenon: the class absorbs the six misrouted \emph{Target} cycles.
+
+\hypertarget{confusion-matrix}{%
+\subsection{4.2.4 Confusion Matrix}\label{confusion-matrix}}
+
+\textbf{Table 4.6.} Confusion matrix on the held-out test split (n = 291), with row and column totals. Rows are true classes, columns predicted. Source: \texttt{models/test\_evaluation.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+True ~Predicted
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Waste
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Acceptable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Target
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Inefficient
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Row total
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Waste} & 70 & 4 & 0 & 0 & 74 \\
+\textbf{Acceptable} & 4 & 78 & 0 & 0 & 82 \\
+\textbf{Target} & 0 & 0 & 56 & 6 & 62 \\
+\textbf{Inefficient} & 0 & 0 & 4 & 69 & 73 \\
+\textbf{Column total} & 74 & 82 & 60 & 75 & 291 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/ch4/fig_ch4_confusion_matrix_test.pdf}
+\caption{Confusion matrix of the champion model on the held-out test split (n = 291), annotated with raw counts and row-normalised percentages. Source: \texttt{figures/ch4/fig\_ch4\_confusion\_matrix\_test}.}
+\label{fig:ch4-confusion-matrix-test}
+\end{figure}
+
+The matrix has a striking and analytically important structure: \textbf{it is block-diagonal.} All 18 errors fall within one of two adjacent-class blocks --- \{\emph{Waste}, \emph{Acceptable}\} accounts for 8 errors, and \{\emph{Target}, \emph{Inefficient}\} accounts for 10 --- and the two blocks do not exchange a single sample. There is no cycle anywhere in the test split that the model confuses across the \{\emph{Waste}, \emph{Acceptable}\} / \{\emph{Target}, \emph{Inefficient}\} boundary.
+
+This means the model's errors follow the ordinal structure of the underlying photometric measurement. The four classes are ordered bands of general uniformity U\textsubscript{0}, and every error the model makes is a confusion between adjacent bands. It never mistakes a badly under-performing lens for an over-performing one. For a quality-control application this is close to the best available error structure, because it means the \emph{magnitude} of every error is bounded by one band.
+
+The safety-critical cell is the \emph{Waste} → \emph{Acceptable} off-diagonal: \textbf{4 of 291 test cycles (1.37\%)} are non-compliant lenses that the model would pass. The mirror cell, \emph{Acceptable} → \emph{Waste}, is also 4, so 4 compliant lenses would be scrapped unnecessarily. The two error types are exactly balanced at this operating point, which is a consequence of the model's calibration on a balanced dataset rather than of any deliberate cost weighting. §5.1 discusses whether a production deployment should shift this balance by adjusting the decision threshold in favour of \emph{Waste} recall, accepting more spurious scrap in exchange for fewer escapes.
+
+\hypertarget{comparison-with-the-reference-benchmark}{%
+\subsection{4.2.5 Comparison with the Reference Benchmark}\label{comparison-with-the-reference-benchmark}}
+
+\textbf{Table 4.7.} Per-class comparison against Polenta et al.~{[}5{]}, Table 10, Random Forest row. \textbf{Protocol difference:} this work reports a single held-out test split (n = 291); the reference reports samples summed across the five folds of stratified five-fold cross-validation over the full 1,451-sample dataset. The two are not a like-for-like comparison. Source: \texttt{models/test\_evaluation.json} and the \texttt{POLENTA\_TABLE10\_RF} constant.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Class
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+This work: precision (test, n = 291)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Reference: precision (5-fold CV, n = 1451)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+This work: recall (test, n = 291)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Reference: recall (5-fold CV, n = 1451)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Waste & 0.9459 & 0.9722 & 0.9459 & 0.9459 \\
+Acceptable & 0.9512 & 0.9511 & 0.9512 & 0.9581 \\
+Target & 0.9333 & 0.9437 & 0.9032 & 0.9194 \\
+Inefficient & 0.9200 & 0.9342 & 0.9452 & 0.9736 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_per_class_vs_baseline.pdf}
+\caption{Per-class precision and recall on this work's held-out test split against the Random Forest row of the reference study. Protocol difference noted in the figure. Source: \texttt{figures/ch4/fig\_ch4\_per\_class\_vs\_baseline}.}
+\label{fig:ch4-per-class-vs-baseline}
+\end{figure}
+
+At aggregate level, the reference reports 95.04\% ± 1.26\% mean accuracy from five-fold cross-validation over all 1,451 samples; this work reports 93.81\% on a held-out split of 291.
+
+\textbf{These figures are not directly comparable, and no claim of parity or superiority is made.} The reason was set out in §3.4.3, deviation §5, and bears restating at the point of comparison. The reference's protocol averages over five folds in which every sample appears in a test fold exactly once, so its denominator is the full dataset and each of its estimates is trained on 80\% of the data. This work's figure comes from a single split of 291 samples with a model trained on 60\% of the data. The reference's figure is an average over more data, trained on more data; this work's is a single estimate on less data, trained on less. A difference of 1.23 percentage points between them carries no interpretable meaning.
+
+What the comparison does support is a weaker but useful statement: \textbf{the per-class profile is consistent between the two.} Recall on \emph{Waste} is essentially identical (0.9459 in both). Precision on \emph{Acceptable} matches to four decimal places (0.9512 versus 0.9511), which is coincidental in its exactness but indicative in its closeness. The reference is uniformly slightly higher on the remaining cells, in the direction its protocol advantage predicts. Nothing in the comparison suggests that the adopted hyperparameter configuration --- with the five deviations documented in §3.4.3 --- has produced a materially different model from the one the reference describes.
+
+This is the appropriate conclusion for a reproduction: not that the result was matched or beaten, but that the reimplementation behaves like the thing it reimplements. That is what licenses using this model as the substrate for the counterfactual work that follows.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{explanation-layer-results}{%
+\section{4.3 Explanation Layer Results}\label{explanation-layer-results}}
+
+\hypertarget{global-shap-feature-importance}{%
+\subsection{4.3.1 Global SHAP Feature Importance}\label{global-shap-feature-importance}}
+
+Global attributions were computed by TreeSHAP over the full training split and aggregated as mean absolute SHAP value per feature across all four classes.
+
+\textbf{Table 4.8.} All 13 process parameters ranked by mean absolute SHAP value, aggregated across classes, training split. Source: \texttt{thesis\_assets/data/shap\_global\_importance.json}.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Rank & Parameter & Mean \textbar SHAP\textbar{} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & ZUx -- Cycle time & 0.09987 \\
+2 & ZDx -- Plasticizing time & 0.06997 \\
+3 & time\_to\_fill & 0.05219 \\
+4 & SKx -- Closing force & 0.04128 \\
+5 & APVs -- Specific injection pressure peak value & 0.04110 \\
+6 & SKs -- Clamping force peak value & 0.03640 \\
+7 & Mold temperature & 0.03082 \\
+8 & Melt temperature & 0.01494 \\
+9 & CPn -- Screw position at end of hold pressure & 0.01313 \\
+10 & SVo -- Shot volume & 0.01124 \\
+11 & Mm -- Torque mean value & 0.00750 \\
+12 & Ms -- Torque peak value & 0.00570 \\
+13 & APSs -- Specific back pressure peak value & 0.00331 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_shap_global_bar.pdf}
+\caption{Global feature importance from SHAP TreeExplainer, mean absolute SHAP value per parameter over the full training split, aggregated across all four classes. Source: \texttt{figures/ch4/fig\_ch4\_shap\_global\_bar}.}
+\label{fig:ch4-shap-global-bar}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_shap_beeswarm.pdf}
+\caption{SHAP summary (beeswarm) plot for the \emph{Target} class, computed on a 200-sample random draw from the training split (seed 42). Colour encodes feature value; horizontal position encodes signed SHAP contribution. Source: \texttt{figures/ch4/fig\_ch4\_shap\_beeswarm}.}
+\label{fig:ch4-shap-beeswarm}
+\end{figure}
+
+The ranking is dominated by \textbf{time-domain parameters}. The top three --- cycle time, plasticizing time, and filling time --- are all durations, and together they carry more attribution mass than the remaining ten parameters combined. Cycle time alone (0.09987) is worth more than the bottom seven parameters together. The force and pressure group occupies ranks 4 to 6, temperatures ranks 7 to 8, and the torque and back-pressure measurements are close to irrelevant to the model at ranks 11 to 13.
+
+This is a substantive statement about the process rather than an artefact of the model, and §5.1 develops its physical interpretation. Its immediate consequence for the present chapter is that the Tier-1 counterfactual search, which selects the top five features by local \textbar SHAP\textbar, will predominantly be adjusting timings --- which is precisely what §4.4.3 shows.
+
+\hypertarget{agreement-with-independent-importance-methods}{%
+\subsection{4.3.2 Agreement with Independent Importance Methods}\label{agreement-with-independent-importance-methods}}
+
+Because §2.7 argues that a model's endorsement of its own explanation is weak evidence, the global ranking was compared against three other importance methods: the model's own impurity-based importances, and the Relief and ANOVA filter weights reported by the reference study for the same dataset.
+
+\textbf{Table 4.9.} Importance comparison across four methods for all 13 parameters, with Spearman rank correlations. Relief and ANOVA weights reproduced from Polenta et al.~{[}5{]}, Figures 2--3; they are reference constants, not values computed in this work. Source: \texttt{thesis\_assets/data/shap\_vs\_impurity.json}, \texttt{shap\_vs\_filters.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Parameter (reference name)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Column
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+SHAP
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Impurity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Relief
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+ANOVA
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+cycle time & ZUx -- Cycle time & 0.09987 & 0.21133 & 1.0000 & 1.0000 \\
+plasticizing time & ZDx -- Plasticizing time & 0.06997 & 0.16520 & 0.0913 & 0.0199 \\
+filling time & time\_to\_fill & 0.05219 & 0.11838 & 0.5749 & 0.0250 \\
+closing force & SKx -- Closing force & 0.04128 & 0.10011 & 0.1793 & 0.0145 \\
+specific injection pressure & APVs -- Spec. inj. pressure peak & 0.04110 & 0.08976 & 0.0632 & 0.0295 \\
+clamping force & SKs -- Clamping force peak & 0.03640 & 0.08627 & 0.1849 & 0.0101 \\
+mold temperature & Mold temperature & 0.03082 & 0.07872 & 0.1325 & 0.0289 \\
+melt temperature & Melt temperature & 0.01494 & 0.04200 & 0.0000 & 0.0000 \\
+screw position & CPn -- Screw position & 0.01313 & 0.03064 & 0.1421 & 0.0202 \\
+shot volume & SVo -- Shot volume & 0.01124 & 0.02833 & 0.1393 & 0.0204 \\
+torque mean & Mm -- Torque mean & 0.00750 & 0.02320 & 0.0584 & 0.0020 \\
+torque peak & Ms -- Torque peak & 0.00570 & 0.01609 & 0.0611 & 0.0012 \\
+specific back pressure & APSs -- Spec. back pressure peak & 0.00331 & 0.00998 & 0.0038 & 0.0032 \\
+\textbf{Spearman r (SHAP vs.~impurity)} & & \textbf{1.0000} & \emph{p} = 0.0 & & \\
+\textbf{Spearman r (SHAP vs.~Relief)} & & \textbf{0.6593} & \emph{p} = 0.0142 & & \\
+\textbf{Spearman r (SHAP vs.~ANOVA)} & & \textbf{0.6044} & \emph{p} = 0.0287 & & \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_importance_method_comparison.pdf}
+\caption{Rank comparison of the 13 parameters across SHAP (this work, training split) and the Relief and ANOVA filter rankings reported in the reference study. Source: \texttt{figures/ch4/fig\_ch4\_importance\_method\_comparison}.}
+\label{fig:ch4-importance-method-comparison}
+\end{figure}
+
+Three findings, of decreasing strength.
+
+\textbf{SHAP and impurity importance agree perfectly in rank (Spearman r = 1.000).} All 13 parameters occupy identical positions under both methods. This is a reassuring internal-consistency result --- the exact Shapley attribution and the model's own splitting statistics tell the same story about which parameters the forest relies on --- but it must not be over-read. Both quantities are computed from the same fitted model, so their agreement is agreement of a model with itself. It establishes that the SHAP implementation is behaving correctly; it establishes nothing about the process.
+
+\textbf{SHAP agrees moderately with the two independent filter methods} (r = 0.659 against Relief, \emph{p} = 0.014; r = 0.604 against ANOVA, \emph{p} = 0.029). Both correlations are positive and statistically significant at α = 0.05. This is the more meaningful comparison, because Relief and ANOVA are computed from the data without reference to any trained model, so agreement between them and SHAP is agreement between a model-derived and a model-free account of what matters.
+
+\textbf{All three methods rank cycle time first.} This is the single most robust finding of the explanation layer: three methodologically unrelated procedures --- an exact game-theoretic attribution over a random forest, a nearest-neighbour-based filter, and a univariate analysis of variance --- independently identify the same parameter as most informative.
+
+The disagreements are also informative and should not be smoothed over. Relief ranks filling time second (0.5749) where SHAP ranks it third and ANOVA ranks it fourth. More strikingly, both filter methods assign melt temperature a weight of exactly 0.0 --- no univariate discriminative power at all --- while SHAP places it eighth of thirteen with a non-trivial attribution. The most plausible explanation is that melt temperature carries information only in interaction with other parameters, which a univariate filter cannot see and a tree ensemble can. This is a small illustration of the disagreement problem documented by Krishna et al.~{[}73{]} and observed in injection molding by Muaz et al.~{[}47{]}, and it is exactly why §3.9.2 requires reporting agreement rather than asserting correctness.
+
+\hypertarget{local-explanations-and-shaplime-agreement}{%
+\subsection{4.3.3 Local Explanations and SHAP--LIME Agreement}\label{local-explanations-and-shaplime-agreement}}
+
+Local explanations were computed for three worked test-split cases, chosen as one correctly classified instance of each outcome of interest: a \emph{Waste} cycle (test index 8), an \emph{Inefficient} cycle (test index 5), and a \emph{Target} cycle (test index 0).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_shap_local_waterfall.pdf}
+\caption{Local SHAP explanations for the three worked test-split cases, decomposing the predicted-class probability from the SHAP expected value to the realised prediction, largest contributions first. Source: \texttt{figures/ch4/fig\_ch4\_shap\_local\_waterfall}, \texttt{thesis\_assets/data/local\_explanations.json}.}
+\label{fig:ch4-shap-local-waterfall}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_lime_local.pdf}
+\caption{LIME local linear coefficients for the same three cases, for direct comparison on identical cycles. Source: \texttt{figures/ch4/fig\_ch4\_lime\_local}.}
+\label{fig:ch4-lime-local}
+\end{figure}
+
+Because the counterfactual engine depends on SHAP and LIME performing different jobs on the same cycle (§3.5.3), the degree to which they agree is a precondition for the design being coherent. Agreement was measured over 50 randomly drawn test-split cycles by ranking all 13 parameters under each method and computing the Spearman rank correlation, together with the overlap of the two top-five sets.
+
+\textbf{Table 4.10.} SHAP--LIME rank agreement over 50 randomly drawn test-split cycles. Source: \texttt{thesis\_assets/data/shap\_lime\_agreement.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Measure
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Mean Spearman r (SHAP rank vs.~LIME rank) & \emph{{[}Insert \texttt{spearman\_r\_mean} from artefact{]}} \\
+Std. dev. of Spearman r & \emph{{[}Insert \texttt{spearman\_r\_std}{]}} \\
+Mean top-5 overlap (of 5) & \emph{{[}Insert \texttt{top5\_overlap\_mean}{]}} \\
+Std. dev. of top-5 overlap & \emph{{[}Insert \texttt{top5\_overlap\_std}{]}} \\
+\end{longtable}
+
+LIME's repeatability was assessed separately by re-running the explainer ten times on a single fixed test cycle, deliberately bypassing the result cache so that each run performs fresh stochastic perturbation sampling.
+
+\textbf{Table 4.11.} LIME repeatability across ten independent runs on one fixed test-split cycle. Source: \texttt{thesis\_assets/data/lime\_stability.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Measure
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Number of runs & 10 \\
+Mean top-5 overlap with first run (of 5) & \emph{{[}Insert \texttt{top5\_overlap\_with\_first\_run\_mean}{]}} \\
+Largest per-feature coefficient standard deviation & \emph{{[}Insert max of \texttt{coefficient\_std\_by\_feature}{]}} \\
+\end{longtable}
+
+Two things matter about these measurements, whichever way the numbers fall.
+
+The \textbf{stability of the top-five set is the property the engine actually depends on}, not the stability of the coefficient magnitudes. Tier 1 uses LIME only for the \emph{sign} of each coefficient on five features that SHAP has already selected. Coefficient magnitude variation across runs is therefore tolerable; sign instability would not be, since it would make the recommended direction of adjustment non-deterministic.
+
+\textbf{TreeSHAP contributes no stochastic variation at all.} Because it computes exact Shapley values rather than sampling them, repeated attribution of the same cycle returns bit-identical results. All variability in the explanation layer originates in LIME. This asymmetry is the practical justification for the division of labour: the component responsible for \emph{which} parameters to touch is deterministic, and only the component responsible for \emph{which way} is stochastic.
+
+\hypertarget{computational-cost}{%
+\subsection{4.3.4 Computational Cost}\label{computational-cost}}
+
+\textbf{Table 4.12.} Explanation-layer wall-clock cost, measured on 15 unique test-split cycles with a freshly constructed engine so that the cache begins empty. Each cycle is queried twice in sequence, simulating an operator re-opening a previously viewed cycle. Source: \texttt{thesis\_assets/data/xai\_timing.json}.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Measure & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+SHAP calls timed & 15 \\
+SHAP mean time per call & 0.00177 s (± 0.00023 s) \\
+LIME calls timed & 30 \\
+LIME mean time per call & 0.02015 s (± 0.02047 s) \\
+Cache hits / misses & 15 / 15 \\
+Cache hit rate & 50.0\% \\
+\end{longtable}
+
+TreeSHAP attributes a cycle in under 2 milliseconds --- fast enough that attribution imposes no meaningful constraint on any deployment scenario. LIME averages 20 milliseconds per call, an order of magnitude slower, with a standard deviation (0.02047 s) essentially equal to its mean. That equality is itself the signal: the distribution is bimodal, not noisy. Cache misses run the full 2,000-sample perturbation and regression; cache hits return a stored list in microseconds. Averaged over a session in which half the calls hit, the mean lands between the two modes.
+
+The 50.0\% hit rate is a direct consequence of the measurement protocol --- each cycle is queried exactly twice, so one miss and one hit per cycle by construction --- and should not be read as an estimate of production hit rate, which depends entirely on how often operators revisit cycles.
+
+Even at the uncached figure, the practical conclusion is unchanged: a full explanation of a single cycle costs on the order of tens of milliseconds, against an injection molding cycle time measured in tens of seconds. The explanation layer is not a bottleneck for per-cycle analysis.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{counterfactual-root-cause-analysis-results}{%
+\section{4.4 Counterfactual Root-Cause Analysis Results}\label{counterfactual-root-cause-analysis-results}}
+
+This section reports what the engine does at its default operating point (acceptance threshold 0.55, iteration budget 150). §4.5 then reports what happens when those results are independently checked.
+
+\hypertarget{resolution-rates}{%
+\subsection{4.4.1 Resolution Rates}\label{resolution-rates}}
+
+\textbf{Table 4.13.} RCA tier counts, resolution rate, and validator agreement on both splits at the default configuration (threshold = 0.55, max\_iter = 150). Source: \texttt{models/rca\_evaluation\_\{val,test\}.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+N non-conforming
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 2
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator confirmed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+val & 147 & 144 & 0 & 0 & 0.9796 & 16 & 0.1111 \\
+\textbf{test} & \textbf{147} & \textbf{140} & \textbf{0} & \textbf{0} & \textbf{0.9524} & \textbf{9} & \textbf{0.0643} \\
+\end{longtable}
+
+On the held-out test split, the engine produces a counterfactual for \textbf{140 of 147 non-conforming cycles --- a resolution rate of 95.24\%.} On the validation split the figure is 144 of 147, or 97.96\%.
+
+Read on its own, this is a strong result, and it is the result that a conventional counterfactual study would report as its headline. For 95\% of defective cycles, the engine returns a concrete set of parameter adjustments that moves the cycle into the conforming region as far as the champion model is concerned.
+
+\textbf{The seven unresolved cases are not search failures.} This requires stating precisely at the point the figure appears, because the natural reading of 140/147 is that the search failed seven times, and that reading is wrong.
+
+\textbf{Table 4.14.} Disposition of the seven test-split cycles excluded from the resolved count. Source: \texttt{thesis\_assets/data/unresolved\_analysis.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Disposition
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Count
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Explanation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Already acceptable & 7 & 0 & Ground-truth label is \emph{Waste} or \emph{Inefficient}, but model confidence P(Acceptable) + P(Target) already ≥ 0.55 \\
+Tier-3 escalation & 0 & 3 & No counterfactual found within physical bounds \\
+Search error & 0 & −1 & --- \\
+\end{longtable}
+
+All seven are \textbf{Tier-0 short-circuits}. Each carries a ground-truth label of \emph{Waste} or \emph{Inefficient}, but the champion model already assigns it conforming confidence above the acceptance threshold, so the engine --- correctly, by its own design --- declines to recommend changes to a cycle it regards as already conforming. These are \textbf{classifier--label disagreements}, not failures of the counterfactual search. They are the same 4-to-6-sample-scale disagreements that appear as off-diagonal cells in the confusion matrix of §4.2.4, viewed from the RCA engine's side.
+
+The consequence for interpretation is that \textbf{the test split contains zero Tier-3 escalations at the default configuration}. Every cycle the engine actually attempted to correct, it corrected. The resolution rate of 95.24\% understates the search's success rate on the population it was asked about (140/140 = 100\%) and correctly reports its coverage of the non-conforming population as a whole. Both readings are given here because Chapter 5 uses the second and a reader might otherwise reconstruct the first.
+
+\hypertarget{tier-activation-distribution}{%
+\subsection{4.4.2 Tier Activation Distribution}\label{tier-activation-distribution}}
+
+At the default configuration, \textbf{all 140 resolutions on the test split are Tier 1}, and all 144 on the validation split. Tier 2 and Tier 3 do not activate on either split.
+
+This warrants care, because it would be easy to read it as evidence that Tiers 2 and 3 are decorative. They are not, and §4.6 demonstrates this directly: both activate substantially as the acceptance threshold rises, with Tier 2 first appearing at threshold 0.65 on validation and 0.75 on test, and Tier 3 accounting for 137 of 147 test-split cycles at threshold 0.95. The cascade is an operating envelope whose tiers engage as a function of configuration, and the default configuration simply sits at the permissive end of that envelope.
+
+What the default-point result does establish is that \textbf{the explanation-guided local search of Tier 1 is sufficient for this dataset at a 0.55 acceptance threshold}. The nearest-neighbour anchor is not needed, because SHAP-selected, LIME-directed movement finds an accepted point in every case it is given.
+
+\hypertarget{most-frequently-adjusted-parameters}{%
+\subsection{4.4.3 Most Frequently Adjusted Parameters}\label{most-frequently-adjusted-parameters}}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_top_adjusted_features.pdf}
+\caption{The five process parameters most frequently selected as the top-adjusted feature by the three-tier engine across all resolved test-split cases. Source: \texttt{figures/ch4/fig\_ch4\_top\_adjusted\_features}, \texttt{models/rca\_evaluation\_test.json}.}
+\label{fig:ch4-top-adjusted-features}
+\end{figure}
+
+\textbf{Table 4.15.} Adjustment frequency of the five most frequently selected parameters, test split. Source: \texttt{models/rca\_evaluation\_test.json} → \texttt{top\_adjusted\_features}.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Parameter & Times selected as top-adjusted feature \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\emph{{[}Insert rank 1 parameter{]}} & \emph{{[}Insert count{]}} \\
+\emph{{[}Insert rank 2 parameter{]}} & \emph{{[}Insert count{]}} \\
+\emph{{[}Insert rank 3 parameter{]}} & \emph{{[}Insert count{]}} \\
+\emph{{[}Insert rank 4 parameter{]}} & \emph{{[}Insert count{]}} \\
+\emph{{[}Insert rank 5 parameter{]}} & \emph{{[}Insert count{]}} \\
+\end{longtable}
+
+The distribution is expected to track the global SHAP ranking of §4.3.1, since Tier 1 selects features by local \textbar SHAP\textbar{} and the local rankings aggregate toward the global one. The interpretive question, addressed in §5.1, is whether the parameters the engine most often reaches for are the ones a process engineer would reach for --- the timings that dominate the SHAP ranking, or the temperatures and pressures that dominate conventional molding troubleshooting practice.
+
+Mean sparsity across resolved test-split cases is \textbf{4.88 features} of a possible five (§4.5.3), so the engine is using nearly its full Tier-1 budget on almost every cycle. Recipes with four rather than five adjustments occur where a selected feature's LIME coefficient produced no net movement before acceptance.
+
+\hypertarget{worked-counterfactual-example}{%
+\subsection{4.4.4 Worked Counterfactual Example}\label{worked-counterfactual-example}}
+
+Table 4.16 gives a complete worked case: test-split index 39, a cycle with ground-truth label \emph{Waste} that the engine resolved at Tier 1 \textbf{and that the independent verifier confirmed} --- one of the nine confirmed cases on the test split.
+
+\textbf{Table 4.16.} Validator-confirmed worked counterfactual case, test-split index 39, in engineering units. Source: \texttt{thesis\_assets/data/counterfactual\_case\_table.csv}, \texttt{counterfactual\_cases.json}.
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Parameter & Original & Suggested & Δ & Direction \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+SKx -- Closing force (N) & 908.60 & 904.424 & −4.176 & ↓ \\
+time\_to\_fill (s) & 6.968 & 6.5562 & −0.4118 & ↓ \\
+ZDx -- Plasticizing time (s) & 4.08 & 4.3032 & +0.2232 & ↑ \\
+Mold temperature (°C) & 81.402 & 81.139 & −0.263 & ↓ \\
+ZUx -- Cycle time (s) & 74.82 & 74.9008 & +0.0808 & ↑ \\
+\end{longtable}
+
+\textbf{Model assessment before and after:}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Quantity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Original cycle
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Counterfactual
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+P(Waste) & 0.8366 & 0.1060 \\
+P(Acceptable) & 0.1501 & 0.1136 \\
+P(Target) & 0.0066 & 0.6293 \\
+P(Inefficient) & 0.0066 & 0.1511 \\
+\textbf{Conforming confidence P(Acc) + P(Target)} & \textbf{0.1567} & \textbf{0.7429} \\
+Independent verifier & --- & \textbf{\checkmark Confirmed} \\
+\end{longtable}
+
+The original cycle is classified \emph{Waste} with 83.66\% probability and carries only 15.67\% conforming confidence. The recommended recipe adjusts five parameters and lifts conforming confidence to 74.29\%, with the probability mass moving decisively to \emph{Target} (62.93\%).
+
+Three features of this recipe are worth drawing out, because they illustrate what the engine does well and where the interpretive difficulty in §4.5 originates.
+
+\textbf{The adjustments are small.} The largest change is a 4.18 N reduction in closing force on a base of 908.6 N --- a 0.46\% adjustment. Filling time drops by 0.41 s, plasticizing time rises by 0.22 s, mold temperature falls by a quarter of a degree, and cycle time rises by 0.08 s. Every one of these is within the resolution an operator can actually set on a machine panel, and none requires an excursion from normal operating practice.
+
+\textbf{The adjustments are coherent as a process intervention.} Filling faster while plasticizing longer and holding the mold marginally cooler is a recognisable combination rather than an arbitrary vector, and the near-zero cycle-time change indicates the recipe does not trade quality against throughput.
+
+\textbf{And yet smallness is exactly what makes the result hard to interpret.} A 0.46\% change in closing force moving a cycle from 83.66\% \emph{Waste} to 62.93\% \emph{Target} is a very large change in model output for a very small change in input. The physically plausible reading is that this cycle sits close to a genuine process boundary. The less comfortable reading, and the one §2.7.2 anticipates, is that it sits close to a \emph{model} boundary whose location reflects the training data's particular arrangement rather than the process. From within the model, these two readings are indistinguishable --- which is precisely why the verifier exists, and why §4.5 reports what happens when it is consulted across the whole population rather than on a case selected for having passed.
+
+A second worked case, test index 5, is reported in \texttt{thesis\_assets/data/counterfactual\_cases.json} as the contrasting exhibit: an \emph{Inefficient} cycle that the engine also resolved at Tier 1, reaching 58.01\% conforming confidence, but which the verifier did \textbf{not} confirm. Its recipe is comparably small and comparably coherent, and nothing on the face of it distinguishes it from the confirmed case. That indistinguishability is the finding of the next section.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{independent-validation-and-the-circularity-finding}{%
+\section{4.5 Independent Validation and the Circularity Finding}\label{independent-validation-and-the-circularity-finding}}
+
+This section reports the central result of the thesis. §4.4 established that the engine resolves 95.24\% of the non-conforming cycles it is given. This section asks what fraction of those resolutions survives a check by a model that played no part in producing them.
+
+\hypertarget{validator-confirmation-rates}{%
+\subsection{4.5.1 Validator Confirmation Rates}\label{validator-confirmation-rates}}
+
+\textbf{Table 4.17.} Self-reported resolution against independently confirmed resolution, both splits, default configuration. Source: \texttt{models/rca\_evaluation\_\{val,test\}.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+N non-conforming
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolved
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator confirmed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+val & 147 & 144 & \textbf{97.96\%} & 16 & \textbf{11.11\%} \\
+\textbf{test} & \textbf{147} & \textbf{140} & \textbf{95.24\%} & \textbf{9} & \textbf{6.43\%} \\
+\end{longtable}
+
+On the held-out test split, the engine resolves 140 of 147 non-conforming cycles and the independent verifier confirms \textbf{9 of those 140 --- a confirmation rate of 6.43\%.}
+
+The two figures in that sentence describe the same 140 recommendations. The first is what the engine reports about itself; the second is what a model of a different family, trained with a different seed, taking no part in the search, says about the same set of counterfactuals. \textbf{The gap is 88.81 percentage points.}
+
+Stated operationally: at the default configuration, the system issues 140 corrective recommendations to operators, of which 131 carry no independent corroboration.
+
+\textbf{The validation--test difference is itself informative, and the direction matters.} The validation split shows a materially higher confirmation rate (11.11\%) than the test split (6.43\%) --- 16 confirmations of 144 against 9 of 140. The validation split is not a clean estimate: it was used for the model comparison of §4.2.1 and therefore participated in selecting the champion whose decision surface the counterfactual search traverses. Its higher confirmation rate is exactly the optimism that §3.4.4 and Cawley and Talbot {[}84{]} predict from evaluating on data that informed a selection decision. \textbf{The 6.43\% test figure is the one reported as the result}, in accordance with §3.9.5, and the presence of a more favourable number one split away is precisely why that rule exists.
+
+The verifier's own competence is not in question as an explanation. Its training accuracy is reported at initialisation, and the MLP family achieved 0.9218 cross-validation mean accuracy and 0.8931 validation accuracy as a standalone candidate in Table 4.3. A model that classifies real cycles at roughly 90\% accuracy is not failing to recognise conforming parameter vectors in general. It is declining to accept these particular ones.
+
+\hypertarget{characterising-the-gap}{%
+\subsection{4.5.2 Characterising the Gap}\label{characterising-the-gap}}
+
+Several explanations for a discrepancy of this size are available, and they are not equally supported.
+
+\textbf{It is not an artefact of the verifier being weak.} As noted above, the MLP classifies genuine cycles competently. If it systematically failed to recognise conforming vectors, it would misclassify the conforming portion of the test split too, and it does not.
+
+\textbf{It is not an artefact of the counterfactuals being unbounded or extreme.} §3.6.5 guarantees that every recommendation lies within the training range of every parameter, enforced by clipping at every iteration. Mean proximity on the test split is 0.5161 in scaled units across a space of width 2 (§4.5.3), so the counterfactuals are close to their originating cycles, not distant excursions.
+
+\textbf{It is not an artefact of the acceptance criterion being trivially permissive.} The criterion requires conforming confidence ≥ 0.55, a margin above bare majority, and the worked case of §4.4.4 reaches 74.29\% --- comfortably clear of the threshold. Yet the great majority of accepted counterfactuals at comparable confidence are rejected by the verifier.
+
+\textbf{The explanation consistent with the evidence is the one §2.7.2 anticipates.} The search terminates at points that satisfy the champion model's decision geometry. Where that geometry reflects a genuine process regularity, a second model trained on the same data should tend to agree, because both are estimating the same underlying relationship. Where it reflects the particular arrangement of the training sample --- the specific placement of axis-aligned splits that a random forest happens to have learned --- a model with a fundamentally different inductive bias has no reason to agree, and mostly does not. Laugel et al.~{[}62{]} describe precisely this as the risk of \emph{unjustified} counterfactuals: points continuously connected to the model's favourable region but not to the data's.
+
+The distribution of nearest-neighbour distances supports this reading. Mean NN distance for the three-tier engine on the test split is \textbf{0.829} in scaled units (§4.5.3) --- that is, the average counterfactual sits 0.829 units away from the nearest real conforming cycle in the training data, in a space where each parameter spans 2 units. The counterfactuals are not landing in the neighbourhoods where conforming production has actually been observed. They are landing in regions the champion model \emph{labels} conforming.
+
+\textbf{What this does not mean.} It does not mean the recommendations are wrong. A counterfactual can be unconfirmed by the verifier and still be a correct process intervention; the verifier is a second learned model, not the machine. The finding bounds what may be claimed from a counterfactual RCA engine's self-report --- it does not establish the truth or falsity of any individual recipe. §5.2.4 develops the resulting position: counterfactual recipes should be presented to operators as \textbf{hypotheses for evaluation}, not as verified corrective actions.
+
+\hypertarget{comparison-against-the-centroid-ablation}{%
+\subsection{4.5.3 Comparison Against the Centroid Ablation}\label{comparison-against-the-centroid-ablation}}
+
+A single engine reporting a low confirmation rate is a fact about that engine. The ablation of §3.6.7 tests whether the finding generalises to the method class by removing SHAP feature selection and LIME directional guidance while holding the acceptance criterion, step size, iteration budget, champion model, and verifier constant.
+
+\textbf{Table 4.18.} All five counterfactual metrics for both methods on both splits, with the corresponding McNemar exact-test p-value. Source: \texttt{models/rca\_comparison\_\{val,test\}.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Method
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean proximity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean sparsity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Mean NN distance
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+McNemar \emph{p}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+val & 3-tier RCA & 0.9796 & 0.1111 & 0.5351 & 4.90 & 0.8066 & 0.625 \\
+val & Centroid ablation & 0.9796 & 0.1250 & 0.6583 & 12.40 & 0.6805 & 0.625 \\
+\textbf{test} & \textbf{3-tier RCA} & \textbf{0.9524} & \textbf{0.0643} & \textbf{0.5161} & \textbf{4.88} & \textbf{0.8290} & \textbf{0.180} \\
+\textbf{test} & \textbf{Centroid ablation} & \textbf{0.9524} & \textbf{0.1000} & \textbf{0.6783} & \textbf{12.32} & \textbf{0.6864} & \textbf{0.180} \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_method_comparison_metrics.pdf}
+\caption{Mean proximity, sparsity, and nearest-conforming-neighbour distance for the three-tier engine versus the centroid-ablation baseline, test split. Source: \texttt{figures/ch4/fig\_ch4\_method\_comparison\_metrics}.}
+\label{fig:ch4-method-comparison-metrics}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_validator_by_split_method.pdf}
+\caption{Independent-validator agreement rate for both methods on both splits, with the McNemar exact-test p-value annotated for each split. Source: \texttt{figures/ch4/fig\_ch4\_validator\_by\_split\_method}.}
+\label{fig:ch4-validator-by-split-method}
+\end{figure}
+
+The first observation is that \textbf{the two methods resolve identically}: 140 of 147 on test, 144 of 147 on validation, for both. This is not a coincidence and is not evidence that the methods are equivalent --- it is a consequence of the matched acceptance criterion and of the fact that the unresolved cases in both are the same seven Tier-0 short-circuits, which depend on the champion model rather than on the search. With resolution held equal by construction, the remaining four metrics isolate the effect of the ablated components cleanly.
+
+The second observation is the important one. \textbf{The centroid ablation achieves a \emph{higher} independent confirmation rate than the three-tier engine} on both splits: 10.00\% against 6.43\% on test (14 confirmations against 9), and 12.50\% against 11.11\% on validation.
+
+This is not the result the engine's design would predict, and it is reported here without softening. The method that removes SHAP feature selection and LIME directional guidance --- the two components that constitute this work's contribution to the search itself --- produces recommendations that an independent model endorses more often. §4.5.4 establishes that the difference is not statistically distinguishable from chance, and §4.5.5 explains why the structure of the two methods makes this outcome unsurprising in retrospect. But the direction of the difference is real and it is not favourable to the proposed engine.
+
+The third observation is that \textbf{both rates are low.} 6.43\% and 10.00\% are both far from anything that would license describing either method's output as verified. Whatever separates the two methods is small relative to what they have in common, and what they have in common is a confirmation rate in the single digits to low tens of percent.
+
+\hypertarget{statistical-significance}{%
+\subsection{4.5.4 Statistical Significance}\label{statistical-significance}}
+
+The comparison concerns paired binary outcomes --- each non-conforming cycle is analysed by both methods, and each method's result for that cycle is either confirmed or not --- so McNemar's exact two-sided test was applied per §3.9.4.
+
+\textbf{Table 4.19.} McNemar contingency table, test split, per-sample verifier outcomes for the two methods. Source: \texttt{models/rca\_comparison\_test.json}.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+& Ablation confirmed & Ablation not confirmed & Row total \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{3-tier confirmed} & 14 & 2 & 16 \\
+\textbf{3-tier not confirmed} & 7 & 124 & 131 \\
+\textbf{Column total} & 21 & 126 & 147 \\
+\end{longtable}
+
+\textbf{McNemar exact test, test split: statistic = 2.0, \emph{p} = 0.1797.} Not significant at α = 0.05.
+
+\textbf{McNemar exact test, validation split: \emph{p} = 0.625.} Not significant at α = 0.05. \emph{{[}Insert the validation contingency table from \texttt{models/rca\_comparison\_val.json} → \texttt{mcnemar\_test.contingency}.{]}}
+
+\textbf{Convention used.} The test operates on the raw per-sample verifier flag. The seven Tier-0 already-conforming cycles carry a positive flag for \textbf{both} methods, because the engine returns \texttt{validator\_ok\ =\ True} for a cycle it declines to modify. They therefore contribute to the concordant ``both confirmed'' cell (14) and do not enter either discordant cell. Since McNemar conditions only on the discordant cells, these seven cases have \textbf{no effect on the statistic or the p-value}. The aggregate confirmation rates of §4.5.1 and Table 4.18, by contrast, are computed over resolved cases only and exclude them --- which is why the row totals here (16 and 21) exceed the confirmed counts reported there (9 and 14) by exactly seven.
+
+The discordant cells are the evidential content: \textbf{7 cycles where only the ablation's recommendation was confirmed, against 2 where only the three-tier engine's was.} With 9 discordant pairs in total, an exact binomial test on a 7:2 split yields \emph{p} = 0.1797. This is a small number of discordant observations, and the test is correspondingly underpowered --- a point returned to in §5.5.
+
+\textbf{Interpretation, stated carefully.} A non-significant McNemar result does not prove the two methods equivalent. Absence of evidence for a difference is not evidence of absence, and at nine discordant pairs the test could not have detected a moderate difference. What the result licenses is the conditional statement prepared in §3.9.4:
+
+\begin{quote}
+The independent-confirmation rates of two structurally different counterfactual search strategies are statistically indistinguishable on this data.
+\end{quote}
+
+Combined with the ablation framing of §3.6.7 --- the two methods share an acceptance criterion, a champion model, a verifier, a step size, and a search paradigm, and differ in feature selection and directional guidance --- this indistinguishability is \textbf{consistent with the confirmation rate being a property of the shared approach rather than of either implementation}. The three-tier engine's low confirmation rate is not a defect of SHAP-guided search that a better feature-selection scheme would fix, because removing SHAP-guided search entirely does not fix it.
+
+This is the argument by which the finding of §4.5.1 is generalised from one algorithm to a method class. It is an argument from a non-significant test on a small sample, and it is stated at that strength --- as evidence consistent with a claim, not as a demonstration of it.
+
+\hypertarget{where-each-method-wins}{%
+\subsection{4.5.5 Where Each Method Wins}\label{where-each-method-wins}}
+
+The two methods differ sharply on three of the five metrics, and the differences are systematic rather than incidental.
+
+\textbf{Table 4.20.} Metric-by-metric comparison, test split, with the structural explanation for each difference.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+3-tier
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Ablation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Winner
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Explanation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Resolution rate & 0.9524 & 0.9524 & Tie & Matched acceptance criterion; identical Tier-0 exclusions \\
+Mean sparsity & \textbf{4.88} & 12.32 & \textbf{3-tier} & Tier 1 adjusts 5 SHAP-selected features; ablation adjusts all 13 \\
+Mean proximity & \textbf{0.5161} & 0.6783 & \textbf{3-tier} & Fewer moving parameters means shorter total displacement \\
+Mean NN distance & 0.8290 & \textbf{0.6864} & \textbf{Ablation} & Ablation moves explicitly toward the conforming centroid \\
+Validator rate & 0.0643 & \textbf{0.1000} & \textbf{Ablation} & --- \\
+\end{longtable}
+
+\textbf{The three-tier engine wins decisively on actionability.} Its recipes touch a mean of \textbf{4.88 parameters against the ablation's 12.32} --- a 2.5-fold difference --- and are \textbf{24\% closer} to the originating cycle in scaled space (0.5161 against 0.6783). Both differences are large relative to the metrics' scales and both were anticipated in §3.6.7 as direct consequences of the designs. A recipe of five adjustments is something an operator can execute and reason about; a recipe of twelve is a wholesale reconfiguration of the machine, and one whose individual components an operator cannot separately assess. If the question is which method produces a usable work instruction, the answer is unambiguous.
+
+\textbf{The ablation wins on nearest-neighbour distance (0.6864 against 0.8290), and this metric structurally favours it.} This was stated in advance in §3.6.7 and is restated here so that the result is not over-read. The ablation's entire search consists of moving toward the centroid of conforming training samples. A metric that measures distance to the nearest conforming training sample is therefore measuring, in part, how directly a method aims at the region that metric rewards. Reporting the ablation as ``more plausible'' on this basis would be close to circular. The honest statement is that the ablation terminates closer to observed conforming production, by construction, and that the three-tier engine's counterfactuals sit further from it.
+
+\textbf{The ablation also wins on validator rate, and this is not structurally explained away.} The nearest-neighbour result and the confirmation result point the same way: the method that ends closer to real conforming cycles is also the method a second model more often endorses. That is a coherent story, and it is unfavourable to the proposed engine. §5.2 takes it up.
+
+The overall picture is a clean instance of the desiderata conflict established in §2.4.4 and the reason §3.9.2 requires reporting all five metrics rather than a favourable subset. \textbf{No configuration wins on everything.} The three-tier engine produces recommendations that are sparse, proximate, and actionable --- and less often independently corroborated. The ablation produces recommendations that are dense, distant from the original cycle, and closer to observed conforming production --- and slightly more often corroborated. A study reporting only sparsity and proximity would conclude the three-tier engine is better. A study reporting only nearest-neighbour distance and validator rate would conclude the ablation is. Both conclusions would be selective reporting of the same experiment.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{tier-cascade-sensitivity}{%
+\section{4.6 Tier Cascade Sensitivity}\label{tier-cascade-sensitivity}}
+
+§4.5 established a gap between self-reported and independently confirmed resolution at the default operating point. This section asks whether that gap is a fixed property of the engine or a function of how it is configured. The answer is the second, and it is the most practically consequential result in the chapter.
+
+Two sweeps were run on both splits: the \textbf{acceptance threshold} across \{0.55, 0.65, 0.75, 0.85, 0.95\} with the iteration budget fixed at 150, and the \textbf{iteration budget} across \{10, 25, 50, 150\} with the threshold fixed at 0.55.
+
+\hypertarget{threshold-sweep}{%
+\subsection{4.6.1 Threshold Sweep}\label{threshold-sweep}}
+
+\textbf{Table 4.21.} Acceptance-threshold sweep, test split (n = 147 non-conforming cycles per configuration), iteration budget fixed at 150. Source: \texttt{models/tier\_sensitivity\_test.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Threshold
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 2
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolved
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Confirmed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Runtime (s)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{0.55} (default) & 140 & 0 & 0 & 140 & \textbf{95.24\%} & 9 & \textbf{6.43\%} & 71 \\
+0.65 & 140 & 0 & 2 & 140 & 95.24\% & 13 & 9.29\% & 143 \\
+0.75 & 89 & 21 & 33 & 110 & 74.83\% & 24 & 21.82\% & 477 \\
+0.85 & 21 & 24 & 98 & 45 & 30.61\% & 20 & 44.44\% & 904 \\
+0.95 & 1 & 6 & 137 & 7 & \textbf{4.76\%} & 6 & \textbf{85.71\%} & 1,084 \\
+\end{longtable}
+
+\textbf{Table 4.22.} Acceptance-threshold sweep, validation split (n = 147), iteration budget fixed at 150. Source: \texttt{models/tier\_sensitivity\_val.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Threshold
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 2
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolved
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Confirmed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Runtime (s)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.55 (default) & 144 & 0 & 0 & 144 & 97.96\% & 16 & 11.11\% & 73 \\
+0.65 & 142 & 1 & 2 & 143 & 97.28\% & 15 & 10.49\% & 159 \\
+0.75 & 99 & 13 & 33 & 112 & 76.19\% & 25 & 22.32\% & 463 \\
+0.85 & 25 & 18 & 102 & 43 & 29.25\% & 24 & 55.81\% & 945 \\
+0.95 & 0 & 4 & 142 & 4 & 2.72\% & 4 & \textbf{100.00\%} & 1,448 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_tradeoff_resolution_validator.pdf}
+\caption{\textbf{Central result figure.} Resolution rate (falling) and independent-validator agreement rate (rising) as functions of the acceptance-confidence threshold, test split, with the default operating point annotated and raw counts labelled at every marker. Source: \texttt{figures/ch4/fig\_ch4\_tradeoff\_resolution\_validator}.}
+\label{fig:ch4-tradeoff-resolution-validator}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_tier_distribution.pdf}
+\caption{Distribution of RCA outcomes (Tier 1, Tier 2, Tier 3, already-acceptable) across the five swept thresholds, test split. Source: \texttt{figures/ch4/fig\_ch4\_tier\_distribution}.}
+\label{fig:ch4-tier-distribution}
+\end{figure}
+
+Three findings.
+
+\textbf{Finding 1 --- The gap is tunable, and the trade-off is near-monotonic.} As the acceptance threshold rises from 0.55 to 0.95 on the test split, resolution rate falls from 95.24\% to 4.76\% while validator agreement rises from 6.43\% to 85.71\%. The validation split shows the same relationship, reaching 100\% agreement at threshold 0.95. Every increment of the threshold buys independent corroboration and pays for it in coverage.
+
+This transforms the finding of §4.5.1 from a defect into an \textbf{operating characteristic}. The 6.43\% confirmation rate is not a fixed property of counterfactual RCA on this dataset; it is the confirmation rate at the most permissive point of a configurable envelope. A deployment can choose where on that curve to sit, and the choice is a genuine engineering decision about the relative cost of an uncorroborated recommendation and a declined one.
+
+The counts at the tight end are small and must be read as such. At threshold 0.95 on test, 6 confirmations of 7 resolutions is 85.71\% with a very wide confidence interval; on validation, 4 of 4 is 100\% on four observations. The \emph{direction} of the relationship is supported across ten configurations and two splits; the precise values at the extremes are not.
+
+\textbf{Finding 2 --- The tier cascade is an active operating envelope.} Tier 2 first activates at threshold 0.65 on validation (1 case) and 0.75 on test (21 cases), reaching 24 cases at threshold 0.85 on test. Tier 3 activates at 0.65 on both splits and becomes dominant above 0.75, accounting for 98 of 147 cycles at 0.85 and 137 of 147 at 0.95 on test.
+
+This settles the question left open in §3.6.4. The tiers are not dormant fallbacks that this dataset never exercises; they are the mechanism by which the cascade responds to a stricter acceptance criterion. As the threshold rises, Tier 1's explanation-guided local search increasingly fails to reach an accepted point, control passes to the nearest-neighbour anchor, and where that also fails the engine escalates. The behaviour is exactly what the design intends, and it is only invisible at the default configuration because the default is permissive.
+
+\textbf{Finding 3 --- Escalation is the engine behaving correctly, not failing.} At threshold 0.95, the engine declines to answer for 137 of 147 cycles. Read against §3.6.4, this is the safety property working: under a demand for high-confidence correction, the engine mostly reports that no parameter adjustment within physical bounds achieves it, and directs the cycle to manual inspection. The 6 of 7 it does answer are answered with recommendations an independent model overwhelmingly endorses.
+
+There is also a computational cost to the strict end: runtime rises from 71 s to 1,084 s on test, a factor of 15, because failed Tier-1 searches run their full iteration budget before Tier 2 begins.
+
+\hypertarget{iteration-budget-sweep}{%
+\subsection{4.6.2 Iteration-Budget Sweep}\label{iteration-budget-sweep}}
+
+\textbf{Table 4.23.} Iteration-budget sweep, threshold fixed at 0.55, both splits. Source: \texttt{models/tier\_sensitivity\_\{val,test\}.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 14\tabcolsep) * \real{0.1250}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Max iter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 2
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Tier 3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Resolution rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Confirmed
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Validator rate
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+test & 10 & 83 & 7 & 50 & 61.22\% & 12 & \textbf{13.33\%} \\
+test & 25 & 139 & 1 & 0 & 95.24\% & 10 & 7.14\% \\
+test & 50 & 140 & 0 & 0 & 95.24\% & 9 & 6.43\% \\
+test & 150 & 140 & 0 & 0 & 95.24\% & 9 & 6.43\% \\
+val & 10 & 76 & 5 & 63 & 55.10\% & 18 & \textbf{22.22\%} \\
+val & 25 & 140 & 3 & 1 & 97.28\% & 19 & 13.29\% \\
+val & 50 & 144 & 0 & 0 & 97.96\% & 16 & 11.11\% \\
+val & 150 & 144 & 0 & 0 & 97.96\% & 16 & 11.11\% \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_tradeoff_maxiter.pdf}
+\caption{Resolution rate and validator agreement as functions of the iteration budget, threshold fixed at 0.55, test split. Source: \texttt{figures/ch4/fig\_ch4\_tradeoff\_maxiter}.}
+\label{fig:ch4-tradeoff-maxiter}
+\end{figure}
+
+The iteration budget produces the same trade-off through a different mechanism, and the result is arguably more interesting than the threshold sweep because it is less expected.
+
+\textbf{A shorter search yields better-corroborated recommendations.} At an iteration budget of 10 on the test split, resolution falls to 61.22\% but validator agreement rises to 13.33\% --- more than double the default figure --- and on validation to 22.22\%, also roughly double. Restricting how far the search may travel improves the independent quality of what it finds.
+
+The mechanism is the one §2.4.4 and §2.7.2 describe. A counterfactual reached in ten steps of 0.02 lies at most 0.2 scaled units from the original cycle in any parameter. A counterfactual permitted 150 steps may travel up to 3.0 units and saturate at the bounds. The further the search travels from the observed cycle, the more it relies on the model's extrapolation and the less likely a second model is to agree. \textbf{Search effort and independent trustworthiness are inversely related} on this dataset.
+
+\textbf{Saturation occurs by 50 iterations.} The results at 50 and 150 are identical on both splits --- same tier counts, same resolution, same confirmations. The additional 100 iterations change nothing, because every search that succeeds does so within 50 steps and every search that fails would fail at any budget. The default budget of 150 is therefore three times larger than necessary at this threshold, and reducing it to 50 would cut runtime with no effect on results. §5.3 takes up whether it should be reduced further, to a regime where the trade-off is actively used.
+
+\hypertarget{implications-for-the-operating-point}{%
+\subsection{4.6.3 Implications for the Operating Point}\label{implications-for-the-operating-point}}
+
+Taken together, the two sweeps show that the engine has a \textbf{two-dimensional operating envelope} and that the default configuration sits at the permissive corner of it: the lowest threshold and an iteration budget three times past saturation. That corner maximises coverage and minimises independent corroboration.
+
+Nothing in this chapter establishes which point on the envelope a deployment should choose, because that depends on the relative cost of a wrong recommendation and a declined one in a particular plant --- a question this thesis has no data to answer. What the sweeps establish is that \textbf{the choice exists, is continuous, and is measurable}, and that reporting a single operating point without characterising the envelope around it would have concealed most of what the engine actually does. §5.3 discusses candidate operating points and the information a plant would need to select among them.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{drift-detection-validation}{%
+\section{4.7 Drift Detection Validation}\label{drift-detection-validation}}
+
+Per §3.7.3, the reference and current windows both derive from the same stratified split of the same dataset, so no genuine temporal drift is present and none is reported. What is reported is \textbf{detector sensitivity to controlled synthetic perturbation}, which is the claim the available data supports.
+
+For each of the 13 parameters and each shift magnitude k $\in$ \{0, 1, 2, 3\}, the validation set was copied, the selected parameter shifted by k × σ\_train and clipped to the scaled bounds, and PSI recomputed against the training reference.
+
+\textbf{Table 4.24.} PSI response to synthetic distribution shift, selected parameters. Full table for all 13 parameters at all four magnitudes in Appendix D. Thresholds: PSI \textless{} 0.10 stable, 0.10--0.20 moderate, \textgreater{} 0.20 critical. Source: \texttt{models/drift\_validation.json}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Parameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+σ\_train
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+PSI at k = 0
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+PSI at k = 1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+PSI at k = 2
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+PSI at k = 3
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Melt temperature & 0.1705 & 0.0259 & 8.2883 & 8.2883 & 8.2883 \\
+Mold temperature & 0.2559 & 0.0406 & 2.1087 & 5.1307 & 6.8035 \\
+time\_to\_fill & 0.6478 & 0.0195 & 7.6032 & 7.5715 & 7.6140 \\
+ZDx -- Plasticizing time & 0.2353 & 0.0512 & 2.9142 & 7.6622 & 8.2924 \\
+ZUx -- Cycle time & 0.8592 & 0.0362 & 6.0487 & 5.7814 & 8.1222 \\
+SKx -- Closing force & 0.4291 & 0.0573 & 1.5497 & 4.2614 & 7.3632 \\
+SKs -- Clamping force peak & 0.4200 & 0.0133 & 2.9266 & 3.9492 & \emph{{[}see artefact{]}} \\
+APVs -- Spec. inj. pressure peak & 0.3592 & 0.0257 & 1.9440 & 4.2252 & 4.8287 \\
+CPn -- Screw position & 0.3198 & 0.0321 & 1.4790 & 3.7901 & 4.8616 \\
+SVo -- Shot volume & 0.3090 & 0.0183 & 1.6420 & 4.8940 & 7.1315 \\
+\end{longtable}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ch4/fig_ch4_psi_sensitivity.pdf}
+\caption{PSI for each of the 13 parameters under synthetic shifts of magnitude k·σ, with the moderate (0.10) and critical (0.20) thresholds marked. Source: \texttt{figures/ch4/fig\_ch4\_psi\_sensitivity}.}
+\label{fig:ch4-psi-sensitivity}
+\end{figure}
+
+Three results.
+
+\textbf{At k = 0, every parameter is classified stable.} PSI values range from 0.0133 to 0.0573, all below the 0.10 moderate threshold. This is the anticipated baseline stated in §3.7.3: two samples drawn from the same stratified split of the same dataset should look alike, and they do. The non-zero values reflect finite-sample binning variation between 870 training and 290 validation observations, not drift.
+
+\textbf{At k = 1σ, all 13 parameters cross the critical threshold.} The smallest PSI at k = 1 is 1.479 (screw position), more than seven times the 0.20 critical threshold; the largest is 8.288 (melt temperature). \textbf{The detector's trigger magnitude is therefore k = 1σ for all 13 parameters}, with a very wide margin. A one-standard-deviation shift in any single process parameter is detected unambiguously.
+
+\textbf{PSI does not increase monotonically with k for every parameter, and the reason is instructive.} Melt temperature returns exactly 8.2883 at k = 1, 2 and 3; time\_to\_fill returns 7.6032, 7.5715 and 7.6140; cycle time falls from 6.0487 at k = 1 to 5.7814 at k = 2 before rising to 8.1222 at k = 3. This is a consequence of the clipping applied after the shift. Once a shift is large enough to push most of a parameter's mass against the scaled upper bound of +1, further shifting cannot move it, and the resulting distribution --- and its PSI --- saturates. Melt temperature has the smallest σ\_train (0.1705) and saturates first and completely.
+
+The correct conclusion is that \textbf{PSI magnitude beyond the trigger point is not a reliable measure of drift severity in this bounded space}, and PSI should be read as a detector rather than as a magnitude estimator. That is consistent with its conventional use and with the threshold-based interpretation of §3.7.3, but it is worth stating because a reader looking at Table 4.24 might otherwise expect the values to order the severity of the injected shifts, and they do not.
+
+\textbf{Limitations restated.} This is a synthetic sensitivity study, labelled as such throughout. It establishes that the detector responds to controlled single-parameter shifts of known magnitude. It does not establish that the detector would catch the drift patterns a real machine produces, which are typically gradual, multi-parameter, and correlated rather than sudden, univariate, and independent. Real drift monitoring requires temporally separated production data, which this work does not have. The Page-Hinkley detector on the confidence stream was exercised on the validation split and is reported in the application interface, but for the same reason it detects nothing on data with no temporal structure, and no result from it is claimed here.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{expert-evaluation-sub-study}{%
+\section{4.8 Expert Evaluation Sub-Study}\label{expert-evaluation-sub-study}}
+
+\emph{{[}This section is a placeholder pending collection of expert responses. The instrument is complete and reproduced in Appendix C. If responses are not collected before submission, this section should be removed and the sub-study described in §6.4 as planned work --- a study that was designed but not run must not be reported as though it were run.{]}}
+
+\hypertarget{participants-and-procedure}{%
+\subsection{4.8.1 Participants and Procedure}\label{participants-and-procedure}}
+
+\emph{{[}Insert: number of participants; role distribution (process engineer, quality manager, machine operator, academic); experience bands; recruitment route; whether the instrument was administered in person or remotely; date range of collection; language of administration and whether translation was required.{]}}
+
+\emph{{[}Insert consent statement: participation voluntary and informed; responses recorded without identifying information beyond coarse role and experience band; results reported in aggregate only.{]}}
+
+\hypertarget{instrument-design}{%
+\subsection{4.8.2 Instrument Design}\label{instrument-design}}
+
+The questionnaire presents each participant with RCA cases drawn from the held-out test split, including at least one verifier-confirmed case (test index 39, reproduced in Table 4.16) and at least one unconfirmed case (test index 5). For each case, participants see the cycle's 13 parameters in engineering units, the model's classification and confidence, the SHAP and LIME explanation, and the recommended adjustments --- \textbf{without} being told the verifier's verdict, so that judgements are not anchored by it.
+
+Four five-point Likert constructs are assessed:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Construct
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Item
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+C1 --- Explanation clarity & The explanation makes it clear which process parameters drove this classification. \\
+C2 --- Recommendation plausibility & The recommended adjustments are plausible as a process intervention. \\
+C3 --- Behavioural intention & I would act on this recommendation on a running machine. \\
+C4 --- System trust & I would trust a system of this kind as a decision-support tool in quality control. \\
+\end{longtable}
+
+Each item is followed by a free-text field for reasoning. The full instrument, including the case presentations and the demographic items, is reproduced in Appendix C.
+
+\hypertarget{results}{%
+\subsection{4.8.3 Results}\label{results}}
+
+\emph{{[}Insert: per-construct mean, median, and distribution across participants; comparison of ratings between the confirmed and unconfirmed cases --- the analytically central comparison, since it tests whether expert judgement distinguishes the cases the independent verifier distinguishes; representative free-text responses, translated where necessary.{]}}
+
+\emph{{[}Table 4.25 placeholder: Likert response distribution by construct.{]}}
+
+\emph{{[}Figure 4.16 placeholder: diverging stacked bar chart of Likert responses by construct.{]}}
+
+\hypertarget{threats-to-validity-given-sample-size}{%
+\subsection{4.8.4 Threats to Validity Given Sample Size}\label{threats-to-validity-given-sample-size}}
+
+\emph{{[}Insert once n is known.{]}} The sub-study is \textbf{descriptive rather than inferential} and no significance testing is performed on its results, for the reasons given in §3.9.6: the expert pool available in the local industrial context is small, and inferential statistics on a handful of respondents would convey a precision the design cannot support.
+
+Three threats apply regardless of the realised sample size and are stated here so that the section is not read as stronger than it is.
+
+\textbf{Construct mismatch.} Expert plausibility judgement and recommendation correctness are different constructs. An expert may find a recommendation plausible and be wrong; a correct recommendation may be counter-intuitive. The sub-study measures whether the system's outputs are \emph{credible to domain experts}, which is a necessary condition for adoption and not a sufficient condition for correctness. It complements the independent-validation protocol of §4.5 and does not substitute for it.
+
+\textbf{Selection.} Participants recruited through professional contacts are not a random sample of the population of process engineers, and may be more favourably disposed toward digital quality tools than the population a deployment would encounter.
+
+\textbf{Presentation.} Judgements are made from a static case presentation rather than from use of the running system, so the results speak to the intelligibility of the output rather than to the usability of the application.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{summary-of-findings}{%
+\section{4.9 Summary of Findings}\label{summary-of-findings}}
+
+\textbf{Table 4.26.} Research questions mapped to results and supporting artefacts. All headline figures are test-split unless stated.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+RQ
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Question
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Result
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Supporting artefact
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{RQ1} & How accurately can injection-molding quality be classified from machine-native parameters alone? & \textbf{93.81\%} test accuracy (n = 291); macro F1 0.9369; \emph{Waste} recall \textbf{94.59\%}; non-conformance recall \textbf{94.56\%}; all errors between adjacent photometric bands & \texttt{test\_evaluation.json}, \texttt{experiments.json} \\
+\textbf{RQ2} & Can post-hoc explanation identify which parameters drive individual outcomes, usably? & Global SHAP ranking led by cycle time, plasticizing time, filling time; rank agreement r = 1.000 with impurity, \textbf{r = 0.659} with Relief and \textbf{r = 0.604} with ANOVA, all three ranking cycle time first; attribution in \textbf{1.8 ms}, local explanation in \textbf{20 ms} & \texttt{shap\_global\_importance.json}, \texttt{shap\_vs\_filters.json}, \texttt{xai\_timing.json} \\
+\textbf{RQ3} & Can explanations be converted into bounded, executable corrective recommendations? & \textbf{95.24\%} resolution (140/147); mean \textbf{4.88} parameters per recipe; mean proximity \textbf{0.5161}; all recommendations within observed operating range by construction; zero Tier-3 escalations at default & \texttt{rca\_evaluation\_test.json}, \texttt{rca\_comparison\_test.json} \\
+\textbf{RQ4a} & What is the discrepancy between self-reported and independently confirmed resolution? & \textbf{95.24\% self-reported against 6.43\% independently confirmed} --- a gap of \textbf{88.81 percentage points}. 131 of 140 recommendations carry no corroboration & \texttt{rca\_evaluation\_test.json} \\
+\textbf{RQ4b} & Is the discrepancy a property of one algorithm or of the method class? & Centroid ablation, with SHAP and LIME removed, confirms at \textbf{10.00\%} --- statistically indistinguishable (McNemar exact, \emph{p} = 0.180 test, \emph{p} = 0.625 val). Consistent with a property of the shared approach & \texttt{rca\_comparison\_\{val,test\}.json} \\
+\textbf{RQ4c} & Is the discrepancy fixed or configurable? & \textbf{Tunable and near-monotonic.} Threshold 0.55 → 0.95 moves resolution 95.24\% → 4.76\% and confirmation 6.43\% → 85.71\%. Iteration budget 150 → 10 moves resolution 95.24\% → 61.22\% and confirmation 6.43\% → 13.33\% & \texttt{tier\_sensitivity\_\{val,test\}.json} \\
+\textbf{RQ5} & Do the artefacts integrate into a Quality 4.0 framework aligned with ISO 9001? & Traceability records prediction, recommendation \textbf{and verification status} per cycle; PSI drift detection operates without labels and triggers at \textbf{k = 1σ}; capability module functional but computed against \textbf{assumed} limits (§5.3.4), so no capability claim about the real process is supported & \texttt{process\_capability.json}, \texttt{traceability\_sample.json}, \texttt{drift\_validation.json}, \texttt{oee\_simulation.json} \\
+\textbf{Supporting} & Does the tier cascade function as designed? & Active operating envelope: Tier 2 activates from threshold 0.65 (val) / 0.75 (test); Tier 3 reaches 137/147 at threshold 0.95 & \texttt{tier\_sensitivity\_\{val,test\}.json} \\
+\textbf{Supporting} & Is drift detection sensitive? & PSI triggers critical at \textbf{k = 1σ for all 13 parameters}; stable at k = 0; saturates above trigger due to bound clipping. Synthetic study only & \texttt{drift\_validation.json} \\
+\end{longtable}
+
+\hypertarget{the-result-in-one-paragraph}{%
+\subsection{4.9.1 The Result in One Paragraph}\label{the-result-in-one-paragraph}}
+
+On a held-out test split of 291 real injection-molding cycles, a Random Forest classifies quality at 93.81\% accuracy with 94.59\% recall on the safety-critical \emph{Waste} class, and its predictions are explained by attributions that three independent importance methods corroborate. A three-tier counterfactual engine converts those explanations into bounded corrective recipes for 95.24\% of non-conforming cycles, averaging 4.88 parameter adjustments each, every one within the machine's observed operating range. An independently trained multilayer perceptron, of a different model family and different seed, taking no part in generating those recipes, confirms \textbf{6.43\%} of them. A structurally different search with the explanation components removed confirms 10.00\%, a difference McNemar's exact test cannot distinguish from chance. Raising the acceptance threshold to 0.95 lifts confirmation to 85.71\% and collapses coverage to 4.76\%.
+
+The engine's self-report and its independent corroboration differ by nearly ninety percentage points at the default operating point; the difference is not attributable to the explanation components, and it is tunable rather than fixed.
+
+Chapter 5 interprets these results, examines what the circularity finding does and does not license, and sets out what a defensible validation protocol for counterfactual root-cause analysis in manufacturing would require.

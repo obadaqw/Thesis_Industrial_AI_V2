@@ -1,0 +1,123 @@
+\hypertarget{application-screenshots}{%
+\chapter{Application Screenshots}\label{application-screenshots}}
+
+This appendix documents the deployed application described in §3.8, which demonstrates that the framework operates as an integrated system rather than as a set of evaluation scripts. Eight pages are captured, one per module, together with the role that governs access to each.
+
+\textbf{Capture procedure.} These figures cannot be produced by a script; they require an interactive session (\texttt{streamlit\ run\ app.py}). The light theme should be selected (Settings → Theme) for consistency with the print-ready figures elsewhere in this thesis and for legibility when printed or photocopied. Each screenshot is saved to \texttt{thesis\_assets/figures/appendix/} as \texttt{fig\_appendix\_\textless{}page\_slug\textgreater{}.png} at the highest resolution the browser permits.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.1-model-forge}{%
+\section{F.1 Model Forge}\label{f.1-model-forge}}
+
+\textbf{Role:} AI Engineer \emph{(the only role permitted to train)}
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_model\_forge.png}{]}}
+
+\textbf{Figure F.1.} The Model Forge page, showing the six-algorithm training and comparison view. The capture should display the cross-validation mean and standard deviation for all six candidates, with Random Forest identified as champion, corresponding to Table 4.3.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.2-xai-lab}{%
+\section{F.2 XAI Lab}\label{f.2-xai-lab}}
+
+\textbf{Role:} AI Engineer
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_xai\_lab.png}{]}}
+
+\textbf{Figure F.2.} The XAI Lab page, showing a SHAP attribution and a LIME explanation for a single selected cycle. The capture should show both explanations for the same cycle so that the division of labour described in §3.5.3 --- SHAP selecting which parameters, LIME determining direction --- is visible in a single frame.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.3-rca-investigator}{%
+\section{F.3 RCA Investigator}\label{f.3-rca-investigator}}
+
+\textbf{Role:} AI Engineer · Quality Manager
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_rca\_investigator.png}{]}}
+
+\textbf{Figure F.3.} The RCA Investigator page, showing a resolved three-tier counterfactual result. \textbf{The capture must include the validator confirmation badge}, since the visibility of that badge to the operator is a design claim made in §3.6.6 and §5.2.5 and should be evidenced rather than asserted. The repair recipe table in engineering units and the tier indicator should also be visible.
+
+\emph{Suggested additional capture:} a second frame showing an \textbf{unconfirmed} result, so that the visual difference between a corroborated and an uncorroborated recommendation can be assessed directly against the argument of §5.2.5.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.4-digital-twin}{%
+\section{F.4 Digital Twin}\label{f.4-digital-twin}}
+
+\textbf{Role:} Operator
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_digital\_twin.png}{]}}
+
+\textbf{Figure F.4.} The Digital Twin page during a running simulation, showing the OEE gauge with its availability, performance and quality components, and the live cycle stream. §3.7.4 records that this is a simulation over recorded data, not a connection to a live machine.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.5-smart-reports}{%
+\section{F.5 Smart Reports}\label{f.5-smart-reports}}
+
+\textbf{Role:} Operator · Quality Manager
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_smart\_reports.png}{]}}
+
+\textbf{Figure F.5.} The Smart Reports page, showing a generated shift report. The capture should show a report for a cycle on which counterfactual analysis was run, so that the corrective adjustments and the verification status appear in the narrative --- the requirement stated in §3.7.5 that the verifier's verdict be carried through to the report rather than dropped at the presentation layer.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.6-iso-9001-dashboard}{%
+\section{F.6 ISO 9001 Dashboard}\label{f.6-iso-9001-dashboard}}
+
+\textbf{Role:} Quality Manager
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_iso9001\_dashboard.png}{]}}
+
+\textbf{Figure F.6.} The ISO 9001 Dashboard, showing the process-capability view with Cp and Cpk per parameter, first-pass yield, and the non-conformance summary. \textbf{The caption in the thesis body must repeat the qualification of §5.3.4:} the specification limits are the observed range of the historical dataset, not sourced engineering limits, so the capability verdicts displayed are not capability assessments of the reference process.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.7-drift-monitor}{%
+\section{F.7 Drift Monitor}\label{f.7-drift-monitor}}
+
+\textbf{Role:} AI Engineer · Quality Manager
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_drift\_monitor.png}{]}}
+
+\textbf{Figure F.7.} The Drift Monitor page showing a triggered PSI alert. The alert should be produced using the synthetic drift-injection control in the sidebar, at a shift of at least 1σ on one or more parameters, consistent with the sensitivity result of §4.7. The baseline note displayed on the page --- that near-zero PSI is the expected result when both windows derive from the same split --- should be legible in the capture, since it is the honest framing the module carries in the interface as well as in the thesis.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.8-cycle-history}{%
+\section{F.8 Cycle History}\label{f.8-cycle-history}}
+
+\textbf{Role:} AI Engineer · Quality Manager · Operator
+
+\emph{{[}Insert screenshot: \texttt{fig\_appendix\_cycle\_history.png}{]}}
+
+\textbf{Figure F.8.} The Cycle History page showing the SQLite audit trail with several logged cycles. The capture should show the columns that carry the ISO 9001 traceability argument of §3.7.2 and §5.3.4: timestamp, cycle identifier, prediction, confidence, RCA tier, and \textbf{verification status} --- the field that allows an auditor to distinguish corroborated from uncorroborated advice after the fact.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{f.9-role-access-summary}{%
+\section{F.9 Role Access Summary}\label{f.9-role-access-summary}}
+
+\textbf{Table F.1.} Page access by role, as implemented in \texttt{src/role\_manager.py}.
+
+\begin{longtable}[]{@{}lccc@{}}
+\toprule\noalign{}
+Page & Operator & AI Engineer & Quality Manager \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Model Forge & & $\bullet$ & \\
+XAI Lab & & $\bullet$ & \\
+RCA Investigator & & $\bullet$ & $\bullet$ \\
+Digital Twin & $\bullet$ & & \\
+Smart Reports & $\bullet$ & & $\bullet$ \\
+ISO 9001 Dashboard & & & $\bullet$ \\
+Drift Monitor & & $\bullet$ & $\bullet$ \\
+Cycle History & $\bullet$ & $\bullet$ & $\bullet$ \\
+\emph{Permitted to train models} & & $\bullet$ & \\
+\end{longtable}
+
+\textbf{This is an interface concept, not a security control.} Accessing a page outside the active role's scope produces a warning banner rather than a block, and the application has no authentication backend. The module demonstrates that the same underlying analysis serves three distinct information needs at three different depths; it does not implement access control and should not be described as doing so. See §3.7.7 and limitation L8 in §5.4.

@@ -1,0 +1,177 @@
+\hypertarget{hyperparameter-provenance-and-deviation-analysis}{%
+\chapter{Hyperparameter Provenance and Deviation Analysis}\label{hyperparameter-provenance-and-deviation-analysis}}
+
+This appendix reproduces the provenance document maintained in the project repository at \texttt{docs/hyperparameter\_provenance.md}. It records the origin of every hyperparameter of the champion Random Forest, classifies each difference from the source configuration, and justifies each deviation. It is reproduced in full because §3.4.3 summarises it and a reader assessing the reproduction claim requires the complete record.
+
+\hypertarget{b.1-reference}{%
+\section{B.1 Reference}\label{b.1-reference}}
+
+Polenta, A.; Tomassini, S.; Falcionelli, N.; Contardo, P.; Dragoni, A. F.; Sernani, P. ``A Comparison of Machine Learning Techniques for the Quality Classification of Molded Products.'' \emph{Information}, 2022, 13(6), article 272. DOI: 10.3390/info13060272. Cited in this thesis as reference {[}5{]}.
+
+\hypertarget{b.2-what-the-source-publication-reports}{%
+\section{B.2 What the Source Publication Reports}\label{b.2-what-the-source-publication-reports}}
+
+The following values are taken directly from the source, Section 3.2.3 and Table 5. Nothing in this section is inferred.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Best configuration:} 95.04\% ± 1.26\% mean test accuracy via stratified five-fold cross-validation over all 1,451 samples. Parameters: \textbf{151 trees}, \textbf{maximum depth 79}, \textbf{gain ratio} as the splitting criterion.
+\item
+  \textbf{Second-best configuration:} 94.68\% accuracy. Parameters: \textbf{151 trees}, \textbf{maximum depth 140}, \textbf{information gain} as the splitting criterion.
+\item
+  \textbf{Ensemble method:} Extremely Randomised Trees (ExtraTrees), in which split thresholds are selected at random rather than greedily optimised.
+\item
+  \textbf{Features evaluated per split:} int(log(m) + 1), where m is the number of features and log is the natural logarithm. For m = 13: int(ln 13 + 1) = int(3.565) = \textbf{3}.
+\item
+  \textbf{Minimal leaf size:} 2. \textbf{Minimal size for splitting:} 4. \textbf{Minimal gain:} 0.01.
+\item
+  \textbf{No pruning strategy} was applied.
+\item
+  \textbf{Voting:} confidence voting, predicting the class with the highest accumulated confidence summed across trees.
+\end{itemize}
+
+\hypertarget{b.3-mapping-table}{%
+\section{B.3 Mapping Table}\label{b.3-mapping-table}}
+
+\textbf{Table B.1.} Champion Random Forest hyperparameter provenance, with each difference classified.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Hyperparameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Polenta et al.~(2022)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+This implementation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Status
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{n\_estimators} & 151 & 151 & \textbf{Identical} \\
+\texttt{min\_samples\_leaf} & 2 & 2 & \textbf{Identical} \\
+\texttt{min\_samples\_split} & 4 & 4 & \textbf{Identical} \\
+\texttt{criterion} & gain ratio (best config) & \texttt{\textquotesingle{}entropy\textquotesingle{}} (information gain) & \textbf{Deviation} --- §B.4.1 \\
+\texttt{max\_depth} & 79 (gain ratio row) / 140 (information gain row) & 79 & \textbf{Deviation} --- §B.4.2 \\
+Ensemble type & ExtraTrees & \texttt{RandomForestClassifier} & \textbf{Deviation} --- §B.4.3 \\
+Features per split & int(ln(m)+1) = 3 for m = 13 & \texttt{\textquotesingle{}sqrt\textquotesingle{}} → int(√13) = 3 & \textbf{Equivalent} --- §B.4.4 \\
+Evaluation protocol & 5-fold CV, full dataset & Single held-out split & \textbf{Deviation} --- §B.4.5 \\
+\texttt{random\_state} & Not specified & 42 & \textbf{Addition} (reproducibility) \\
+\end{longtable}
+
+\hypertarget{b.4-deviation-justifications}{%
+\section{B.4 Deviation Justifications}\label{b.4-deviation-justifications}}
+
+\hypertarget{b.4.1-splitting-criterion}{%
+\subsection{B.4.1 Splitting Criterion}\label{b.4.1-splitting-criterion}}
+
+The source's best-performing configuration uses the \textbf{gain ratio} criterion, which normalises information gain by split entropy to correct for high-cardinality features. scikit-learn's \texttt{RandomForestClassifier} implements only \texttt{\textquotesingle{}gini\textquotesingle{}} (Gini impurity) and \texttt{\textquotesingle{}entropy\textquotesingle{}} (information gain); gain ratio is not available.
+
+\texttt{criterion=\textquotesingle{}entropy\textquotesingle{}} corresponds to information gain, which is the criterion from the source's \textbf{second-best} row. The source reports a 0.36 percentage-point difference between gain ratio (95.04\%) and information gain (94.68\%) within its own evaluation protocol. \textbf{This magnitude represents an upper bound on what is attributable to the criterion difference} under that protocol.
+
+\hypertarget{b.4.2-maximum-depth}{%
+\subsection{B.4.2 Maximum Depth}\label{b.4.2-maximum-depth}}
+
+Two rows of the source's Table 5 are relevant: the gain ratio row specifies \texttt{max\_depth\ =\ 79}, and the information gain row specifies \texttt{max\_depth\ =\ 140}. This work uses \texttt{criterion=\textquotesingle{}entropy\textquotesingle{}} (information gain, §B.4.1) but \texttt{max\_depth=79} (the gain ratio row). The two parameters therefore originate from different rows.
+
+Rather than leaving this as an unresolved inconsistency, it was tested empirically. \texttt{scripts/check\_tree\_depth.py} trains the champion and measures the realised depth of each of its 151 estimators.
+
+\textbf{Table B.2.} Configured versus realised tree depth. Source: \texttt{models/tree\_depth.json}.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Statistic & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Configured \texttt{max\_depth} & 79 \\
+Realised maximum depth & \textbf{20} \\
+Realised mean depth & 12.04 \\
+Realised median depth & 12.0 \\
+Realised minimum depth & 9 \\
+Constraint binding? & \textbf{No} \\
+\end{longtable}
+
+No tree reaches depth 20, let alone 79 or 140. With 870 training samples, \texttt{min\_samples\_leaf=2} and \texttt{min\_samples\_split=4}, trees terminate naturally well below either bound. \textbf{The discrepancy between 79 and 140 is therefore empirically immaterial on this dataset: both values produce identical trained models.} This resolves the ambiguity rather than merely flagging it, and is the reason the deviation is documented rather than corrected.
+
+\hypertarget{b.4.3-ensemble-type}{%
+\subsection{B.4.3 Ensemble Type}\label{b.4.3-ensemble-type}}
+
+The source uses \textbf{Extremely Randomised Trees} {[}82{]}, in which the split threshold for each candidate feature is drawn uniformly at random rather than optimised. \texttt{RandomForestClassifier} selects the best threshold among a random subsample of features, which is a more deterministic search.
+
+\texttt{RandomForestClassifier} is used here for two reasons:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Downstream compatibility.} The entire explanation and counterfactual chain --- TreeSHAP attribution, SHAP-driven feature selection, LIME direction assignment, the tier cascade, and the independent verifier --- was developed and tested against \texttt{RandomForestClassifier}. Substituting the ensemble type would require re-validating every downstream component, and the risk of a silent behavioural change in the counterfactual engine outweighs the benefit of exact correspondence with the source's ensemble type.
+\item
+  \textbf{Stack consistency.} All five non-XGBoost candidates in this work use scikit-learn estimators.
+\end{enumerate}
+
+\hypertarget{b.4.4-features-evaluated-per-split}{%
+\subsection{B.4.4 Features Evaluated Per Split}\label{b.4.4-features-evaluated-per-split}}
+
+The source specifies int(ln(m) + 1) features per candidate split; scikit-learn's \texttt{max\_features=\textquotesingle{}sqrt\textquotesingle{}} uses int(√m). For \textbf{m = 13}:
+
+\begin{itemize}
+\tightlist
+\item
+  Source formula: int(ln 13 + 1) = int(2.565 + 1) = int(3.565) = \textbf{3}
+\item
+  This work: int(√13) = int(3.606) = \textbf{3}
+\end{itemize}
+
+The two formulae produce identical values at m = 13. \textbf{The ``Equivalent'' classification applies specifically to this dataset and does not hold in general} --- at m = 20, for example, the source formula gives 3 and \texttt{\textquotesingle{}sqrt\textquotesingle{}} gives 4.
+
+\hypertarget{b.4.5-evaluation-protocol}{%
+\subsection{B.4.5 Evaluation Protocol}\label{b.4.5-evaluation-protocol}}
+
+The source reports mean test accuracy from \textbf{stratified five-fold cross-validation over all 1,451 samples} (95.04\% ± 1.26\%). This work reports cross-validation accuracy on the training split only (n = 870) and a separate held-out test accuracy (n = 291, 93.81\%).
+
+\textbf{The two figures are not directly comparable.} The denominators, the train/test compositions, and the averaging procedures all differ. Any statement placing this work's accuracy alongside the source's 95.04\% must acknowledge this. \textbf{The source's 95.04\% is the reference point for the hyperparameter configuration, not a benchmark this work claims to match or exceed.} See §1.5.2 and §4.2.5.
+
+\hypertarget{b.5-champion-selection}{%
+\section{B.5 Champion Selection}\label{b.5-champion-selection}}
+
+The champion is selected by the highest stratified five-fold cross-validation mean accuracy among all six candidates, implemented in \texttt{get\_champion()} in \texttt{src/experiment\_tracker.py}, which ranks on \texttt{cv\_mean} rather than single-split \texttt{val\_acc}.
+
+\textbf{Table B.3.} Six-algorithm comparison. Source: \texttt{models/experiments.json}.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Algorithm & CV mean & CV std & Validation accuracy \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{RF} & \textbf{0.9471} & 0.0190 & 0.9310 \\
+XGB & 0.9425 & 0.0202 & \textbf{0.9414} \\
+GB & 0.9379 & 0.0168 & 0.9310 \\
+MLP & 0.9218 & 0.0240 & 0.8931 \\
+DT & 0.9023 & 0.0170 & 0.8966 \\
+KNN & 0.8839 & 0.0043 & 0.8828 \\
+\end{longtable}
+
+Random Forest achieves the highest CV mean (0.9471) and is selected as champion. XGBoost achieves the highest single-split validation accuracy (0.9414), which is precisely why the selection criterion is the cross-validation mean: a single held-out split of 290 samples can be misleading at this resolution, and the difference between the two models on that split is approximately three samples. The full argument is given in §3.4.4.
+
+Held-out test accuracy of the champion (n = 291): \textbf{93.81\%}, from \texttt{models/test\_evaluation.json}.
+
+\hypertarget{b.6-hyperparameters-of-the-non-champion-candidates}{%
+\section{B.6 Hyperparameters of the Non-Champion Candidates}\label{b.6-hyperparameters-of-the-non-champion-candidates}}
+
+The five non-champion candidates use library defaults except where the source publication specifies otherwise. Because none is selected as champion, their configurations affect only the ranking, and the ranking's purpose in this work is to justify the champion selection rather than to establish a definitive algorithm comparison. Their exact configurations are recorded in \texttt{models/experiments.json} alongside their results.
+
+\hypertarget{b.7-summary-statement}{%
+\section{B.7 Summary Statement}\label{b.7-summary-statement}}
+
+\textbf{The champion's hyperparameters are adopted from the source publication with five documented differences. They are not tuned in this work, and no hyperparameter search was conducted.} This is stated plainly in §3.4.3 and again here, because presenting adopted values as though they were the product of a search conducted in this work would misrepresent it. The consequence --- that a tuned configuration might classify better, and might produce a differently-shaped decision surface with different counterfactual behaviour --- is recorded as limitation L4 in §5.4.

@@ -1,0 +1,283 @@
+\hypertarget{declaration-of-artificial-intelligence-tool-use}{%
+\chapter{Declaration of Artificial Intelligence Tool Use}\label{declaration-of-artificial-intelligence-tool-use}}
+
+Submitted in accordance with the Palestine Polytechnic University 2025 policy on the use of artificial intelligence in academic work, Section 6.
+
+\emph{{[}Before submission: verify this declaration against the current text of the policy. The structure below is designed to be complete rather than minimal, on the principle that an incomplete declaration is a more serious defect than a thorough one. If the policy prescribes a particular form or set of headings, adopt those and map the content below onto them.{]}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.1-summary-statement}{%
+\section{G.1 Summary Statement}\label{g.1-summary-statement}}
+
+Generative artificial intelligence tools were used substantially throughout this project, in software development, literature verification, analysis interpretation, and the drafting of this document. This appendix records that use in full.
+
+The research questions, the design decisions, the experimental configuration, the empirical results, the interpretation of those results, and the conclusions drawn from them are the author's own. All AI-generated material --- code, prose, and citations alike --- was reviewed, tested, corrected where necessary, and accepted or rejected by the author, who takes full responsibility for the entire contents of this thesis including any error that survived that review.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.2-tools-used}{%
+\section{G.2 Tools Used}\label{g.2-tools-used}}
+
+\textbf{Table G.1.} Artificial intelligence tools used during the project.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Tool
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Provider
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interface
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Period of use
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Purpose
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Claude (Anthropic large language models) & Anthropic & Web and desktop chat interface & \emph{{[}Insert date range{]}} & Literature review support, reference verification, analysis interpretation, document drafting, translation review \\
+Claude Code & Anthropic & Command-line agentic coding tool & \emph{{[}Insert date range{]}} & Repository-level code generation, refactoring, correction, and test authoring \\
+Groq inference API (Llama-3.3-70B) & Groq / Meta & API, embedded in the artefact & \emph{{[}Insert date range{]}} & \textbf{Component of the system under study}, not a research aid --- see §G.6 \\
+\emph{{[}Insert any other tool used{]}} & & & & \\
+\end{longtable}
+
+\emph{{[}Complete the table. Include every tool used at any point, including tools used briefly or abandoned, and including any general-purpose writing assistant, translation tool, grammar or style checker, code completion tool, or reference manager with AI features. Model versions should be recorded where known. If no other tools were used, state that explicitly rather than leaving the row blank.{]}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.3-uses-by-category}{%
+\section{G.3 Uses by Category}\label{g.3-uses-by-category}}
+
+\hypertarget{g.3.1-software-development}{%
+\subsection{G.3.1 Software Development}\label{g.3.1-software-development}}
+
+Claude Code was used for repository-level software development across the implementation described in Chapter 3. This included generating initial module implementations, refactoring existing modules, authoring the pytest suite, writing the evaluation and export scripts, and producing the orchestration scripts.
+
+All generated code was executed, tested, and reviewed by the author before being committed. The test suite described in §3.8.4 was itself developed with AI assistance and serves as one of the mechanisms by which generated code was verified: several assertions encode methodological claims made in Chapter 3 precisely so that a defect introduced by any means --- including by generated code --- causes a build failure rather than a silent error in a reported result.
+
+\textbf{Statement on characterisation of the development process.} The implementation was produced through an iterative process of specification, generation, execution, testing, and correction, with the author specifying requirements, reviewing output against them, and directing revision. Every module in the repository was executed and its behaviour verified against its specification before it contributed to any result reported in this thesis.
+
+\hypertarget{g.3.2-code-review-and-correction}{%
+\subsection{G.3.2 Code Review and Correction}\label{g.3.2-code-review-and-correction}}
+
+A substantial portion of the AI-assisted development effort was corrective rather than generative. Multiple review passes were conducted over the repository in which AI assistance was used to identify defects, inconsistencies, and unsupported claims in code, documentation, and comments. §G.5 records specific defects identified and corrected through this process, including several introduced by earlier AI-assisted work.
+
+\hypertarget{g.3.3-literature-review-and-reference-verification}{%
+\subsection{G.3.3 Literature Review and Reference Verification}\label{g.3.3-literature-review-and-reference-verification}}
+
+AI assistance was used to identify candidate literature, to summarise identified sources, and --- critically --- to verify bibliographic details against publisher records via web search.
+
+The verification step was necessary because generative models produce plausible but fabricated citations. §G.5 records four such defects found and corrected in the reference list of an earlier draft of Chapter 2. \textbf{All 91 references in the consolidated list were subject to review, and a subset was verified directly against publisher records; those not individually verified are identified in the author's working records.} Any reference the author could not confirm was either verified independently or removed.
+
+\hypertarget{g.3.4-analysis-and-interpretation}{%
+\subsection{G.3.4 Analysis and Interpretation}\label{g.3.4-analysis-and-interpretation}}
+
+AI assistance was used to interpret computed results, to identify relationships between results and the reviewed literature, and to propose explanatory mechanisms.
+
+\textbf{No numerical result in this thesis was produced by a generative model.} Every reported figure was computed by the evaluation scripts described in Appendix D, from the dataset described in §3.2, and traces to a named artefact file. Where AI assistance contributed to interpretation --- for example, the proposal in §5.2.1 that the setpoint-versus-measured-outcome distinction may contribute to the observed validation gap --- that contribution is a hypothesis, is identified as such in the text, and is accompanied in §6.4 by the experiment that would test it.
+
+Two derived statistics in §5.2.2 and §5.4 (approximate Wilson confidence intervals) were computed from counts already reported by the evaluation scripts and are identified in the text as derived rather than as script outputs.
+
+\hypertarget{g.3.5-document-drafting}{%
+\subsection{G.3.5 Document Drafting}\label{g.3.5-document-drafting}}
+
+\textbf{This is the most extensive category of use and is declared without qualification.} AI assistance was used in drafting the text of this thesis. The process was iterative: the author specified the required structure, content, evidence base, and argumentative position for each section; AI assistance produced draft prose against that specification; the author reviewed, corrected, and revised the result.
+
+Specifically:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Chapter 2} was revised from an earlier author-drafted literature review. Two major sections (§2.4.4 on counterfactual desiderata and §2.7 on the validation of explanations) were newly drafted with AI assistance, and the reference list was renumbered and verified.
+\item
+  \textbf{Chapters 1, 3, 4, 5 and 6} were drafted with AI assistance against a chapter-by-chapter structure agreed in advance by the author, using results computed by the author's evaluation scripts.
+\item
+  \textbf{The appendices}, including this declaration, were drafted with AI assistance.
+\item
+  \textbf{The Arabic abstract} was produced with AI assistance and requires review by a native Arabic-speaking reader with domain knowledge before submission. \emph{{[}Record here the name and role of the reviewer, or state that the author reviewed it personally.{]}}
+\end{itemize}
+
+\hypertarget{g.3.6-translation}{%
+\subsection{G.3.6 Translation}\label{g.3.6-translation}}
+
+\emph{{[}If any source material was translated with AI assistance, or if the expert evaluation instrument was translated into Arabic for administration, record that here, together with the review procedure applied to the translation.{]}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.4-representative-prompts}{%
+\section{G.4 Representative Prompts}\label{g.4-representative-prompts}}
+
+The following are representative of the prompts issued during the project. The complete interaction log is retained by the author and can be supplied to the examining committee on request.
+
+\textbf{Software development and correction:}
+
+\begin{quote}
+``Add a \texttt{-\/-split} flag to \texttt{evaluate\_rca.py} and \texttt{compare\_rca\_methods.py} so both can be run against the held-out test split rather than validation only. Outputs must be written to split-suffixed filenames and must not overwrite existing files.''
+\end{quote}
+
+\begin{quote}
+``The plausibility metric currently reported does not distinguish counterfactuals of materially different quality. Replace it with mean L2 distance from the counterfactual to its nearest conforming training sample in scaled space, and update the comparison script and its documentation accordingly.''
+\end{quote}
+
+\begin{quote}
+``Document the provenance of every champion hyperparameter against Polenta et al.~Table 5. Classify each difference as identical, equivalent, or a deviation, and justify each deviation. Do not describe any value as tuned in this work.''
+\end{quote}
+
+\textbf{Verification and review:}
+
+\begin{quote}
+``Verify every reference in this chapter against publisher records. Report any that cannot be confirmed to exist, and any whose volume, pages, authors, or DOI do not match.''
+\end{quote}
+
+\begin{quote}
+``Re-check the repository against the claims made in the methodology chapter and report any statement in the document that the code does not support.''
+\end{quote}
+
+\textbf{Document drafting:}
+
+\begin{quote}
+``Deep review this chapter and add everything needed. Keep in mind professional referencing, double check all the references, keep in mind the structure we agreed on.''
+\end{quote}
+
+\begin{quote}
+``Generate chapter three, keep in mind the outline we discussed and all we've done, don't miss anything.''
+\end{quote}
+
+\begin{quote}
+``Proceed to chapter 4 as per the thesis structure we agreed on. Include all results we generated and figures. Put placeholders for the expert evaluation study.''
+\end{quote}
+
+\emph{{[}Add further representative prompts if the policy requires broader coverage, and record the approximate total volume of interaction if required.{]}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.5-errors-in-ai-generated-material-identified-and-corrected}{%
+\section{G.5 Errors in AI-Generated Material Identified and Corrected}\label{g.5-errors-in-ai-generated-material-identified-and-corrected}}
+
+This section is included because a declaration that records only that AI was used, without recording that its output required correction, would understate both the risk and the review effort. The following defects in AI-generated material were identified by the author and corrected. All are recorded in the project's revision history.
+
+\textbf{Bibliographic fabrication and error.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  A citation to ``R. Kazmer et al., \emph{Real-time data acquisition and streaming in smart injection molding machines}, SPE ANTEC 2019'' appeared in an earlier draft reference list. \textbf{The publication does not exist}, and the author initial was also incorrect. It was removed.
+\item
+  A patent citation attributed ``Statistical root cause analysis using convolutional neural networks'' (US 2018/0293722 A1) to the wrong authors. The correct inventors are J. D. Crocco and P. R. O'Hern Jr.~Corrected.
+\item
+  A digital-twin reference was attributed to ``M. Dalibor et al., MODELS 2021.'' The correct source is Bibow et al., CAiSE 2020, LNCS vol.~12127, pp.~85--100 --- a different lead author, venue and year. Corrected.
+\item
+  The Muaz et al.~(2025) reference carried the wrong volume and page range (vol.~141, pp.~1144--1159 rather than vol.~145, pp.~371--380), although the DOI was correct. Corrected.
+\item
+  The Sarkar et al.~(2020) reference carried an incorrect DOI and publisher location. Corrected.
+\end{enumerate}
+
+\textbf{Unsupported factual claims.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  A draft asserted that Wang et al.~(2024) combined an ensemble Bayesian network with a genetic algorithm. The source describes structure learning, parameter learning and Bayesian inference, and does not use a genetic algorithm. The sentence was rewritten to match the source.
+\item
+  An earlier version of the repository documentation described the champion model's hyperparameters as tuned in this work. They are adopted from the reference publication. The documentation was corrected and the full provenance analysis of Appendix B written in consequence.
+\end{enumerate}
+
+\textbf{Methodological error in generated text.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{7}
+\tightlist
+\item
+  A draft of §3.9.3 stated that unresolved cases are treated as unconfirmed in the McNemar comparison. Inspection of the implementation showed that Tier-0 already-conforming cycles carry a positive verifier flag, which is why the contingency table row totals exceed the confirmed counts by exactly seven. The section was corrected to describe the actual convention, and the discrepancy documented at Table 4.19.
+\end{enumerate}
+
+\textbf{Software defects.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{8}
+\tightlist
+\item
+  An evaluation metric intended to measure counterfactual plausibility was found to be vacuous --- it could not distinguish counterfactuals of materially different quality --- and was replaced with mean nearest-neighbour distance.
+\item
+  Evaluation scripts initially supported only the validation split, which would have caused the thesis's central figures to be reported on data that had participated in model selection. A \texttt{-\/-split} flag was added and all headline results recomputed on the held-out test split.
+\item
+  Path inconsistencies affecting \texttt{raw\_data.csv} and \texttt{constraints.yaml} were identified and corrected.
+\item
+  Two modules present in early development --- a genetic process optimiser and a REST API server --- were removed as outside the scope of the research questions (§1.5.3).
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.6-artificial-intelligence-as-an-object-of-study}{%
+\section{G.6 Artificial Intelligence as an Object of Study}\label{g.6-artificial-intelligence-as-an-object-of-study}}
+
+A distinction is drawn between AI tools used \emph{to conduct} this research and AI components that form part of the \emph{system being studied}. The latter are not research aids and their behaviour is a subject of the thesis rather than a contribution to its production:
+
+\begin{itemize}
+\tightlist
+\item
+  The \textbf{Random Forest classifier}, \textbf{SHAP} and \textbf{LIME} explanation layers, \textbf{counterfactual engine}, and \textbf{MLP verifier} are the artefact under evaluation (Chapter 3).
+\item
+  The \textbf{Groq / Llama-3.3-70B shift reporting module} (§3.7.5) is a component of that artefact. Its role is confined to narrating results computed deterministically by other modules; it performs no analysis and no numerical reasoning, and every quantity in its prompt is supplied by a deterministic component. The single shift-report exhibit reproduced in the thesis is a verbatim generated output and is identified as such.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.7-verification-procedures-applied-to-ai-generated-material}{%
+\section{G.7 Verification Procedures Applied to AI-Generated Material}\label{g.7-verification-procedures-applied-to-ai-generated-material}}
+
+The following checks were applied.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Category
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Verification applied
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Code & Executed; unit and integration tests run; assertions encoding methodological claims added to the test suite; results reproducible from raw data by two orchestration scripts \\
+Numerical results & Not AI-generated. Computed by scripts, written to named artefact files, mapped to every reported figure in Appendix D \\
+Citations & Reviewed against publisher records; unconfirmable citations removed; five bibliographic defects corrected (§G.5) \\
+Factual claims about sources & Checked against the source text; one unsupported claim corrected (§G.5, item 6) \\
+Methodological statements & Cross-checked against the implementation; one error corrected (§G.5, item 8) \\
+Drafted prose & Reviewed and revised by the author; all figures cross-checked against artefact files \\
+Arabic abstract & \emph{{[}Record the review procedure and reviewer{]}} \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{g.8-statement-of-authorship-and-responsibility}{%
+\section{G.8 Statement of Authorship and Responsibility}\label{g.8-statement-of-authorship-and-responsibility}}
+
+The intellectual contributions of this thesis --- the identification of the research gap, the decision to build an independent verifier and an ablated baseline in order to make the central question answerable, the choice to report the held-out test figure where the validation figure was more favourable, the interpretation of the results, and the conclusions drawn --- are the author's own.
+
+Generative artificial intelligence tools were used as instruments in producing the software, verifying the literature, and drafting the text, under the author's direction and subject to the author's review at every stage. Their use is declared here in full.
+
+\textbf{The author takes complete responsibility for the entire contents of this thesis, including any error, omission, or unsupported claim that survived review.}
+
+~
+
+Signature: \ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots..
+
+Name: Obadah AlQawasema
+
+Date: \ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots\ldots..

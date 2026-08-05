@@ -1,0 +1,377 @@
+\hypertarget{selected-code-listings}{%
+\chapter{Selected Code Listings}\label{selected-code-listings}}
+
+This appendix reproduces the source of the three components on which the thesis's central finding depends: the three-tier counterfactual engine, the independent verifier, and the centroid-ablation baseline. Listings are reproduced from the project repository and are abridged where indicated; complete sources are at \texttt{github.com/obadaqw/Thesis\_Industrial\_AI\_V2}.
+
+Peripheral modules --- the Streamlit pages, the LLM wrapper, the notification transport, the digital twin, and the role manager --- are not reproduced here. They are infrastructure (§3.7) and their inclusion would obscure the components that matter.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.1-counterfactual-rca-engine-configuration-and-contract}{%
+\section{E.1 Counterfactual RCA Engine --- Configuration and Contract}\label{e.1-counterfactual-rca-engine-configuration-and-contract}}
+
+\texttt{src/counterfactual\_rca.py}, module header and hyperparameters.
+
+\begin{verbatim}
+"""
+counterfactual_rca.py — Counterfactual RCA: 3-Tier parameter-correction engine.
+
+Distinct from rca_surrogate.py (Statistical Anomaly Monitor): that module flags
+*which sensors / hardware components* deviate statistically; this module computes
+*which parameter adjustments* would move a defective cycle into the conforming
+region. Tier-3 escalations here correspond to cycles where the anomaly monitor
+typically reports structural / multi-sensor faults beyond correctable bounds.
+
+Design decisions implemented:
+  #7  SHAP SELECTS which features to adjust (top-k by |SHAP value for Target class|).
+      LIME gives the DIRECTION (sign of local linear coefficient for Target class).
+  #9  Three-tier strategy in order: T1 -> T2 -> T3 (escalation).
+  #10 ROBUST T2: centroid of <=15 nearest real good-quality samples; acceptance
+      requires P(Acceptable) + P(Target) >= 0.55 (confidence margin).
+  #11 Accepted counterfactual: model predicts class in {1, 2} (Acceptable OR Target).
+  #12 Independent MLP validator (random_state=7, family != RF) confirms CF;
+      validator_ok flag is returned to the caller/UI.
+
+All counterfactual search is performed in MinMax-scaled space ([-1, 1]).
+Physical bounds are enforced via np.clip at every iteration.
+"""
+
+# ── Hyper-parameters ─────────────────────────────────────────────────────────
+TARGET_CLASSES       = {1, 2}   # model 0-based: 1=Acceptable, 2=Target
+CONFIDENCE_THRESHOLD = 0.55     # P(Acceptable) + P(Target) to accept CF
+T1_TOP_K             = 5        # SHAP selects top-5 features
+T2_TOP_K             = 7        # Tier-2 adjusts top-7 features
+T2_N_NEIGHBORS       = 15       # centroid of 15 nearest good samples
+STEP                 = 0.02     # per-iteration step in scaled [-1,1] space
+MAX_ITER             = 150      # max iterations per tier
+LIME_SAMPLES         = 2000     # LIME perturbation budget
+\end{verbatim}
+
+\texttt{TARGET\_CLASSES} is the single definition of conformance (§3.2.3). It is imported by \texttt{evaluate\_rca.py}, \texttt{compare\_rca\_methods.py}, \texttt{tier\_sensitivity.py} and \texttt{greedy\_rca.py}, so that one constant governs the entire system.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.2-acceptance-criterion-and-the-independent-verifier}{%
+\section{E.2 Acceptance Criterion and the Independent Verifier}\label{e.2-acceptance-criterion-and-the-independent-verifier}}
+
+\texttt{src/counterfactual\_rca.py}, acceptance and verification helpers.
+
+\begin{verbatim}
+    def _confidence(self, x_scaled):
+        """P(Acceptable) + P(Target) for a single scaled vector."""
+        proba = self.model.predict_proba(x_scaled.reshape(1, -1))\cite{ref0}
+        return float(proba\cite{ref1} + proba\cite{ref2})
+
+    def _is_accepted(self, x_scaled):
+        return self._confidence(x_scaled) >= self.confidence_threshold
+
+    def _validate(self, x_scaled):
+        """Independent MLP validator: True if it also predicts {Acceptable, Target}."""
+        pred = int(self.validator.predict(x_scaled.reshape(1, -1))\cite{ref0})
+        return pred in TARGET_CLASSES
+\end{verbatim}
+
+Verifier construction, from \texttt{CounterfactualRCA.\_\_init\_\_}:
+
+\begin{verbatim}
+        # Good samples for Tier-2 anchor (Acceptable=1 or Target=2 in 0-based)
+        good_mask = np.isin(self.y_train, list(TARGET_CLASSES))
+        self.good_samples = self.X_train[good_mask]
+
+        # Independent MLP validator — different family (not RF), different seed
+        self.validator = MLPClassifier(
+            hidden_layer_sizes=(100, 50), max_iter=1000,
+            random_state=7, early_stopping=True, n_iter_no_change=20
+        )
+        self.validator.fit(self.X_train, self.y_train)
+\end{verbatim}
+
+\textbf{Three independence properties are visible in these eight lines} and are asserted in the test suite (§E.6): the verifier is an \texttt{MLPClassifier} and the champion is a \texttt{RandomForestClassifier}; its seed is 7 while the champion's and the split's is 42; and it is fitted on \texttt{X\_train} only. \texttt{\_validate} is called only after a search has terminated --- it contributes nothing to \texttt{\_is\_accepted}, to feature selection, to direction assignment, or to the termination condition.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.3-tier-1-shap-selected-lime-directed-search}{%
+\section{E.3 Tier 1 --- SHAP-Selected, LIME-Directed Search}\label{e.3-tier-1-shap-selected-lime-directed-search}}
+
+\texttt{src/counterfactual\_rca.py}.
+
+\begin{verbatim}
+    def _tier1(self, x_scaled):
+        x    = x_scaled.copy()
+        x_df = pd.DataFrame([x], columns=self.feature_names)
+
+        shap_vals = self.xai._get_shap_values(x_df)
+        top_idx   = np.argsort(np.abs(shap_vals))[-self.t1_top_k:]
+
+        top_names = [self.feature_names[i] for i in top_idx]
+        try:
+            lime_coeffs = self.xai.get_lime_directions(
+                x_df, top_names, label=2, num_samples=LIME_SAMPLES
+            )
+        except Exception:
+            lime_coeffs = {}
+
+        directions = {}
+        for idx in top_idx:
+            fname = self.feature_names[idx]
+            coeff = lime_coeffs.get(fname, 0.0)
+            if coeff == 0.0:
+                coeff = float(shap_vals[idx])
+            directions[idx] = float(np.sign(coeff)) if coeff != 0 else 1.0
+
+        for _ in range(self.max_iter):
+            for idx, d in directions.items():
+                x[idx] += d * STEP
+            x = np.clip(x, -1.0, 1.0)
+            if self._is_accepted(x):
+                return {"success": True, "cf_scaled": x,
+                        "feature_indices": top_idx.tolist()}
+
+        return {"success": False}
+\end{verbatim}
+
+Three design decisions from §3.6.2 are visible. Feature selection is by absolute SHAP magnitude and is a \textbf{hard structural constraint} --- only five indices ever enter \texttt{directions}, which is where the sparsity objective enters the design. Direction assignment uses the LIME \textbf{sign} only, with a documented fallback chain to the SHAP sign and then to +1. And \texttt{np.clip(x,\ -1.0,\ 1.0)} executes \textbf{inside} the loop, so bound enforcement applies at every iteration rather than to the final result.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.4-tier-2-nearest-neighbour-anchored-search}{%
+\section{E.4 Tier 2 --- Nearest-Neighbour Anchored Search}\label{e.4-tier-2-nearest-neighbour-anchored-search}}
+
+\texttt{src/counterfactual\_rca.py}.
+
+\begin{verbatim}
+    def _tier2(self, x_scaled):
+        dists    = euclidean_distances([x_scaled], self.good_samples)\cite{ref0}
+        nn_idx   = np.argsort(dists)[:self.t2_n_neighbors]
+        centroid = self.good_samples[nn_idx].mean(axis=0)
+
+        gap     = np.abs(centroid - x_scaled)
+        top_idx = np.argsort(gap)[-self.t2_top_k:]
+
+        x = x_scaled.copy()
+        for _ in range(self.max_iter):
+            for idx in top_idx:
+                d = np.sign(centroid[idx] - x[idx])
+                x[idx] += d * STEP
+            x = np.clip(x, -1.0, 1.0)
+            if self._is_accepted(x):
+                return {"success": True, "cf_scaled": x,
+                        "feature_indices": top_idx.tolist()}
+
+        return {"success": False}
+\end{verbatim}
+
+The anchor is the mean of the fifteen nearest \textbf{real conforming training samples}, not a synthetic optimum --- which is why the tier's target lies on the observed conforming manifold by construction (§3.6.3).
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.5-tier-cascade-and-public-contract}{%
+\section{E.5 Tier Cascade and Public Contract}\label{e.5-tier-cascade-and-public-contract}}
+
+\texttt{src/counterfactual\_rca.py}, \texttt{analyze()}, abridged: the Tier-1 and Tier-2 result branches are structurally identical and only Tier 1 is shown.
+
+\begin{verbatim}
+    def analyze(self, x_real_df):
+        x_scaled = self.scaler.transform(x_real_df)\cite{ref0}
+        proba    = self.model.predict_proba(x_scaled.reshape(1, -1))\cite{ref0}
+        pred     = int(self.model.predict(x_scaled.reshape(1, -1))\cite{ref0})
+        conf     = float(proba\cite{ref1} + proba\cite{ref2})
+
+        # ── Tier 0: already acceptable ────────────────────────────────────
+        if self._is_accepted(x_scaled):
+            return {
+                "tier": 0, "status": "already_acceptable",
+                "prediction": pred, "proba": proba.tolist(), "confidence": conf,
+                "adjustments": [], "validator_ok": True,
+                "message": (f"Part meets quality threshold "
+                            f"(P{{Acc,Target}}={conf:.1%}).")
+            }
+
+        # ── Tier 1 ────────────────────────────────────────────────────────
+        r1 = self._tier1(x_scaled)
+        if r1["success"]:
+            adj = self._build_adjustments(x_real_df, r1["cf_scaled"],
+                                          r1["feature_indices"])
+            vok = self._validate(r1["cf_scaled"])
+            cf_conf = self._confidence(r1["cf_scaled"])
+            return {
+                "tier": 1, "status": "resolved",
+                "prediction": pred, "proba": proba.tolist(), "confidence": conf,
+                "adjustments": adj, "validator_ok": vok,
+                "cf_confidence": round(cf_conf, 4),
+                "message": (f"Tier 1 (SHAP+LIME): {self.t1_top_k} adjustments found. "
+                            f"CF confidence={cf_conf:.1%}. "
+                            f"Validator: {'Confirmed' if vok else 'Unconfirmed'}.")
+            }
+
+        # ── Tier 2 ────────────────────────────────────────────────────────
+        #   [structurally identical to Tier 1; calls self._tier2]
+
+        # ── Tier 3: escalation ────────────────────────────────────────────
+        return {
+            "tier": 3, "status": "escalate",
+            "prediction": pred, "proba": proba.tolist(), "confidence": conf,
+            "adjustments": [], "validator_ok": False, "cf_confidence": 0.0,
+            "message": ("No parameter adjustment can resolve this defect within "
+                        "physical bounds. Structural root cause — "
+                        "manual inspection required.")
+        }
+\end{verbatim}
+
+\textbf{Note on the Tier-0 return value.} \texttt{validator\_ok} is \texttt{True} for an already-conforming cycle that the engine declines to modify. This is why the McNemar contingency table of §4.5.4 carries row totals exceeding the confirmed counts by exactly seven, and it is documented at that table. The flag therefore carries two meanings --- \emph{this recommendation was corroborated} and \emph{no recommendation was needed} --- which is recorded as a construct-validity limitation in §5.5.3.
+
+Adjustments are converted back to engineering units before return:
+
+\begin{verbatim}
+    def _build_adjustments(self, x_real_df, cf_scaled, feature_indices):
+        cf_real = self.scaler.inverse_transform(cf_scaled.reshape(1, -1))\cite{ref0}
+        x_real  = x_real_df.values\cite{ref0}
+        result  = []
+        for idx in feature_indices:
+            fname  = self.feature_names[idx]
+            curr   = round(float(x_real[idx]), 4)
+            sugg   = round(float(cf_real[idx]), 4)
+            delta  = round(sugg - curr, 4)
+            result.append({
+                "feature":   fname,
+                "current":   curr,
+                "suggested": sugg,
+                "delta":     delta,
+                "direction": "↑" if delta > 0 else ("↓" if delta < 0 else "—"),
+            })
+        return sorted(result, key=lambda r: abs(r["delta"]), reverse=True)
+\end{verbatim}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.6-centroid-ablation-baseline}{%
+\section{E.6 Centroid-Ablation Baseline}\label{e.6-centroid-ablation-baseline}}
+
+\texttt{src/greedy\_rca.py}, module header.
+
+\begin{verbatim}
+"""
+greedy_rca.py — Centroid-ablation baseline for comparison with 3-tier RCA.
+
+This module implements a single-tier counterfactual search that moves all features
+simultaneously toward the centroid of conforming training samples, without SHAP
+feature selection or LIME direction guidance. It serves as a centroid-ablation
+baseline in the thesis comparison study:
+
+  3-tier RCA     -> SHAP selects top-k features · LIME gives adjustment direction
+                    · NN-anchored centroid fallback (Tier 2)
+  Ablation (this)-> all features adjusted toward global conforming centroid
+                    · no feature selection · no local explanation
+
+The acceptance criterion (P(Acceptable) + P(Target) >= confidence_threshold) and
+physical bounds (clip to scaled space [-1, 1]) are identical to those of the
+3-tier engine. Matching acceptance criteria is a design requirement: without it,
+differing resolution rates would reflect threshold differences rather than the
+effect of feature selection and directional guidance.
+
+Output schema matches CounterfactualRCA.analyze() exactly so compare_rca_methods.py
+can treat both methods interchangeably.
+"""
+
+TARGET_CLASSES       = {1, 2}
+CONFIDENCE_THRESHOLD = 0.55
+MAX_ITER             = 150
+STEP                 = 0.02
+\end{verbatim}
+
+The matched constants are the experimental control (§3.6.7): identical acceptance criterion, step size, iteration budget and bound enforcement, with only feature selection and direction assignment removed. Any difference in outcome is therefore attributable to those two components --- and §4.5.3 reports that the confirmation rate is not.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.7-comparison-harness-and-statistical-test}{%
+\section{E.7 Comparison Harness and Statistical Test}\label{e.7-comparison-harness-and-statistical-test}}
+
+\texttt{scripts/compare\_rca\_methods.py}, metric definitions and the paired test.
+
+\begin{verbatim}
+def compute_proximity(orig_scaled, cf_scaled):
+    return float(np.linalg.norm(orig_scaled - cf_scaled))
+
+
+def compute_sparsity(adjustments):
+    return sum(1 for a in adjustments if abs(a["delta"]) > 1e-4)
+
+
+def compute_nn_distance(cf_scaled, good_samples):
+    """L2 distance from cf_scaled to its nearest conforming training sample."""
+    dists = euclidean_distances([cf_scaled], good_samples)
+    return float(dists.min())
+
+
+def run_mcnemar(df_rca, df_greedy):
+    """McNemar's exact test on paired per-sample validator outcomes."""
+    merged = df_rca[["sample_idx", "validator_ok"]].merge(
+        df_greedy[["sample_idx", "validator_ok"]],
+        on="sample_idx", suffixes=("_rca", "_greedy")
+    )
+    a = int(( merged["validator_ok_rca"] &  merged["validator_ok_greedy"]).sum())
+    b = int((~merged["validator_ok_rca"] &  merged["validator_ok_greedy"]).sum())
+    c = int(( merged["validator_ok_rca"] & ~merged["validator_ok_greedy"]).sum())
+    d = int((~merged["validator_ok_rca"] & ~merged["validator_ok_greedy"]).sum())
+    table = np.array([[a, b], [c, d]])
+    result = mcnemar(table, exact=True)
+    return {
+        "contingency": {"a_both": a, "b_greedy_only": b,
+                        "c_rca_only": c, "d_neither": d},
+        "mcnemar_statistic": float(result.statistic),
+        "mcnemar_p": float(result.pvalue),
+    }
+\end{verbatim}
+
+The leakage guarantee is stated in the script header and holds for every result in Chapter 4:
+
+\begin{quote}
+Leakage guarantee: the MLP validator, the Tier-2 good-sample pool, and the greedy centroid are all derived from \texttt{X\_train} exclusively. The specified split is used only as the evaluation target, not for any training step.
+\end{quote}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{e.8-tests-encoding-methodological-claims}{%
+\section{E.8 Tests Encoding Methodological Claims}\label{e.8-tests-encoding-methodological-claims}}
+
+Selected assertions from \texttt{tests/}. These exist so that a change violating a claim made in Chapter 3 fails the build rather than silently invalidating a reported result.
+
+\begin{verbatim}
+# tests/test_counterfactual.py
+class TestValidatorIndependence:
+    def test_validator_is_mlp(self, cf_rca):
+        from sklearn.neural_network import MLPClassifier
+        assert isinstance(cf_rca.validator, MLPClassifier)
+
+    def test_validator_seed_differs_from_champion(self, cf_rca):
+        # Validator must use seed != 42 to be truly independent
+        assert cf_rca.validator.random_state != 42
+        assert cf_rca.validator.random_state == 7
+
+
+class TestConfidenceThreshold:
+    def test_threshold_constant(self, cf_rca):
+        from counterfactual_rca import CONFIDENCE_THRESHOLD as CF_THRESH
+        assert CF_THRESH == pytest.approx(0.55)
+
+
+# tests/test_data.py
+class TestScaler:
+    def test_scaler_feature_range(self, scaler):
+        assert scaler.feature_range == (-1, 1), "Feature range must be (-1, 1)"
+
+
+# tests/test_xai.py
+class TestSHAP:
+    def test_shap_target_class_index(self, xai_engine):
+        assert xai_engine.target_class_idx == 2, \
+            "target_class_idx must be 2 (model class 2 = original quality 3 = Target)"
+
+    def test_shap_different_rows_differ(self, xai_engine, defect_scaled_row, good_scaled_row):
+        sv_defect = xai_engine._get_shap_values(defect_scaled_row)
+        sv_good   = xai_engine._get_shap_values(good_scaled_row)
+        assert not np.allclose(sv_defect, sv_good), \
+            "SHAP values identical for defect and golden — explainer is broken"
+\end{verbatim}
+
+The last assertion is a guard against a silently broken explainer returning constants --- a failure mode that would leave every reported attribution meaningless while producing no error.

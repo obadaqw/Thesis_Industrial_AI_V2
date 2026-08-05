@@ -1,0 +1,140 @@
+\hypertarget{introduction}{%
+\chapter{Introduction}\label{introduction}}
+
+\hypertarget{background-and-motivation}{%
+\section{1.1 Background and Motivation}\label{background-and-motivation}}
+
+The plastics sector occupies a substantial position in Palestinian manufacturing, supplying construction, agriculture, packaging, and household-goods markets both domestically and for export. Injection molding is among its most widely used processes, valued for its ability to produce dimensionally complex parts at high volume and low unit cost.
+
+\emph{{[}Insert here the sector's contribution to national output, with a citation to the Palestinian Central Bureau of Statistics or an equivalent published source. The research proposal on which this thesis builds stated a figure of approximately 15\% of GDP for the plastics industry; that figure is uncited and appears inconsistent with published estimates of the size of Palestinian manufacturing as a whole, and should not be reproduced without verification against a primary statistical source. A similarly uncited figure --- injection molding accounting for approximately 30\% of global plastic production --- should likewise be sourced or removed.{]}}
+
+What is not in doubt, and is documented in the sector literature reviewed in §2.2.5, is the character of quality control in these facilities. Inspection is predominantly manual: operators visually check molded parts, and the judgement recorded --- where it is recorded at all --- is a pass or fail entered by hand. This approach carries well-understood limitations. Human inspection performance varies with fatigue, training, and attention; subtle or internal defects are frequently invisible to the eye; and as production volume rises, end-of-line inspection becomes a throughput bottleneck as well as a reliability one.
+
+Behind the inspection problem sits a broader digital-transformation gap. The infrastructure of Industry 4.0 --- sensor data collection, real-time analytics, automated quality feedback --- has made substantial inroads in large manufacturers globally and remains sparse in the small and medium enterprises that constitute most of the Palestinian sector. Limited capital, scarce specialist expertise, and short payback expectations make sensor-rich or vision-based solutions difficult to justify. The consequence is reactive rather than preventive quality management: process data that could anticipate defects is often neither collected nor analysed, even where the machine already produces it.
+
+This last observation is the motivating premise of the thesis. A modern injection molding machine records, for every cycle it runs, a substantial set of process parameters --- temperatures, pressures, forces, screw positions, and timings --- as a matter of ordinary operation. That data exists, costs nothing additional to obtain, and is largely unused. If quality can be predicted, explained, and corrected from those parameters alone, then intelligent quality control becomes available to a factory that cannot afford a camera system or an in-mold sensor.
+
+There is a further pressure that makes this timely. Many Palestinian manufacturers pursue ISO 9001 certification, frequently because customers require it. ISO 9001:2015 specifies what must be monitored, evidenced, and corrected; it does not supply the means. A system that records what was found, why, what correction was advised, and on what basis produces precisely the audit trail the standard requires --- turning a compliance burden into a by-product of ordinary operation.
+
+\hypertarget{the-injection-molding-quality-problem}{%
+\section{1.2 The Injection Molding Quality Problem}\label{the-injection-molding-quality-problem}}
+
+Injection molding is a cyclic process in which molten thermoplastic is plasticized in a heated barrel, injected into a mold cavity under pressure, packed to compensate for shrinkage as it solidifies, cooled to rigidity, and ejected. Part quality depends on the precise control of parameters at every stage: melt and mold temperature govern flow and shrinkage, injection pressure and speed determine how completely and uniformly the cavity fills, and packing and cooling times control dimensional stability. When these parameters are well tuned the process produces consistent parts; when they drift, characteristic defects emerge --- short shots, sink marks, warpage, flash, burn marks.
+
+Quality is difficult to control for two reasons that recur throughout this thesis. First, the parameters are strongly coupled and nonlinear in their effect: a change made to correct one defect commonly induces another, which is why the classical practice of adjusting one setting at a time and observing the next few shots is slow and unreliable. Second, the quality-relevant outcome is often not observable at the machine. In the case examined here --- injection-molded road lenses whose quality is defined by photometric general uniformity --- the measurement that defines conformance requires laboratory analysis and cannot be performed in-line at production rate. The parameters that determine quality are recorded continuously; the quality itself is not. A fuller treatment of the process, its defect modes, and the applicable standards is given in §2.2.
+
+\hypertarget{problem-statement}{%
+\section{1.3 Problem Statement}\label{problem-statement}}
+
+This thesis addresses two distinct problems. They are stated separately because they are of different kinds, and because the second is what distinguishes the work from a systems-integration exercise.
+
+\hypertarget{problem-1-practical}{%
+\subsection{Problem 1 --- Practical}\label{problem-1-practical}}
+
+\textbf{Manual quality control cannot deliver the consistency that formal quality standards require, and the machine learning methods that could replace it are not usable in their current form by the people who would have to rely on them.}
+
+The state of the art in molding quality prediction reaches accuracies above 90\% using tree ensembles and neural networks on process-parameter data. But these models are black boxes: they issue a verdict without a rationale. An operator with limited exposure to AI, presented with an unexplained classification, may reasonably override or ignore it, and a quality manager cannot enter an unexplained verdict into a corrective-action record. More fundamentally, a prediction is not an instruction. A model that reports ``this cycle will produce waste'' leaves entirely open the question the operator actually faces --- \emph{what should I change?} The gap between accurate prediction and actionable guidance is the practical problem, and it is compounded in the target context by the requirement that any solution work on the machine's existing data, without added sensing.
+
+\hypertarget{problem-2-methodological}{%
+\subsection{Problem 2 --- Methodological}\label{problem-2-methodological}}
+
+\textbf{Counterfactual explanations in quality control are conventionally validated by the same model that generated them, and this circularity is almost never tested.}
+
+Counterfactual explanation is the natural bridge from prediction to action in a process-control setting: because the model's input features \emph{are} machine settings, the minimal input change that flips the model's decision is directly a corrective work instruction. The method is well developed, with an established set of desiderata --- validity, proximity, sparsity, plausibility, actionability.
+
+The first of those desiderata contains a structural problem. A counterfactual is deemed \emph{valid} if the model classifies it as the desired class. But the counterfactual was produced by searching that same model's decision surface until it did. The criterion by which the recommendation is judged is identical to the objective by which it was constructed, so a search that terminates when the model is satisfied will, by construction, report success. What is measured is the competence of the optimiser, not the correctness of the recommendation.
+
+This would be harmless if trained models faithfully represented the processes they model. The critical literature establishes that they do not, in specific and documented ways: post-hoc explanations can reflect artefacts the model learned rather than knowledge present in the data; counterfactuals can be perfectly valid under a model while occupying regions of feature space where no real production has ever occurred. Yet surveys of evaluation practice find that one XAI paper in three evaluates exclusively on anecdotal evidence, and that only about a fifth of published counterfactual methods have been tested with users at all.
+
+The consequence is that a practitioner deploying counterfactual root-cause analysis in a factory has \textbf{no basis on which to calibrate trust in its output}, because the discrepancy between what such a system reports about itself and what an independent check would confirm has never been measured in an industrial setting. Quantifying that discrepancy --- and determining whether it is a property of one algorithm or of the approach as a class --- is the methodological problem this thesis addresses.
+
+\hypertarget{research-questions}{%
+\section{1.4 Research Questions}\label{research-questions}}
+
+Five research questions follow from the two problems above.
+
+\textbf{RQ1.} Can a reproducible multi-class classifier for molded-product quality be established from machine-native process-parameter data alone, without vision systems or added in-mold sensing?
+
+\textbf{RQ2.} Can SHAP and LIME provide operator-interpretable explanations of quality classifications at both global and local scope, and do those explanations agree with importance measures that do not consult the model?
+
+\textbf{RQ3.} Can counterfactual search convert those explanations into actionable, physically bounded parameter recipes that move non-conforming cycles into the conforming region?
+
+\textbf{RQ4.} \emph{(The thesis's own question.)} Do counterfactual recipes validated by the generating classifier survive validation by an independent model --- and if not, is the resulting discrepancy a property of one search algorithm or of the method class?
+
+\textbf{RQ5.} How do the resulting artefacts integrate into a Quality 4.0 framework aligned with ISO 9001 --- process capability monitoring, traceability, drift detection, and operator-facing reporting?
+
+RQ1 to RQ3 are questions about whether a thing can be built, and their expected answers are affirmative; the literature suggests that each component is achievable and the contribution in answering them lies in the integration and in the machine-native constraint. \textbf{RQ4 is different in kind.} It does not ask whether something can be built but whether what has been built can be believed, and its answer is not known in advance. It is flagged here as the thesis's own question because the entire methodology of Chapter 3 --- the independent verifier, the ablated baseline, the sensitivity sweep, the split discipline --- exists to make it answerable, and because its answer is the principal finding reported.
+
+\hypertarget{objectives-and-scope}{%
+\section{1.5 Objectives and Scope}\label{objectives-and-scope}}
+
+\hypertarget{original-objectives-and-what-was-delivered}{%
+\subsection{1.5.1 Original Objectives and What Was Delivered}\label{original-objectives-and-what-was-delivered}}
+
+The research proposal on which this thesis is based set four objectives. Each is restated below with a plain statement of what was delivered against it.
+
+\textbf{Objective 1 --- Conduct a scoping literature review of AI-driven quality control for injection molding, identifying key gaps and areas for improvement.}
+\emph{Delivered, and extended.} Chapter 2 covers the five domains originally scoped and adds a section (§2.7) surveying how explanations and counterfactuals are validated in the literature. That addition was not anticipated in the proposal; it became necessary once the empirical finding emerged, because without it the finding would have had no gap in the literature to occupy.
+
+\textbf{Objective 2 --- Reproduce and validate the findings of the reference study to establish a baseline.}
+\emph{Delivered, with an explicit protocol caveat.} Six algorithms were compared and a Random Forest champion established at 93.81\% accuracy on a held-out test split, with an algorithm ranking and per-class profile consistent with the reference. The hyperparameter configuration was adopted from the reference with five documented deviations (§3.4.3). Because this work uses a held-out split while the reference cross-validates over its full dataset, the two accuracy figures are \textbf{not directly comparable}, and no claim of parity or superiority is made anywhere in this thesis.
+
+\textbf{Objective 3 --- Enhance the validated model by integrating XAI and RCA layers.}
+\emph{Delivered, and it is the substantive body of the work.} A hybrid SHAP-plus-LIME explanation layer (§3.5) and a three-tier counterfactual RCA engine with an independent verifier (§3.6) were built, deployed as a working application, and evaluated across the full held-out population.
+
+\textbf{Objective 4 --- Acquire a new dataset, or generate an augmented one, to test the enhanced model against a second data source.}
+\textbf{\emph{Not pursued.}} No new dataset was acquired and no data augmentation was performed. The work instead deepened the evaluation on the reference dataset in three directions the proposal did not anticipate: a held-out test split reserved from every selection decision, a centroid-ablation baseline permitting a controlled comparison of search strategies, and a two-dimensional sensitivity sweep characterising the engine's operating envelope. This is a genuine deviation from the proposal, and in the author's assessment the substitution strengthened the work --- the ablation study is what allows the central finding to be generalised beyond a single algorithm --- but it is a deviation, and it is stated here rather than left for a reader holding the proposal to discover.
+
+\hypertarget{correcting-the-record-on-accuracy}{%
+\subsection{1.5.2 Correcting the Record on Accuracy}\label{correcting-the-record-on-accuracy}}
+
+The proposal anticipated that the enhanced model would achieve accuracy superior to the reference baseline. \textbf{That was not achieved, and it is not the contribution of this thesis.}
+
+Under a protocol that is not directly comparable, this work reports 93.81\% on a held-out test split against the reference's 95.04\% mean accuracy from five-fold cross-validation over its full dataset. The two figures differ in denominator, in training-set size, and in averaging procedure, and the difference between them carries no interpretable meaning (§4.2.5). What the comparison supports is the weaker and sufficient claim that the reimplementation behaves like the model it reimplements --- which is what licenses using it as the substrate for the counterfactual work.
+
+The contribution of this thesis lies elsewhere: in the explanation and root-cause layers built on top of that model, and above all in the finding about how the output of such layers should be validated. Accuracy improvement was never the mechanism by which this work was going to be useful, and stating that plainly here prevents the thesis being read against a benchmark it does not claim to meet.
+
+\hypertarget{scope}{%
+\subsection{1.5.3 Scope}\label{scope}}
+
+\textbf{In scope.} Quality classification, explanation, and counterfactual root-cause analysis from the thirteen machine-native process parameters of a single published dataset; independent verification of counterfactual output; ablation comparison and sensitivity analysis; and the supporting Quality 4.0 modules --- process capability, traceability, drift monitoring, OEE simulation, LLM reporting, operator notification, and role separation --- as infrastructure demonstrating deployment feasibility.
+
+\textbf{Out of scope, and why.}
+
+\emph{Physical validation.} No counterfactual recipe generated in this work was executed on an injection molding machine. This requires access to an instrumented machine producing the same part, production time, photometric measurement capability, and tolerance for producing scrap during a trial, none of which were available. It is the principal limitation of the work (§5.4) and the principal item of future work (§6.4).
+
+\emph{Vision-based inspection.} Excluded by the machine-native design constraint, which is the premise of the deployment argument rather than an omission.
+
+\emph{Process optimisation and closed-loop control.} The system recommends; it does not write setpoints back to the machine. Two modules present in early development --- a genetic process optimiser and a REST API server --- were removed as out of scope, on the grounds that they broadened the artefact without contributing to the research questions.
+
+\emph{Multi-product and multi-machine generalisation.} All results derive from one product, one machine, and one manufacturer.
+
+\hypertarget{contributions}{%
+\section{1.6 Contributions}\label{contributions}}
+
+The contributions are listed in order of strength. Each is stated at the level the evidence supports; §6.3 restates them alongside what is explicitly not claimed.
+
+\textbf{Contribution 1 --- An independently-validated counterfactual RCA architecture that exposes and quantifies the circularity gap.} On a held-out test split of real injection-molding cycles, the engine reports a resolution rate of \textbf{95.24\%} while an independently trained verifier --- of a different model family, a different seed, and taking no part in the counterfactual search --- confirms \textbf{6.43\%} of those resolutions. To the author's knowledge this is the first quantification of that discrepancy on a real industrial process dataset, measured across a complete evaluation population rather than on selected illustrative cases.
+
+\textbf{Contribution 2 --- Evidence that the gap is not attributable to search strategy.} A centroid-ablation baseline, which removes SHAP feature selection and LIME directional guidance while holding the acceptance criterion, champion model, verifier, step size and iteration budget constant, achieves a statistically indistinguishable confirmation rate (10.00\% against 6.43\%; McNemar exact test, \emph{p} = 0.180 on the test split). Combined with the structural similarity of the two methods, this is evidence that the confirmation rate is a property of the shared approach rather than of either implementation --- which is what generalises Contribution 1 beyond the particular engine built here.
+
+\textbf{Contribution 3 --- Characterisation of the gap as a tunable operating envelope.} Two sensitivity sweeps across ten configurations and two data splits show the resolution-versus-confirmation trade-off to be continuous and near-monotonic in the acceptance threshold (95.24\% → 4.76\% resolution against 6.43\% → 85.71\% confirmation), and --- less expectedly --- inversely related to search effort, with a reduced iteration budget doubling independent confirmation. This reframes a single unfavourable figure as a design parameter with a measurable cost curve.
+
+\textbf{Contribution 4 --- A hybrid SHAP-plus-LIME explanation layer for multi-class injection-molding quality.} SHAP selects which parameters to adjust; LIME determines the direction. The division uses each method for the quantity it estimates most reliably, yields deterministic feature selection through exact TreeSHAP, and produces attributions that two model-free importance methods independently corroborate (Spearman r = 0.659 and 0.604), with all three ranking the same parameter first.
+
+\textbf{Contribution 5 --- An integrated Quality 4.0 framework deployed as a working application, with a fully reproducible evaluation pipeline.} An eight-page application combining ISO 9001 process-capability monitoring, SQLite traceability, PSI and Page-Hinkley drift detection, OEE simulation, LLM-generated shift reporting, and operator notification, operating on commodity CPU hardware in approximately half a second per cycle. The evaluation is reproducible end to end from raw data by two orchestration scripts, with documented hyperparameter provenance including five deviations from the reference configuration and an empirical resolution of the tree-depth ambiguity.
+
+\hypertarget{thesis-organization}{%
+\section{1.7 Thesis Organization}\label{thesis-organization}}
+
+\textbf{Chapter 2} reviews the literature across five domains: the injection molding process and its quality challenges, machine learning for quality prediction, explainable AI including a detailed treatment of counterfactual explanation and its desiderata, root-cause analysis in smart manufacturing, and Quality 4.0. Its pivotal section (§2.7) surveys how explanations are actually validated in practice and establishes that validation against the generating model is the norm --- the gap that motivates RQ4.
+
+\textbf{Chapter 3} specifies the methodology and system design under a design-science frame: the dataset and its conformance definition, the preprocessing pipeline and split discipline, model selection with full hyperparameter provenance, the explanation layer, the three-tier counterfactual engine with its independent verifier and ablated baseline, the supporting Quality 4.0 modules, the implementation, and the evaluation design.
+
+\textbf{Chapter 4} reports results: classification performance with priority on \emph{Waste} recall, explanation-layer results including agreement with model-free importance methods, counterfactual resolution rates with a worked case, the independent validation finding and its ablation comparison with statistical testing, the tier-cascade sensitivity sweeps, drift-detector validation, and the expert evaluation sub-study.
+
+\textbf{Chapter 5} discusses what the results mean: the physical interpretation of the attributions, why self-validated counterfactuals overstate resolution and why the ablation generalises that finding, what a defensible validation protocol would require, the practical requirements for deployment in the target context, and a full statement of limitations and threats to validity.
+
+\textbf{Chapter 6} answers each research question directly, restates the contributions with their explicit boundaries, and sets out future work --- foremost the physical validation trial that would convert the central finding from a statement about two models into a statement about a process.
+
+\textbf{Appendices} provide the full parameter specification, the hyperparameter provenance document, the expert evaluation instrument, the artefact index mapping every reported figure to its source file, selected code listings, application screenshots, and the declaration of AI tool use required under university policy.

@@ -1,0 +1,54 @@
+% ============================================================
+%  main.tex — top-level thesis document
+%  Compile with XeLaTeX. On Overleaf: set the compiler in the project menu.
+%  Local: xelatex main.tex && xelatex main.tex   (run twice for cross-refs/ToC)
+% ============================================================
+\documentclass[12pt,oneside]{book}
+
+\input{preamble}
+
+\title{Explainable AI for Quality Control and Root-Cause Analysis in Injection Molding Machines}
+\author{Obadah AlQawasema}
+\date{\today}
+
+\begin{document}
+
+% ---------------- FRONT MATTER (roman numerals) ----------------
+\frontmatter
+\input{frontmatter/titlepage}
+\input{frontmatter/declaration}
+\input{frontmatter/acknowledgements}
+\input{frontmatter/abstract_en}
+\input{frontmatter/abstract_ar}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\input{frontmatter/abbreviations}
+
+% ---------------- MAIN MATTER (arabic numerals) ----------------
+\mainmatter
+\input{chapters/ch1}
+\input{chapters/ch2}
+\input{chapters/ch3}
+\input{chapters/ch4}
+\input{chapters/ch5}
+\input{chapters/ch6}
+
+% ---------------- REFERENCES ----------------
+% Uses plain LaTeX thebibliography (see references.tex) so the numbering
+% [1]-[91] you already proofread is reproduced exactly, with no bib-tool
+% parsing risk. See the chat message for the biblatex upgrade path.
+\input{references}
+
+% ---------------- APPENDICES (A, B, C ... ) ----------------
+\appendix
+\input{appendices/appA}
+\input{appendices/appB}
+\input{appendices/appC}
+\input{appendices/appD}
+\input{appendices/appE}
+\input{appendices/appF}
+\input{appendices/appG}
+
+\end{document}

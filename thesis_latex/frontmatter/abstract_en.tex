@@ -1,0 +1,14 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Quality control in injection molding within under-digitized manufacturing environments remains predominantly manual, while the machine learning methods that could replace it are opaque to operators and stop short of corrective guidance. This thesis develops an explainable, machine-native quality control and root-cause analysis framework, and reports a methodological finding about how the output of such systems should be validated.
+
+Six classifiers were compared on 1,451 injection-molded road lenses described by thirteen machine-native process parameters. A Random Forest, selected by stratified cross-validation mean rather than single-split accuracy, achieved 93.81\% accuracy on a held-out test split (n = 291) with 94.59\% recall on the safety-critical \emph{Waste} class, and an error structure confined entirely to adjacent photometric grades. A hybrid explanation layer uses exact TreeSHAP attribution to select which parameters to adjust and LIME local surrogates to determine the direction of adjustment; the resulting global ranking agrees with two model-free importance methods (Spearman r = 0.659 and 0.604), all three ranking cycle time first. A three-tier counterfactual engine converts these explanations into bounded corrective parameter recipes, resolving \textbf{95.24\%} of non-conforming test cycles with a mean of 4.88 adjusted parameters, every recommendation lying within the machine's observed operating range.
+
+An independently trained multilayer perceptron --- a different model family, a different seed, taking no part in the counterfactual search --- confirms \textbf{6.43\%} of those recommendations. A centroid-ablation baseline that removes the SHAP and LIME components achieves a statistically indistinguishable 10.00\% (McNemar exact test, \emph{p} = 0.180), indicating that the discrepancy is a property of the method class rather than of a particular search strategy. Sensitivity analysis shows the gap to be tunable rather than fixed: raising the acceptance threshold moves resolution from 95.24\% to 4.76\% and independent confirmation from 6.43\% to 85.71\%.
+
+The thesis concludes that counterfactual recipes should be presented as hypotheses for operator evaluation rather than as verified corrective actions, and specifies a graded validation protocol for counterfactual root-cause analysis in manufacturing.
+
+\textbf{Keywords:} explainable artificial intelligence; counterfactual explanation; root-cause analysis; injection molding; Quality 4.0; SHAP; LIME; independent validation; ISO 9001.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}

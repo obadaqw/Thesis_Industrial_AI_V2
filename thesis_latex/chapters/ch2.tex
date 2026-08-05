@@ -1,0 +1,519 @@
+\hypertarget{literature-review}{%
+\chapter{Literature Review}\label{literature-review}}
+
+\hypertarget{review-approach}{%
+\section{2.1 Review Approach}\label{review-approach}}
+
+\hypertarget{rationale-for-a-scoping-review}{%
+\subsection{2.1.1 Rationale for a Scoping Review}\label{rationale-for-a-scoping-review}}
+
+This chapter situates the present research within the existing body of knowledge spanning five intersecting domains: machine learning (ML) for injection molding quality prediction, explainable artificial intelligence (XAI), counterfactual explanation, root-cause analysis (RCA), and the emerging paradigm of Quality 4.0. A scoping review approach is adopted rather than a full systematic review. Arksey and O'Malley {[}1{]} characterise scoping studies as appropriate where the aim is to map the key concepts underpinning a research area and the main sources of evidence available, particularly where the area is complex or has not previously been reviewed comprehensively. Both conditions hold here. The research problem is inherently multidisciplinary, and the specific intersection it occupies --- interpretable, machine-native, counterfactual root-cause analysis with independent verification --- has no dedicated review literature of its own. Rather than examining a single technique in isolation, this review maps the state of each contributing domain, evaluates representative studies critically, and isolates the specific gaps that the proposed framework addresses.
+
+An important consequence of this choice should be stated at the outset. A scoping review favours breadth of coverage over exhaustive enumeration and does not attempt formal quality appraisal of every included study. The claims of absence made in this chapter --- most importantly, the claim in Section 2.7 that independent validation of counterfactual explanations is rare --- are therefore claims about what a structured search of the major databases surfaces, not proofs of non-existence. They are stated in those terms throughout.
+
+\hypertarget{search-protocol}{%
+\subsection{2.1.2 Search Protocol}\label{search-protocol}}
+
+The literature was gathered through structured searches of four academic databases --- IEEE Xplore, ScienceDirect, SpringerLink, and MDPI --- supplemented by the ACM Digital Library for the explainability and counterfactual literature, by forward and backward citation tracing from key papers, and by targeted searches of Google Scholar for grey literature relevant to the Palestinian industrial context.
+
+Search strings combined terms across the contributing domains. Representative strings included: (``injection molding'' OR ``injection moulding'') AND (``machine learning'' OR ``quality prediction''); (``explainable AI'' OR XAI OR SHAP OR LIME) AND (manufacturing OR ``quality control''); (``counterfactual explanation'' OR ``algorithmic recourse'') AND (evaluation OR validation OR plausibility); (``root cause analysis'') AND (``machine learning'' OR ``zero-defect manufacturing''); and (``Quality 4.0'') AND (``Industry 4.0'' OR ``ISO 9001'').
+
+Studies were included if they applied data-driven or interpretable methods to manufacturing quality control, with priority given to injection molding, and if published primarily between 2015 and 2025. Seminal earlier works were retained where they remain foundational --- Ribeiro's support-vector work on molding quality monitoring and the in-process measurement studies of Gao and Gordon are examples. Studies were excluded if they addressed unrelated manufacturing processes without transferable methodology, or if they reported insufficient methodological detail for the claims made to be assessed. For the counterfactual and explanation-evaluation literature the domain restriction was deliberately relaxed, because the methodological problem examined in Section 2.7 is not specific to manufacturing and the relevant work is concentrated in the general machine-learning venues.
+
+Screening counts are not reported. The search was iterative and interleaved with the design of the artefact rather than executed as a single frozen protocol, so a PRISMA-style flow diagram would impose a false retrospective precision on the process. The protocol is therefore described in prose, and the review is presented as a scoping map rather than an auditable systematic review.
+
+\hypertarget{structure-of-the-chapter}{%
+\subsection{2.1.3 Structure of the Chapter}\label{structure-of-the-chapter}}
+
+The chapter builds a cumulative argument. Section 2.2 establishes the injection molding process, the parameters that govern part quality, the defect modes that arise when those parameters drift, and the industrial reality of Palestinian and comparable manufacturers. Section 2.3 surveys machine learning for quality prediction, examines in detail the benchmark study on which this thesis builds, and argues that the field's evaluation practice stops at predictive accuracy. Section 2.4 covers XAI foundations, develops the counterfactual explanation literature and its desiderata in depth, and shows that explainability remains almost absent from injection molding practice. Section 2.5 reviews RCA from classical tools to data-driven methods and positions counterfactual reasoning as a route to actionable diagnosis. Section 2.6 frames the discussion within Quality 4.0, statistical process capability, and concept drift. Section 2.7 --- the pivot of the chapter --- surveys how explanations and counterfactuals are actually validated in the literature and establishes that validation against the generating model is the norm and independent validation the exception. Section 2.8 consolidates the gaps and states how each is addressed.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{injection-molding-and-quality-challenges}{%
+\section{2.2 Injection Molding and Quality Challenges}\label{injection-molding-and-quality-challenges}}
+
+\hypertarget{process-fundamentals}{%
+\subsection{2.2.1 Process Fundamentals}\label{process-fundamentals}}
+
+Injection molding is a cyclic manufacturing process in which molten thermoplastic is shaped into solid parts through five sequential stages: plasticizing, injection, packing, cooling, and ejection. During plasticizing, pellets are melted in a heated barrel by a rotating screw. During injection, the screw advances to force the melt into the mold cavity under high pressure. The packing phase then maintains pressure to compensate for volumetric shrinkage as the material begins to solidify. The cooling phase allows the part to gain sufficient rigidity for handling, and finally the mold opens for ejection before the next cycle begins. Cycle times range from seconds to minutes depending on part geometry, wall thickness, and material, which makes the process highly efficient for mass production of dimensionally consistent parts {[}2{]}, {[}3{]}.
+
+The process is best understood as a sequence of energy and material transfers, each of which is instrumented on a modern machine. The screw's rotation and back pressure govern melting; its forward velocity and the resulting hydraulic or specific injection pressure govern cavity filling; the clamping unit resists the separating force generated inside the cavity; and the thermal circuits of barrel and mold govern solidification. Every one of these quantities is measured by the machine's own control system as a matter of ordinary operation, a fact that becomes central to the argument of this thesis.
+
+\hypertarget{process-parameters-and-their-effect-on-part-quality}{%
+\subsection{2.2.2 Process Parameters and Their Effect on Part Quality}\label{process-parameters-and-their-effect-on-part-quality}}
+
+Part quality depends critically on the precise control of process parameters at each stage. Melt and mold temperature govern flow behaviour, crystallinity, and shrinkage. Injection pressure and speed determine how completely and how uniformly the cavity fills, and how much molecular orientation is frozen into the part. Packing (hold) pressure and hold time determine how much additional material is fed into the cavity to compensate for contraction. Cooling time and mold temperature determine dimensional stability and residual stress at ejection. Zhao et al.~{[}4{]}, in a review of sensing, optimization, and control for intelligent injection molding, characterise these relationships as strongly nonlinear and mutually coupled: a change made to correct one defect commonly induces another, which is precisely why single-parameter trial-and-error adjustment is slow and unreliable in practice.
+
+Two properties of this parameter--quality mapping matter for the present work. First, it is direct: the parameters are not proxies for quality-relevant physics, they \emph{are} the quality-relevant physics, which is what makes machine-native data a legitimate basis for quality prediction rather than a compromise. Second, it is coupled: because parameters interact, a corrective recommendation that adjusts several parameters simultaneously is not merely a convenience but a requirement, and the correctness of such a multi-parameter recommendation cannot be established by inspecting each parameter in isolation. This second property anticipates the validation problem developed in Section 2.7.
+
+\hypertarget{common-defect-modes}{%
+\subsection{2.2.3 Common Defect Modes}\label{common-defect-modes}}
+
+Even within a controlled process, injection-molded parts exhibit recurring defects whose causes span material, machine, and environmental factors. Table 2.1 summarises the most common defects and their principal causes, synthesised from established process and mold-design references {[}2{]}, {[}3{]}, {[}4{]}.
+
+\textbf{Table 2.1.} Common injection molding defects and their principal causes.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Defect
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Principal causes
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Shrinkage & Dimensional reduction as the part cools & Inherent material contraction; insufficient packing pressure or hold time \\
+Warpage & Distortion or twisting of the part & Differential or uneven cooling; non-uniform wall thickness; anisotropic shrinkage \\
+Short shot & Incompletely filled cavity & Insufficient injection pressure or speed; inadequate material feed; restricted gates or venting \\
+Burn marks & Charred dark spots near end of fill & Trapped air or gas combusting under compression; excessive injection speed or melt temperature; poor venting \\
+Flash & Thin excess plastic at parting lines & Insufficient clamping force; over-packing; mold wear or misalignment \\
+Sink marks & Surface depressions over thick sections & Localized shrinkage; inadequate packing pressure or cooling time; non-uniform wall thickness \\
+Weld lines & Visible seams where flow fronts meet & Low melt or mold temperature; slow injection; unfavourable gate placement \\
+\end{longtable}
+
+These causes fall into three broad groups: material-related (resin grade, moisture content, contamination, regrind fraction), machine- or process-related (incorrect temperatures, pressures, speeds, or timings, and equipment faults such as worn check rings or degraded heater bands), and environment- or operator-related (ambient humidity, cooling-water temperature variability, and inconsistent manual operation).
+
+Critically for this thesis, the machine- and process-related group is precisely the group captured directly by an injection molding machine's own sensors. A substantial fraction of defect causes is therefore, in principle, diagnosable from machine-native data alone, without recourse to vision systems or laboratory measurement. The corollary is equally important and is stated here so that Chapter 5 can return to it: causes in the material and environmental groups are \emph{not} represented in machine-parameter data, and no method operating on that data alone can be expected to diagnose them. A residue of cases that resist parameter-based correction is therefore anticipated by the physics of the process, not merely by the limitations of any particular algorithm.
+
+\hypertarget{quality-standards-for-the-reference-product}{%
+\subsection{2.2.4 Quality Standards for the Reference Product}\label{quality-standards-for-the-reference-product}}
+
+The dataset used in this thesis concerns injection-molded road lenses produced by iGuzzini Illuminazione, and its quality labels derive from a photometric standard rather than from visual defect inspection. Polenta et al.~{[}5{]} label each lens by measuring its general uniformity, U\textsubscript{0}, under laboratory photometric analysis, and define four classes with reference to the requirement in UNI EN 13201-2:2016 {[}6{]} that M1-class lenses for motorised roads achieve U\textsubscript{0} greater than 0.4:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Waste} (U\textsubscript{0} \textless{} 0.4): non-compliant with the standard and to be discarded. Original label 1.
+\item
+  \textbf{Acceptable} (0.4 ≤ U\textsubscript{0} \textless{} 0.45): compliant with the standard and accepted by the manufacturer, though below the internal production target. Original label 2.
+\item
+  \textbf{Target} (0.45 ≤ U\textsubscript{0} ≤ 0.5): considered optimal by the manufacturer. Original label 3.
+\item
+  \textbf{Inefficient} (U\textsubscript{0} \textgreater{} 0.5): compliant with the standard, but achieved at an unnecessary expenditure of machine resources, and therefore to be avoided. Original label 4.
+\end{itemize}
+
+This labelling scheme has two features that shape the whole thesis and must be understood before the results of Chapter 4 can be read correctly. First, the classes are ordinal in photometric terms but not monotonic in desirability: \emph{Inefficient} denotes over-performance, not a defect. A part labelled \emph{Inefficient} is saleable; it is simply uneconomic to produce. Second, and following from the first, the operationally meaningful binary distinction is not ``compliant versus non-compliant'' but ``at the production target versus not at it.'' Chapter 3 accordingly defines the conforming set as \{Acceptable, Target\}, and that definition follows directly from the standard and the manufacturer's stated economics rather than from any modelling convenience.
+
+The reliance on a laboratory photometric measurement also explains why the quality label is expensive to obtain and why predicting it from process data has industrial value: the measurement that defines quality here cannot be performed in-line at production rate.
+
+\hypertarget{industrial-reality-in-palestine-and-comparable-ecosystems}{%
+\subsection{2.2.5 Industrial Reality in Palestine and Comparable Ecosystems}\label{industrial-reality-in-palestine-and-comparable-ecosystems}}
+
+The quality challenges above take on a particular character in developing industrial ecosystems. A study of the Palestinian plastics sector reports that most manufacturers continue to rely on traditional processes with limited investment in modern automation, prioritising immediate cost reduction over digital adoption {[}7{]}. In such settings, quality inspection is typically manual: operators visually check parts, an approach limited by fatigue, inconsistent training, and low throughput, and one that cannot detect internal or parametric deviations at all. As production volumes grow, manual inspection becomes a throughput bottleneck as well as a reliability one.
+
+Beyond inspection, these enterprises face a broader digital transformation gap. Full integration of digital monitoring --- from machine sensors through to automated quality feedback --- is rare in smaller firms. Limited capital, scarce specialist expertise, and infrastructure constraints make high-end solutions difficult to justify against short payback expectations. The result is reactive rather than preventive quality management: process data that could predict defects is often neither collected nor analysed, even where the machine already produces it.
+
+Many such firms nonetheless pursue ISO 9001 certification as a foundation for systematic quality control, frequently because customers require it. ISO 9001:2015 {[}8{]} establishes the management framework --- defined processes, monitoring, traceability of nonconforming output, documented corrective action, and continual improvement --- while Quality 4.0 supplies modern means of achieving these ends through data and analytics. The two are complementary rather than competing: the standard specifies what must be controlled and evidenced, and data-driven methods determine how that control can be exercised with greater insight. This complementarity matters for the present work, because an interpretable, low-cost quality system that runs on existing machine data offers a pragmatic entry point to Quality 4.0 for firms that cannot afford sensor-rich or vision-based infrastructure.
+
+A caveat is warranted. The empirical basis for characterising the Palestinian sector is thin --- a small number of studies, none recent --- and this thesis does not itself collect field data on local factories. The Palestinian context is therefore treated throughout as a motivating deployment scenario that constrains the design (no added sensors, low compute, operator-facing output), not as an empirically characterised setting about which the thesis makes findings.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{machine-learning-for-quality-prediction-in-injection-molding}{%
+\section{2.3 Machine Learning for Quality Prediction in Injection Molding}\label{machine-learning-for-quality-prediction-in-injection-molding}}
+
+\hypertarget{classification-approaches-and-reported-performance}{%
+\subsection{2.3.1 Classification Approaches and Reported Performance}\label{classification-approaches-and-reported-performance}}
+
+Before deep learning became prevalent, classical models --- support vector machines (SVM), k-nearest neighbours (kNN), decision trees, and ensemble methods --- dominated injection molding quality prediction, valued for their tractability on small tabular datasets and their computational efficiency. Ribeiro {[}9{]} trained SVM classifiers on process features to detect fault conditions in a plastic injection molding process, reporting high accuracies and outperforming a contemporary neural network. The result is frequently cited as evidence of SVM viability, but it should be read with caution: the study used a single machine and a modest, defect-specific dataset, so its figures establish feasibility rather than transferability to the multi-machine, imbalanced conditions typical of SME production.
+
+Subsequent work has broadened both the algorithm set and the data basis. Párizs et al.~{[}10{]} compared several classifiers for quality prediction in a multi-cavity mold using pressure-derived features, finding tree-based ensembles and random forest superior and kNN weakest. Ogorodnyk et al.~{[}11{]} applied classification methods to thermoplastic molding parameters and reached comparable conclusions. Silva et al.~{[}12{]} report an industrial deployment in a Portuguese molding company, covering the full path from data collection through data augmentation and human-in-the-loop labelling to real-time classification and operator alerting --- a useful counterpoint to purely offline studies, and one of the few papers to treat labelling cost as a first-class engineering problem.
+
+The consistent finding across these studies is that ensembles outperform single learners while retaining tractable feature-importance information. This justifies the selection of a tree ensemble as the predictive core of an interpretable framework. Classical models thus offer a favourable balance of accuracy, speed, and transparency --- but, as Section 2.3.4 argues, the literature evaluates them almost exclusively on predictive accuracy, leaving their explanatory potential largely unexploited.
+
+\hypertarget{the-polenta-et-al.-2022-benchmark}{%
+\subsection{2.3.2 The Polenta et al.~(2022) Benchmark}\label{the-polenta-et-al.-2022-benchmark}}
+
+One study warrants detailed treatment because it supplies both the dataset and the performance baseline for this thesis. Polenta et al.~{[}5{]} compared six classifiers --- kNN, decision tree, random forest, gradient-boosted trees (GBT), SVM, and a multilayer perceptron (MLP) --- on 1,451 injection-molded road lenses produced by iGuzzini Illuminazione on an Engel E-MAC 310/100 machine, described by 13 process parameters and labelled into the four photometric quality classes set out in Section 2.2.4.
+
+\textbf{Dataset.} The 13 parameters are melt temperature, mold temperature, filling time, plasticizing time, cycle time, closing force, clamping force peak value, torque peak value, torque mean value, specific back pressure peak value, specific injection pressure peak value, screw position at the end of hold pressure, and shot volume. Class distribution is relatively balanced: 370 \emph{Waste}, 406 \emph{Acceptable}, 310 \emph{Target}, and 360 \emph{Inefficient}.
+
+\textbf{Protocol.} Hyperparameters were selected by grid search, and results were obtained under stratified five-fold cross-validation over the full dataset, with per-class precision and recall computed by summing the predictions across the five test folds. This protocol detail matters for any comparison drawn against the study: it aggregates over the whole dataset rather than reporting a single held-out test split, so figures from the two protocols are not strictly commensurable. Chapter 4 states this caveat wherever the comparison is made.
+
+\textbf{Results.} Random forest was the strongest model, reaching a macro-averaged F1 of 94.95\% (±1.23\%), followed by GBT at 94.16\% (±0.98\%). Per-class, random forest achieved the highest precision on the critical \emph{Waste} class at 97.22\%, with 94.59\% recall. The authors emphasise that misclassifications between \emph{Waste} and \emph{Acceptable} are the consequential errors, since these correspond to shipping a non-compliant lens or scrapping a compliant one, whereas confusions among \emph{Acceptable}, \emph{Target}, and \emph{Inefficient} all occur within the compliant region.
+
+\textbf{Significance and limitation.} The study's principal strength, and the reason it is adopted as the baseline here, is reproducibility: both the dataset and the comparison source code were publicly released, making it one of very few fully reproducible benchmarks in this domain. Its principal limitation is that it stops at prediction. It ranks classifiers and reports which features the models find relevant, but it does not translate a prediction into a corrective action, and it makes no attempt to explain individual predictions. The gap between ``this lens will be waste'' and ``reduce melt temperature by 6 °C and increase plasticizing time by 0.2 s'' is exactly the gap this thesis sets out to close.
+
+\hypertarget{deep-learning-and-multi-sensor-approaches}{%
+\subsection{2.3.3 Deep Learning and Multi-Sensor Approaches}\label{deep-learning-and-multi-sensor-approaches}}
+
+With richer datasets, researchers have turned to deep learning, particularly convolutional neural networks (CNNs) for image-based defect detection. Hu et al.~{[}13{]} adapted a simplified VGG16 network for molding fault diagnosis, reporting 96.67\% accuracy against a weaker baseline network. The reported gain was achieved only after substantial architectural simplification to combat overfitting on a small dataset, illustrating a recurring tension: deep models demand either large data volumes or careful, expertise-intensive tuning, neither of which is readily available in under-digitized facilities.
+
+A distinct strand treats the molding machine as a cyber-physical system and fuses multivariate sensor streams for real-time prediction. Gao et al.~{[}14{]} and Gordon et al.~{[}15{]} embedded a multivariate sensor in the mold cavity to measure melt pressure, temperature, flow-front velocity, and inferred viscosity simultaneously, reporting strong correlations between these in-process signals and final part quality. Their central finding --- that the closer a sensor sits to the polymer, the more predictive its signal becomes --- explains why combined orthogonal in-cavity signals outperform any single machine-level channel. Wang et al.~{[}16{]} pursue the same logic for micro-injection products, characterising quality through cavity-pressure features. Kumar et al.~{[}17{]} combine time-series process profiles with statistical classifiers for closed-loop control, and Tercan et al.~{[}18{]} address a different practical obstacle, applying continual learning with memory-aware synapses so that a warpage-prediction network need not be retrained from scratch when the product changes.
+
+These approaches are powerful, but they share a precondition: they assume the availability of in-mold or retrofit sensors and the infrastructure to stream and store their output at cycle rate. That assumption is exactly the barrier that under-digitized SMEs cannot clear. It reframes the question this thesis addresses --- whether comparable diagnostic value can be extracted from the machine's existing native parameters alone, with no additional sensing. Tercan et al.~{[}18{]} also expose a second brittleness: a purely predictive model tied to one product geometry must be replaced or adapted when the product changes, and offers no interpretable account of \emph{why} its prediction shifted.
+
+\hypertarget{limitations-of-accuracy-only-evaluation}{%
+\subsection{2.3.4 Limitations of Accuracy-Only Evaluation}\label{limitations-of-accuracy-only-evaluation}}
+
+Read together, the studies above share an evaluation posture that this thesis treats as a limitation rather than a neutral convention. Performance is reported as accuracy, F1, precision, and recall; models are ranked on those numbers; and the paper ends. Three consequences follow.
+
+First, a model that is accurate is not thereby useful. In a molding plant, a correct prediction that a lens will be \emph{Waste} has value only if it arrives with enough time and enough information to prevent the next lens from also being \emph{Waste}. Accuracy quantifies the first half of that requirement and is silent on the second.
+
+Second, accuracy-only evaluation cannot distinguish models that have learned process physics from models that have learned dataset artefacts. Two classifiers with identical F1 may rest on entirely different feature dependencies, and nothing in the reported metrics discriminates between them. This becomes acute the moment a model is used for anything beyond classification --- most obviously, for generating corrective recommendations, which are only as trustworthy as the dependencies they exploit.
+
+Third, and most consequentially for this thesis, the evaluation vocabulary of the field contains no term for the correctness of a prescription. There is a well-established answer to ``was the classification right?'' and, as Section 2.7 shows, a much weaker one to ``was the recommended correction right?'' The field's metrics were designed for the first question and have been carried over, largely unexamined, to work that is implicitly asking the second.
+
+\hypertarget{vision-based-inspection-versus-machine-parameter-prediction}{%
+\subsection{2.3.5 Vision-Based Inspection versus Machine-Parameter Prediction}\label{vision-based-inspection-versus-machine-parameter-prediction}}
+
+A final contrast completes the picture. In advanced factories, vision-based inspection has become the standard for molding quality control, capturing part images and classifying defects with CNNs or feature-based pipelines. Reported performance is high: Asadi et al.~{[}19{]} achieved an F-score of 96.7\% with a local-binary-pattern and SVM pipeline; Muresan et al.~{[}20{]} reported 94\% to 99\% accuracy for bushing-placement classification in automotive components; Zhang et al.~{[}21{]} report further gains using multiplicative feature fusion and attention mechanisms for molded-part defect detection; and the broader review by Chen et al.~{[}22{]} documents the maturity of surface-defect detection across industrial products generally.
+
+For smaller manufacturers, however, vision systems carry practical barriers. Industrial cameras, controlled lighting, and inference hardware represent a capital cost that must be justified per production cell. Reliable imaging demands careful control of illumination and part positioning, since ambient light, variable presentation angle, and surface reflections induce false detections --- a particularly severe constraint for transparent optical parts such as road lenses. And deployment requires integration expertise that most small molders lack {[}7{]}.
+
+There is also a deeper limitation that cost alone does not capture. Vision inspects the \emph{outcome}. It can report that a part is defective with high reliability, but the image contains no information about which machine setting produced the defect; recovering the cause from the symptom requires a separate inferential step that vision data cannot supply. Machine-parameter data has the inverse profile: it is a weaker signal about the outcome, but it is a direct record of the causes. This asymmetry, rather than cost alone, is the substantive argument for machine-native quality control in a root-cause setting.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{explainable-artificial-intelligence}{%
+\section{2.4 Explainable Artificial Intelligence}\label{explainable-artificial-intelligence}}
+
+Having established that the most accurate quality models are also the least transparent, and that the field's evaluation vocabulary stops short of assessing prescriptions, this section examines the techniques developed to interpret model behaviour and their application to manufacturing.
+
+\hypertarget{taxonomy-of-explanation-methods}{%
+\subsection{2.4.1 Taxonomy of Explanation Methods}\label{taxonomy-of-explanation-methods}}
+
+XAI methods are conventionally organised along three axes {[}23{]}.
+
+The first is \textbf{intrinsic versus post-hoc}. Intrinsic models such as decision trees, linear regression, and rule lists expose their logic by construction. Post-hoc methods explain an already-trained model without altering it. Rudin {[}24{]} argues forcefully that for high-stakes decisions the intrinsic route should be preferred, on the grounds that a post-hoc explanation is by definition an approximation of the model and may therefore be wrong in ways that are undetectable to the user. That argument is directly relevant here and is revisited in Section 2.7: this thesis uses post-hoc methods, and Rudin's critique is a substantial part of the reason the work treats independent verification as necessary rather than optional.
+
+The second axis is \textbf{model-agnostic versus model-specific}. Agnostic methods such as LIME, and the general (KernelSHAP) form of SHAP, treat the model as a queryable black-box function and can therefore be applied to anything. Model-specific methods such as TreeSHAP exploit internal structure to compute exact attributions efficiently for tree ensembles.
+
+The third axis is \textbf{global versus local scope}. Global explanations characterise overall model behaviour --- which parameters matter across the whole process --- whereas local explanations justify a single prediction. Root-cause analysis is inherently a local task: the question is never ``what causes waste in general'' but ``what caused \emph{this} cycle to produce waste.''
+
+\hypertarget{shap-and-treeshap}{%
+\subsection{2.4.2 SHAP and TreeSHAP}\label{shap-and-treeshap}}
+
+SHAP (SHapley Additive exPlanations) attributes a prediction to its input features using Shapley values from cooperative game theory {[}25{]}. A SHAP value expresses how much a feature moves a prediction above or below the model's expected output, in the model's own output space, and the attributions satisfy local accuracy, missingness, and consistency. Lundberg et al.~{[}26{]} subsequently introduced TreeSHAP, which computes exact Shapley values for tree ensembles in polynomial rather than exponential time, making the method practical for random forests of realistic size and removing the sampling variance that afflicts model-agnostic approximation.
+
+Two properties of SHAP are important for what follows. It is \emph{additive and signed}, so attributions can be aggregated across samples to yield a stable global ranking. But it is \emph{not a statement about intervention}: a SHAP value quantifies a feature's contribution to a prediction given the model and the background distribution, and it does not assert that changing the feature by a given amount will change the outcome by a corresponding amount. Treating SHAP magnitudes as adjustment magnitudes is a category error, and one that the design in Chapter 3 explicitly avoids by using SHAP for feature \emph{selection} only.
+
+\hypertarget{lime-and-local-surrogate-models}{%
+\subsection{2.4.3 LIME and Local Surrogate Models}\label{lime-and-local-surrogate-models}}
+
+LIME (Local Interpretable Model-agnostic Explanations) {[}27{]} takes a different route. It perturbs the instance being explained, queries the model on the perturbed samples, weights them by proximity to the original, and fits a sparse linear surrogate to that weighted neighbourhood. The surrogate's coefficients indicate the local direction and strength of each feature's influence.
+
+The distinction from SHAP matters directly for root-cause work. SHAP excels at stable, theoretically grounded feature ranking, but its values are not physical adjustment directions. LIME's local slope, by contrast, maps naturally onto the notion of moving a parameter: a negative coefficient on melt temperature in the neighbourhood of a defective cycle is a statement, however local and however approximate, that reducing melt temperature moves the prediction toward the desired class. This complementarity --- SHAP for \emph{which} parameters, LIME for \emph{which way} --- is exploited directly in the proposed framework. Its weakness is equally relevant: LIME's surrogate is fitted on synthetic perturbations that may lie far from the data manifold, so its directional guidance is only as trustworthy as the model's behaviour in a region where no real production cycles were ever observed. This is the same concern that Section 2.7 develops at length.
+
+\hypertarget{counterfactual-explanations-and-their-desiderata}{%
+\subsection{2.4.4 Counterfactual Explanations and Their Desiderata}\label{counterfactual-explanations-and-their-desiderata}}
+
+\textbf{The formulation.} A counterfactual explanation answers a different question from an attribution method. Rather than asking ``which features drove this prediction?'', it asks ``what would have had to be different for the prediction to have been the desired one?'' Wachter et al.~{[}28{]} introduced the formulation in the context of automated decision-making under the GDPR, defining a counterfactual as the closest point to the original instance that receives the desired classification, obtained by minimising a loss of the form
+
+\begin{quote}
+minimise \emph{d}(\textbf{x}, \textbf{x}\textquotesingle{}) subject to \emph{f}(\textbf{x}\textquotesingle{}) = \emph{y}\textquotesingle{}
+\end{quote}
+
+where \textbf{x} is the factual instance, \textbf{x}\textquotesingle{} the counterfactual, \emph{f} the trained model, \emph{y}\textquotesingle{} the desired class, and \emph{d} a distance in feature space.
+
+The appeal for process control is immediate and is worth stating explicitly, because it is the conceptual basis of the entire artefact built in this thesis. In a manufacturing setting the input features \emph{are} machine settings. A minimal change to the input is therefore not a hypothetical narrative device but a literal work instruction: ``reduce mold temperature by 0.3 °C, reduce filling time by 0.4 s.'' Where a SHAP plot tells an engineer which dial mattered, a counterfactual tells them which way to turn it and how far. Counterfactual explanation is, in this domain, the natural bridge from explanation to action.
+
+\textbf{The desiderata.} The literature has converged on a set of properties that a useful counterfactual should satisfy. The reviews of Verma et al.~{[}30{]} and Guidotti {[}31{]} give the canonical treatments, and the properties below are the ones that Chapter 4 measures. They are defined here so that those results are grounded in the literature rather than introduced without foundation.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Validity.} The counterfactual must actually receive the desired classification: \emph{f}(\textbf{x}\textquotesingle{}) = \emph{y}\textquotesingle{}. This is the minimal requirement, and --- as Section 2.7 shows --- it is almost universally checked against the same model \emph{f} that generated \textbf{x}\textquotesingle{}.
+\item
+  \textbf{Proximity.} The counterfactual should be close to the factual instance under a suitable distance, usually the mean absolute or L\textsubscript{2} distance across features, often normalised by feature range or median absolute deviation. Small changes are cheaper to enact and less disruptive to the process.
+\item
+  \textbf{Sparsity.} The counterfactual should change as few features as possible. Wachter et al.~{[}28{]} motivate this on comprehensibility grounds; in a process-control setting the argument is stronger still, because each altered parameter is a separate physical intervention with its own settling time and its own risk of inducing a secondary defect.
+\item
+  \textbf{Plausibility (or actionability, or feasibility).} The counterfactual must be a point that could actually occur. Mothilal et al.~{[}29{]}, introducing the DiCE framework, formalise feasibility alongside diversity and generate a \emph{set} of counterfactuals rather than a single one, on the argument that a user needs options constrained by their own context. Poyiadzi et al.~{[}32{]} address plausibility geometrically with FACE, generating counterfactuals reachable along high-density paths through the data rather than by straight-line movement through empty regions of feature space. Van Looveren and Klaise {[}33{]} pursue the same objective by guiding the search toward class prototypes.
+\item
+  \textbf{Actionability under constraints.} Ustun et al.~{[}34{]} introduce actionable recourse, distinguishing features a subject can change from those they cannot, and Karimi et al.~{[}35{]} extend the framing from counterfactual explanation to \emph{intervention}, arguing that in the presence of causal dependencies among features, naively setting a feature to its counterfactual value does not produce the counterfactual world, because downstream features move too. In injection molding this is not a theoretical nicety: cycle time is not independent of cooling time, and torque is not independent of melt temperature.
+\end{itemize}
+
+\textbf{How plausibility is measured.} Because plausibility is the property most relevant to this thesis, it is worth noting how the literature operationalises it. The dominant approaches measure the counterfactual's position relative to the observed data: distance to the nearest training instance of the target class, local outlier factor, or density under a fitted model of the data distribution. Keane et al.~{[}36{]} specifically recommend reporting an out-of-distribution measure alongside proximity and sparsity, precisely because a counterfactual can score excellently on the first two while being a point that the process could never physically produce. This recommendation motivates the mean nearest-neighbour distance metric adopted in Chapter 4.
+
+\textbf{The tension among the desiderata.} These properties are in direct conflict, and recognising this is essential to reading the results of this thesis. Minimising proximity pushes the counterfactual toward the decision boundary, where the model is least confident and most likely to be reflecting an idiosyncratic boundary shape rather than a genuine process regularity. Maximising plausibility pulls it toward dense regions of observed data, which are typically further away. Maximising sparsity constrains the search to a low-dimensional subspace and can force larger movements in the few features that remain free. There is no configuration that optimises all simultaneously, which is why an honest evaluation must report the full set rather than the single metric on which a method happens to perform best.
+
+\hypertarget{xai-in-industrial-quality-control}{%
+\subsection{2.4.5 XAI in Industrial Quality Control}\label{xai-in-industrial-quality-control}}
+
+Interest in applying XAI to quality control is growing, motivated chiefly by operator trust and by regulatory traceability. Müller et al.~{[}37{]} describe an interactive system combining machine learning with knowledge-based reasoning so that experts can validate the rationale behind each defect classification, arguing that transparency is decisive for operator acceptance. Hoffmann and Reich {[}38{]}, in a systematic review of AI for visual quality assurance in manufacturing, find that although relatively few studies incorporate explainability, those that do report clearer actionable insight and greater user trust. Saadallah et al.~{[}39{]} apply explainable deep learning to predictive quality inspection in electronics manufacturing, and Ettalibi et al.~{[}40{]} survey real-time vision-based quality control with attention to interpretability. Carletti et al.~{[}41{]} take a step closer to the present concern, using feature importance derived from isolation forests explicitly to \emph{enable} root-cause analysis in anomaly detection.
+
+A consistent theme is that explainability converts AI from an opaque alarm into a decision-support instrument. Yet the same literature surfaces obstacles directly relevant to this thesis. Manufacturing data are noisy, so explanations may latch onto spurious variation. Many XAI methods are computationally heavy relative to cycle time. High-dimensional inputs can produce explanations as overwhelming as the raw data, which is why an effective system must distil explanations to a small number of influential, physically meaningful parameters --- an objective that directly informs the feature-selection design of the proposed RCA layer.
+
+\hypertarget{xai-in-injection-molding-the-identified-gap}{%
+\subsection{2.4.6 XAI in Injection Molding --- the Identified Gap}\label{xai-in-injection-molding-the-identified-gap}}
+
+Within injection molding specifically, explainable AI remains underdeveloped, though less so than it was when this project began. Most quality-prediction studies --- whether using SVM {[}9{]}, neural networks, or hybrid optimisers {[}10{]} --- treat the model as a black box and report accuracy alone. The review by Selvaraj et al.~{[}42{]} surveys a broad range of ML and optimisation techniques for molding and makes no substantive mention of interpretability, confirming that the field has historically prioritised performance over transparency.
+
+A growing set of exceptions deserves careful treatment, because the gap this thesis claims must be stated against the strongest existing work rather than the weakest.
+
+Lee et al.~{[}43{]} propose a smart-molding framework pairing IIoT data with an explanation module that identifies which parameters drove a predicted quality change. Gim and Rhee {[}44{]} interpret a model trained on cavity-pressure profiles to reveal which points in the process state trajectory most influence part weight. Gim and Turng {[}45{]} extend this to transient process data and part quality using explainable AI, and Gim et al.~{[}46{]} go further still with an in-mold-condition-centred, XAI-based process optimisation approach (IMC-XAI) that closes the loop from explanation to parameter recommendation. Most directly relevant, Muaz et al.~{[}47{]} address XAI for \emph{correct} root-cause analysis in injection moulding, and their findings are worth stating precisely: they observe that different explainability methods yield conflicting feature-impact analyses on the same model and data, and that some explainability methods therefore lead to incorrect root-cause identification. They propose improved feature attribution accounting for interactions among machine settings.
+
+Muaz et al.~{[}47{]} is the closest precedent to this thesis and the paper against which its contribution must be positioned. Three differences define the remaining gap. First, their work relies on in-mold and experimental sensing rather than machine-native parameters alone. Second, it is an offline analysis rather than an operator-facing deployed system. Third --- and most importantly for the argument of Section 2.7 --- their concern is the \emph{disagreement between explanation methods}, which they resolve by improving attribution. That is a diagnosis of inconsistency among explainers. It is not a test of whether the resulting recommendation is correct, because a set of explainers could agree perfectly with one another and still be jointly wrong about the process. Establishing agreement among explanations and establishing correctness of a prescription are different problems, and the second remains open.
+
+Marín Díaz {[}48{]} provides a comparative mathematical analysis of XAI methods for manufacturing defect prediction, reinforcing the observation that method choice materially changes the explanation obtained.
+
+The field therefore still lacks an interpretable framework that (i) operates on machine parameters alone, (ii) converts explanation into a bounded, executable parameter recommendation, and (iii) subjects that recommendation to a test that does not consult the model which produced it.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{root-cause-analysis-in-smart-manufacturing}{%
+\section{2.5 Root-Cause Analysis in Smart Manufacturing}\label{root-cause-analysis-in-smart-manufacturing}}
+
+\hypertarget{classical-rca}{%
+\subsection{2.5.1 Classical RCA}\label{classical-rca}}
+
+Root-cause analysis seeks the underlying causes of defects rather than their symptoms. Classical tools --- the Ishikawa (fishbone) diagram, the five-whys technique, Failure Mode and Effects Analysis, Fault Tree Analysis, and Pareto analysis --- remain staples of quality engineering {[}49{]}, complemented by statistical methods such as ANOVA, correlation analysis, and designed experiments that introduce objectivity.
+
+These approaches are intuitive and operator-friendly, but their limits are well documented. As Papageorgiou et al.~{[}50{]} observe in the principal systematic review of the area, qualitative tools depend heavily on individual expertise, are vulnerable to bias, and do not systematically capture or reuse knowledge: the reasoning lives in the analyst rather than in the organisation. Statistical methods generally assume low-dimensional, largely additive relationships. Both under-utilise the high-dimensional data streams that modern machines generate as a matter of course. Solé et al.~{[}51{]} provide a complementary taxonomy that organises RCA techniques by their treatment of causality, distinguishing deterministic from probabilistic approaches, and e Oliveira et al.~{[}52{]} conceptualise automatic RCA in manufacturing as a distinct problem class.
+
+\hypertarget{data-driven-and-probabilistic-rca}{%
+\subsection{2.5.2 Data-Driven and Probabilistic RCA}\label{data-driven-and-probabilistic-rca}}
+
+Papageorgiou et al.~{[}50{]} surveyed thirty studies published between 2017 and 2022 and found the field comparatively under-explored, with no consensus method. Their quantitative findings are useful as a map of the terrain: deterministic models (classical ML, deep learning, neural networks) account for roughly 90\% of the reviewed work and probabilistic models --- chiefly Bayesian networks --- for roughly 10\%.
+
+Within the probabilistic strand, Chigurupati and Lassar {[}53{]} build a diagnostic hybrid Bayesian network modelling cause--effect relations between degradation parameters and failure modes. Lokrantz et al.~{[}54{]} apply structure and parameter learning to derive root causes of process failures in simulated multi-stage manufacturing. Wang et al.~{[}55{]} propose a product-wise ensemble Bayesian network offering robust, human-interpretable probabilistic reasoning under uncertainty, validated on a real manufacturing dataset, and Wehner et al.~{[}56{]} combine causal Bayesian networks with a manufacturing knowledge graph and an interactive interface so that process experts can inspect and correct the learned root-cause graph.
+
+Within the deterministic strand, tree ensembles and clustering are favoured because they yield if-then rules linking conditions to outcomes. Ma et al.~{[}57{]} built a big-data-driven RCA pipeline whose Root Cause Identification module uses supervised learning to surface candidate causes far faster than manual expert analysis. Huang and Li {[}58{]} use tree-based models to identify influencing parameters for quality repeatability in laser powder bed fusion. Sarkar et al.~{[}59{]} apply text classification to incident reports. Crocco and O'Hern {[}60{]} perform statistical root-cause analysis of image-sensor defects using convolutional networks. Steenwinckel et al.~{[}61{]} fuse expert knowledge with machine learning in the FLAGS framework specifically to produce \emph{interpretable} causes for detected anomalies, one of the few contributions to treat the interpretability of the cause --- rather than of the detection --- as the design objective.
+
+The trajectory is clear: ML-based RCA is moving from prediction toward transparent, actionable explanation. Two observations about how this literature evaluates itself will matter in Section 2.7. Most of these systems are validated by comparing identified causes against labelled ground-truth causes where such labels exist, or against expert judgement where they do not. Neither option is available in the setting of this thesis, where the data records process parameters and a photometric outcome but contains no annotated causal attribution --- a condition that is the norm rather than the exception in real production data.
+
+\hypertarget{counterfactual-reasoning-as-root-cause-analysis}{%
+\subsection{2.5.3 Counterfactual Reasoning as Root-Cause Analysis}\label{counterfactual-reasoning-as-root-cause-analysis}}
+
+Counterfactual explanation and root-cause analysis converge naturally in a process-control setting, and the argument for the convergence is stronger here than in the domains where counterfactual methods were developed.
+
+In credit scoring or recidivism prediction --- the canonical counterfactual applications --- the features are attributes of a person, and a counterfactual is a recommendation to that person about how to change their circumstances. The gap between changing a feature value and changing the world is wide, which is precisely what motivated the recourse literature {[}34{]}, {[}35{]}. In injection molding the gap is narrow: the features are setpoints on a control panel, they are directly and immediately settable by the operator, and the ``intervention'' is literally the act of typing a new value. Counterfactual explanation is therefore closer to its ideal use case in manufacturing than in the domains that gave rise to it.
+
+The correspondence also runs the other way conceptually. A root cause, in the classical quality-engineering sense, is a condition whose removal would have prevented the defect. That is a counterfactual claim in ordinary language, and the machine-learning formulation of Wachter et al.~{[}28{]} is its computational analogue. Where classical RCA relies on an expert to propose and test such claims, counterfactual search proposes them automatically from the model's learned decision geometry.
+
+But the two are not identical, and the difference is the crux of this thesis. Classical RCA makes a claim about the \emph{process}: had this condition differed, the part would have been good. Counterfactual search makes a claim about the \emph{model}: had this input differed, the classifier's output would have been different. These coincide only insofar as the model has learned the process. Where the model has instead learned an artefact of the training distribution, a counterfactual can be perfectly valid with respect to the model and simply false with respect to the machine. Laugel et al.~{[}62{]} give this concern its sharpest formulation, which Section 2.7 takes up.
+
+Despite the natural fit, counterfactual reasoning has rarely been applied to injection molding root-cause analysis on machine-native parameters. The structured searches conducted for this review surfaced no study that generates bounded counterfactual parameter recommendations from an injection molding quality classifier and then tests those recommendations against anything other than the classifier itself.
+
+\hypertarget{root-cause-analysis-in-injection-molding-practice}{%
+\subsection{2.5.4 Root-Cause Analysis in Injection Molding Practice}\label{root-cause-analysis-in-injection-molding-practice}}
+
+In injection molding, RCA has historically been manual and experience-driven: technicians troubleshoot defects by adjusting one setting at a time and observing the next few shots. Quality detection and cause identification have remained disconnected. Statistical control charts or vision systems may flag a defect {[}21{]}, but determining why it occurred is left to offline human analysis.
+
+Efforts to bridge the gap remain partial. Gim and Rhee {[}44{]} and Gim et al.~{[}46{]} link cavity-pressure features to part quality through interpretable models and, in the latter case, to optimisation --- but rely on added in-mold sensing. Asadi et al.~{[}19{]} integrate a vision model that halts the machine on detecting a defect, addressing the symptom rather than the cause. Tercan et al.~{[}18{]} predict warpage from parameters but provide no interpretable cause module. Muaz et al.~{[}47{]} address cause identification directly but, as discussed in Section 2.4.6, remain offline and experimentally sensed.
+
+Across these works, RCA is either externally sensed, offline, or symptom-focused. None delivers an embedded, machine-native, cause-explaining capability whose output is checked before it reaches an operator.
+
+\hypertarget{limitations-of-existing-rca-approaches}{%
+\subsection{2.5.5 Limitations of Existing RCA Approaches}\label{limitations-of-existing-rca-approaches}}
+
+Four limitations recur across the RCA literature and together define the opening for this thesis. They are summarised here and revisited in the consolidated gap analysis of Section 2.8.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Limited explainability.} Classical tools explain but are manual; modern ML methods are accurate but opaque. As Muaz et al.~{[}47{]} note, the black-box nature of most quality-prediction models means no direct explanation accompanies their output, restricting their applicability in quality control.
+\item
+  \textbf{Poor operator-facing design.} Advanced analytics typically output abstract artefacts --- ANOVA tables, feature-importance plots, probability vectors --- intelligible to analysts but not to technicians. Few studies address how root-cause information should be \emph{presented}; FLAGS {[}61{]} and the interactive causal-graph interface of Wehner et al.~{[}56{]} are among the rare exceptions, and in molding almost none discuss the operator interface at all.
+\item
+  \textbf{Dependence on ancillary data.} Most solutions assume vision systems {[}19{]}, {[}21{]} or in-mold sensors {[}44{]}, {[}46{]}, external measurements that carry capital cost and integration burden. The machine's own abundant native data remains under-utilised, even though it captures the machine- and process-related causes identified in Section 2.2.3.
+\item
+  \textbf{Unverified prescriptions.} Where these systems do produce a corrective recommendation, the recommendation's correctness is generally asserted rather than demonstrated, and where it is tested, it is tested against the model that produced it. This limitation is the subject of Section 2.7.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{quality-4.0}{%
+\section{2.6 Quality 4.0}\label{quality-4.0}}
+
+\hypertarget{concept-and-dimensions}{%
+\subsection{2.6.1 Concept and Dimensions}\label{concept-and-dimensions}}
+
+Quality 4.0 denotes the integration of traditional quality management with Industry 4.0 technologies --- industrial big data, the Industrial Internet of Things, and artificial intelligence --- to enable real-time, data-driven quality decisions. Escobar and Morales-Menendez {[}63{]} characterise it as the next wave of the quality movement and propose Learning Quality Control as the successor to Statistical Quality Control, addressing complex problems through empirical learning and real-time analysis rather than through periodic sampling. In an earlier review, Escobar et al.~{[}64{]} catalogue the big-data challenges that deployment must overcome in manufacturing settings.
+
+In practice Quality 4.0 couples analytics with data streams and cyber-physical control loops so that sensor data feeds models whose outputs inform machine adjustments. Injection molding is a natural setting: modern presses expose temperature, pressure, screw-position, and cycle-time data through standardised interfaces, and Bibow et al.~{[}65{]} demonstrate a model-driven digital twin for an injection molding machine connected to the physical press via OPC UA, capable of setting machine parameters and orchestrating designed experiments between cycles. These developments confirm that the data substrate for intelligent quality control already exists on many machines. The unresolved question --- the focus of this thesis --- is how to convert that data into interpretable, verified, operator-ready corrective guidance without the additional sensing that current implementations typically presuppose.
+
+\hypertarget{iso-9001-and-statistical-process-capability}{%
+\subsection{2.6.2 ISO 9001 and Statistical Process Capability}\label{iso-9001-and-statistical-process-capability}}
+
+Two elements of the classical quality apparatus remain directly relevant and are used in the artefact built in this thesis.
+
+ISO 9001:2015 {[}8{]} specifies requirements for a quality management system, several of which bear on the design of an AI-assisted quality tool: monitoring and measurement of processes, control of nonconforming outputs, evidence-based decision-making, documented corrective action, and traceability. An explainable model that records why a part was flagged, what correction was recommended, and whether that correction was verified produces exactly the audit record these clauses require. This is a substantive argument for explainability that is independent of operator trust: an opaque system that flags parts without rationale generates a compliance burden rather than discharging one.
+
+Statistical process capability indices provide the second element. Montgomery {[}66{]} defines the capability index Cp as the ratio of specification width to process spread, and Cpk as the corresponding index adjusted for centring:
+
+\begin{quote}
+Cp = (USL − LSL) / 6σ and Cpk = min{[}(USL − μ)/3σ, (μ − LSL)/3σ{]}
+\end{quote}
+
+These indices condense a process's ability to meet specification into a single interpretable number, and they remain the language in which plant engineers and auditors discuss process health. Their limitation in the present context is that they describe aggregate behaviour over a window of production and say nothing about an individual cycle --- which is precisely the complementary role that per-cycle classification and per-cycle root-cause analysis fill.
+
+\hypertarget{concept-drift-in-production-monitoring}{%
+\subsection{2.6.3 Concept Drift in Production Monitoring}\label{concept-drift-in-production-monitoring}}
+
+A model deployed on a production machine faces a problem that a model evaluated on a static dataset does not: the process it was trained on changes. Tool wear, resin lot variation, ambient temperature swings, maintenance events, and operator practice all shift the joint distribution of process parameters over time.
+
+Gama et al.~{[}67{]} give the standard formulation and taxonomy, distinguishing sudden, gradual, incremental, and recurring drift, and separating \emph{virtual} drift --- a change in the input distribution P(\textbf{x}) --- from \emph{real} concept drift, a change in the conditional P(\emph{y}\textbar{}\textbf{x}) that alters the decision boundary itself. Lu et al.~{[}68{]} update this survey and organise the detection literature into error-rate-based, data-distribution-based, and multiple-hypothesis methods.
+
+For a quality-control deployment, the distinction between virtual and real drift is practically decisive. Real drift means the model's learned mapping is now wrong. Virtual drift means the model is being asked about inputs it has not seen, which is a different failure and calls for a different response. Distribution-based detection is the only option available in the common industrial case where labels arrive late or not at all, since error-rate methods require ground truth. The Population Stability Index, a discretised symmetric divergence between a reference and a current distribution, is the standard practitioner instrument for this purpose; Yurdakul {[}69{]} provides its statistical characterisation and the basis for the conventional interpretation thresholds.
+
+Drift monitoring also carries a specific implication for the counterfactual machinery of this thesis, and the connection is not incidental. A counterfactual recommendation is an extrapolation from the model's learned geometry. Under drift, that geometry is stale, and a recommendation that was sound when the model was trained may be actively harmful once the process has moved. Drift detection is therefore not a peripheral monitoring feature bolted onto the system but a precondition for the trustworthiness of its prescriptions.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{the-validation-of-explanations-an-under-addressed-problem}{%
+\section{2.7 The Validation of Explanations --- an Under-Addressed Problem}\label{the-validation-of-explanations-an-under-addressed-problem}}
+
+The preceding sections established that counterfactual explanation is the natural bridge from quality prediction to corrective action in injection molding, and that the desiderata for a good counterfactual are well characterised. This section examines a question that the same literature treats far more lightly: how does anyone know whether a counterfactual explanation is \emph{right}?
+
+\hypertarget{how-explanations-are-evaluated-in-practice}{%
+\subsection{2.7.1 How Explanations Are Evaluated in Practice}\label{how-explanations-are-evaluated-in-practice}}
+
+The most comprehensive evidence on this question comes from Nauta et al.~{[}70{]}, who reviewed the evaluation practices of more than 300 papers introducing XAI methods, published over seven years at twelve flagship computer-science venues. They organise explanation quality into twelve conceptual properties (the Co-12 framework) and assess how each is evaluated in practice. Their headline findings are stark: one paper in three evaluates its method \emph{exclusively} with anecdotal evidence --- a handful of illustrative examples presented for the reader's visual inspection --- and only one in five conducts any evaluation with users. Their explicit conclusion is a call for objective, quantifiable evaluation methods to replace the prevailing practice.
+
+The counterfactual sub-literature has been audited in similar terms. Keane et al.~{[}36{]} surveyed 100 distinct counterfactual explanation methods and quantified the shortfalls in how they are evaluated. Only 21\% had been user-tested. They identify five specific deficits in current evaluation practice and propose a corrective roadmap, arguing that the resulting inconsistency effectively blocks scientific progress in the area because methods cannot be meaningfully compared. Among their recommendations, two are directly adopted in this thesis: that an out-of-distribution measure be reported alongside proximity and sparsity, and that coverage --- the proportion of test cases for which a method produces an acceptable counterfactual --- be reported as a global adequacy estimate rather than being represented by selected successful examples.
+
+Guidotti {[}31{]} reaches a compatible conclusion from a different direction, benchmarking counterfactual explainers against one another and documenting how strongly reported performance depends on the metric chosen and the dataset used.
+
+\hypertarget{the-circularity-of-model-referential-validation}{%
+\subsection{2.7.2 The Circularity of Model-Referential Validation}\label{the-circularity-of-model-referential-validation}}
+
+Beneath the evaluation-practice problem lies a structural one. Consider what the validity criterion actually asserts. A counterfactual \textbf{x}\textquotesingle{} is generated by searching the decision surface of a trained model \emph{f} for a point classified as the desired class. It is then declared valid because \emph{f}(\textbf{x}\textquotesingle{}) = \emph{y}\textquotesingle{}.
+
+This is circular in a precise sense: the criterion by which the counterfactual is judged is identical to the objective by which it was constructed. A search procedure that terminates when the model is satisfied will, by construction, produce counterfactuals that satisfy the model. The validity rate reported by such a procedure measures the competence of the optimiser, not the correctness of the recommendation. It is a self-report.
+
+This would be a purely philosophical concern if trained models were faithful representations of the processes they model. They are not, and a substantial body of work documents the specific ways they fail.
+
+Laugel et al.~{[}62{]} state the problem for counterfactuals most directly. They observe that post-hoc explanations create the risk of producing explanations that reflect artefacts learned by the model rather than knowledge present in the data, and they introduce the notion of a \emph{justified} counterfactual --- one that is continuously connected to ground-truth data rather than sitting in a region of feature space the classifier happens to label favourably but where no real observations exist. Investigating the local neighbourhoods of instances to be explained, they find the risk of generating unjustified counterfactuals to be high across several datasets, and further show that most state-of-the-art methods do not distinguish justified from unjustified counterfactuals at all. A counterfactual can thus be perfectly valid under the model and yet be a point the process cannot produce.
+
+Related evidence reinforces the concern from other angles. Rudin {[}24{]} argues that post-hoc explanations of black-box models are approximations that can be misleading precisely where it matters most. Alvarez-Melis and Jaakkola {[}71{]} show that local explanation methods including LIME and SHAP can be unstable, returning materially different explanations for near-identical inputs. Slack et al.~{[}72{]} demonstrate that both LIME and SHAP can be deliberately fooled by an adversarially constructed model, which establishes that agreement between a model and its explainer is not evidence of the explanation's correctness. Krishna et al.~{[}73{]} document the disagreement problem: different explanation methods applied to the same model and data routinely produce conflicting accounts, with no principled basis for adjudication --- a finding echoed within injection molding specifically by Muaz et al.~{[}47{]}. Adebayo et al.~{[}74{]} show, in the vision setting, that widely used saliency explanations can be independent of both model parameters and training labels, meaning they pass visual inspection while carrying no information about the model at all.
+
+The cumulative implication is that the model's endorsement of an explanation is weak evidence. Doshi-Velez and Kim {[}75{]} anticipated this in their framework for rigorous interpretability research, distinguishing functionally-grounded evaluation (a proxy metric, no humans, no task), human-grounded evaluation (real humans, simplified task), and application-grounded evaluation (real humans, real task), and observing that the field concentrates overwhelmingly at the cheapest end of that hierarchy. Self-reported validity is functionally-grounded evaluation of the least demanding kind.
+
+\hypertarget{toward-independent-verification}{%
+\subsection{2.7.3 Toward Independent Verification}\label{toward-independent-verification}}
+
+A smaller body of work moves beyond model-referential validation, and it is useful to distinguish three levels of independence, since they are not equivalent.
+
+\textbf{Distributional checks.} The plausibility and justification measures discussed in Section 2.4.4 --- nearest-neighbour distance, local outlier factor, density estimates, the connectedness criterion of Laugel et al.~{[}62{]} --- assess the counterfactual against the \emph{data} rather than the model. This is genuine independence from the model but says nothing about whether the recommended change would achieve the intended outcome; a counterfactual can sit comfortably inside the data manifold and still be the wrong instruction.
+
+\textbf{Second-model verification.} A stronger test asks whether a model that did not participate in generating the counterfactual also classifies it as conforming. Agreement between two models trained on the same data but with different inductive biases is meaningfully more informative than the generating model's self-assessment, because the two models' idiosyncratic boundary artefacts are unlikely to coincide. This is the standard applied in the present thesis. Its limitation must be stated plainly: two models trained on the same data share that data's biases, so agreement bounds but does not eliminate the risk of a shared error. Pawelczyk et al.~{[}76{]} provide the closest infrastructural precedent, with the CARLA framework for benchmarking recourse and counterfactual algorithms under standardised conditions across models.
+
+\textbf{Process verification.} The definitive test is to enact the recommendation on the machine and measure the resulting part. No study identified in this review performs this for machine-parameter counterfactuals in injection molding, and the reason is not oversight: it requires production time on a running machine, physical measurement of the resulting parts, and tolerance for producing scrap during the trial. Chapter 6 identifies this as the principal item of future work.
+
+\hypertarget{the-unquantified-gap}{%
+\subsection{2.7.4 The Unquantified Gap}\label{the-unquantified-gap}}
+
+The gap this thesis addresses can now be stated precisely. The literature contains: a well-developed set of counterfactual generation methods {[}28{]}, {[}29{]}, {[}32{]}, {[}33{]}; a well-characterised set of desiderata {[}30{]}, {[}31{]}; documented evidence that evaluation practice is weak and predominantly self-referential {[}36{]}, {[}70{]}; and specific demonstrations that model-endorsed explanations can be artefacts {[}62{]}, {[}72{]}, {[}74{]}.
+
+What it does not contain is a \emph{quantification}, in an industrial process-control setting, of how large the discrepancy actually is between what a counterfactual RCA engine reports about its own success and what an independent check confirms. The critiques establish that the discrepancy exists in principle. They do not measure it in practice, on a real manufacturing dataset, with a defined independent criterion and across the full test population rather than on selected illustrative cases.
+
+Two further consequences of that absence are worth noting, since Chapter 4 addresses both. First, if the discrepancy has never been measured, it has also never been shown to be a property of a \emph{method class} rather than of one particular implementation --- a distinction that requires comparison against an ablated baseline. Second, if the discrepancy is a function of how conservatively the search is configured, then it is not a fixed defect but an operating characteristic that can be tuned, and its shape across the configuration space is itself an empirical object that has not been reported.
+
+Without this quantification, practitioners deploying counterfactual RCA in manufacturing have no basis for calibrating their trust in its output, and the field has no benchmark against which methods that claim to address the problem can be assessed. This is the gap that motivates the fourth research question of this thesis.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{research-gap-and-positioning}{%
+\section{2.8 Research Gap and Positioning}\label{research-gap-and-positioning}}
+
+\hypertarget{synthesis}{%
+\subsection{2.8.1 Synthesis}\label{synthesis}}
+
+The reviewed literature establishes five points that together define the contribution of this thesis.
+
+First, tree ensembles --- particularly random forest --- achieve high and reproducible accuracy in injection molding quality prediction while retaining tractable feature-importance information, making them a sound interpretable core (Sections 2.3.1--2.3.2).
+
+Second, the most accurate models are the least transparent, and explainability --- though demonstrably valuable for operator trust, for cause analysis, and for ISO 9001 traceability --- remains sparse in injection molding practice, with the few exceptions dependent on added sensing (Sections 2.4.5--2.4.6).
+
+Third, root-cause analysis in molding is still predominantly manual, offline, or symptom-focused, and existing data-driven RCA is rarely closed-loop, rarely operator-facing, and rarely based on machine-native data (Section 2.5).
+
+Fourth, the dominant vision-based and multi-sensor solutions presuppose infrastructure that resource-constrained factories cannot afford, and --- more fundamentally --- inspect outcomes rather than causes (Sections 2.3.3, 2.3.5).
+
+Fifth, and most importantly, counterfactual explanations in this domain are validated against the models that generate them. The critical literature establishes that this is unsound in principle; no study quantifies how unsound it is in practice for industrial process control (Section 2.7).
+
+\hypertarget{positioning-against-surveyed-work}{%
+\subsection{2.8.2 Positioning Against Surveyed Work}\label{positioning-against-surveyed-work}}
+
+Table 2.2 maps the most closely related studies against five criteria: whether the approach is explainable, whether it performs root-cause analysis rather than detection alone, whether it operates on machine-native parameters without added sensing, whether any independent validation of its output is performed, and whether it is deployed as an operator-facing system.
+
+\textbf{Table 2.2.} Positioning of the present work against closely related studies.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Study
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Explainable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Performs RCA
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Machine-native only
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Independent validation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Operator-facing deployment
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Ribeiro {[}9{]} & No & No & Yes & No & No \\
+Polenta et al.~{[}5{]} & Partial (feature ranking) & No & Yes & No & No \\
+Párizs et al.~{[}10{]} & No & No & No (cavity pressure) & No & No \\
+Silva et al.~{[}12{]} & No & No & Yes & No & Yes \\
+Hu et al.~{[}13{]} & No & No & No (vision) & No & No \\
+Tercan et al.~{[}18{]} & No & No & Yes & No & No \\
+Asadi et al.~{[}19{]} & No & No & No (vision) & No & Yes \\
+Gim and Rhee {[}44{]} & Yes & Partial & No (in-mold sensor) & No & No \\
+Gim et al.~{[}46{]} & Yes & Yes & No (in-mold sensor) & No & No \\
+Muaz et al.~{[}47{]} & Yes & Yes & No (experimental sensing) & No (inter-method agreement only) & No \\
+Steenwinckel et al.~{[}61{]} & Yes & Yes & N/A (other domain) & No & Partial \\
+Wang et al.~{[}55{]} & Yes & Yes & N/A (other domain) & No & No \\
+\textbf{This work} & \textbf{Yes (SHAP + LIME)} & \textbf{Yes (counterfactual)} & \textbf{Yes} & \textbf{Yes (independent MLP verifier)} & \textbf{Yes (Streamlit + messaging)} \\
+\end{longtable}
+
+The table's final column of substance is the fourth. Every surveyed study that produces a cause or a corrective recommendation reports it without an independent check, and the one study that comes closest --- Muaz et al.~{[}47{]} --- establishes agreement \emph{between explanation methods} applied to the same models, which addresses inconsistency rather than correctness.
+
+\hypertarget{identified-gaps-and-the-response-of-the-proposed-framework}{%
+\subsection{2.8.3 Identified Gaps and the Response of the Proposed Framework}\label{identified-gaps-and-the-response-of-the-proposed-framework}}
+
+\textbf{Table 2.3.} Identified research gaps and the corresponding response of the proposed framework.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Gap
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Identified limitation in the literature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Response of the proposed framework
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+G1 & High-accuracy molding models are opaque, limiting operator trust and precluding cause analysis. & An XAI layer (TreeSHAP for feature selection, LIME for local direction) is applied to a validated random forest so that every prediction is interpretable. \\
+G2 & Quality prediction and root-cause identification remain disconnected in molding practice. & A tiered counterfactual RCA engine converts explanations into concrete, bounded corrective parameter adjustments. \\
+G3 & Existing RCA outputs are abstract and not operator-friendly. & Recommendations are delivered in engineering units as natural-language corrective messages through an accessible interface and messaging channel. \\
+G4 & Most solutions depend on costly vision or in-mold sensing, infeasible for under-digitized SMEs. & The entire framework operates on the thirteen machine-native process parameters, with no added sensing. \\
+\textbf{G5} & \textbf{Counterfactual recommendations are validated against the model that generated them; the resulting discrepancy has never been quantified in an industrial setting.} & \textbf{An independently trained MLP verifier, which takes no part in counterfactual generation, adjudicates every recommendation. The gap between self-reported resolution and independently confirmed resolution is measured on the held-out test split, tested for generality against an ablated baseline, and characterised across the engine's configuration space.} \\
+\end{longtable}
+
+\hypertarget{statement-of-contribution}{%
+\subsection{2.8.4 Statement of Contribution}\label{statement-of-contribution}}
+
+To the best of the author's knowledge, and on the basis of the searches described in Section 2.1.2, no existing study integrates explainable, counterfactual root-cause analysis with machine-parameter-only quality prediction in a single deployable framework \emph{and} subjects the resulting recommendations to a model-independent verification whose disagreement rate is reported.
+
+The individual components --- tree-ensemble classification, SHAP and LIME explanation, counterfactual search, and second-model verification --- are each established in isolation. Their combination is a contribution of engineering integration. The measurement of the gap between self-reported and independently verified performance, however, is a contribution of a different kind: it is a methodological finding about a class of methods, and it is reported in this thesis as the principal result rather than as a limitation of the system built to obtain it.
+
+Chapter 3 details the methodology by which this framework is designed, implemented, and evaluated.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}

@@ -1,0 +1,382 @@
+\hypertarget{discussion}{%
+\chapter{Discussion}\label{discussion}}
+
+Chapter 4 reported what the system does. This chapter asks what those results mean: what the classification performance and feature attributions say about the injection molding process, what the gap between self-reported and independently confirmed resolution establishes about counterfactual root-cause analysis as a method, what would have to be true for a factory of the kind described in §2.2.5 to adopt this framework, and where the boundaries of the work lie.
+
+The chapter is organised around a single argumentative spine. §5.1 establishes that the predictive and explanatory layers behave in ways consistent with the physics of the process and with independent methods --- that is, that the substrate on which the counterfactual work rests is sound. §5.2 then argues that the circularity finding is not a defect of that substrate but a property of how counterfactual explanations are validated, and derives from it a specific change in how such systems should present their output. §5.3 asks what deployment would require. §5.4 and §5.5 state the limits of all of it.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{interpreting-the-classification-results}{%
+\section{5.1 Interpreting the Classification Results}\label{interpreting-the-classification-results}}
+
+\hypertarget{why-random-forest-performs-well-on-this-problem}{%
+\subsection{5.1.1 Why Random Forest Performs Well on This Problem}\label{why-random-forest-performs-well-on-this-problem}}
+
+Random Forest attained 93.81\% test accuracy and the highest cross-validation mean of the six candidates, though --- as §4.2.1 emphasised --- by a margin smaller than the cross-validation standard deviation separating it from XGBoost and Gradient Boosting. The question worth asking is not why Random Forest beat the others, since on this evidence it did not meaningfully beat the other two tree ensembles, but why \emph{tree ensembles as a class} dominate here while the multilayer perceptron and k-nearest neighbours trail by three to six percentage points.
+
+Three properties of the problem account for it.
+
+\textbf{The data are tabular, low-dimensional, and modest in volume.} Thirteen features and 870 training samples is a regime in which the inductive bias of axis-aligned recursive partitioning is well matched to the estimation problem, and in which a neural network has too many parameters relative to the evidence available to constrain them. The MLP's cross-validation standard deviation (0.0240) is the largest of the six, which is the signature of a model whose fit varies materially with which 80\% of the training split it sees.
+
+\textbf{The decision boundaries are threshold-like.} The quality label is defined by binning a continuous photometric measurement at U\textsubscript{0} = 0.40, 0.45 and 0.50. The underlying target is therefore genuinely a set of thresholds, and a model that represents decisions as thresholds on individual features is representing the target in its own native form. A distance-based learner such as kNN, which has no mechanism for expressing ``this quantity above that value,'' must approximate a threshold structure with a neighbourhood structure, and its weaker performance (0.8839 CV mean, the lowest of the six) follows.
+
+\textbf{Feature scales and interactions are heterogeneous.} The 13 parameters span forces in the hundreds of newtons, pressures in the hundreds of bar, and times in single-digit seconds. Tree ensembles are invariant to monotone rescaling of individual features; distance-based and gradient-based learners are not, and depend on the scaling choice to behave sensibly. The MinMax scaling of §3.3 mitigates this for all models but does not eliminate the advantage.
+
+There is a fourth consideration that matters more for this thesis than for the accuracy comparison. Of the six candidates, only the tree ensembles admit exact Shapley attribution through TreeSHAP. Had the MLP been the champion, the explanation layer would have depended on sampling-based approximation, the Tier-1 feature ranking would have been stochastic, and identical inputs could have produced different repair recipes on different runs. The choice of a tree ensemble is therefore not solely an accuracy decision; it is a determinism decision, and §4.3.3 showed that all remaining variability in the explanation layer originates in LIME precisely because SHAP contributes none.
+
+\hypertarget{agreement-with-the-reference-study}{%
+\subsection{5.1.2 Agreement with the Reference Study}\label{agreement-with-the-reference-study}}
+
+The comparison of §4.2.5 was deliberately conservative: the protocols differ, the figures are not commensurable, and no claim of parity was made. What the comparison does support is worth restating, because it is the licence for everything downstream.
+
+The \textbf{algorithm ranking reproduces}. Polenta et al.~{[}5{]} found random forest strongest and gradient-boosted trees second among their six candidates, with kNN weakest; this work recovers the same ordering under a different protocol, a different software stack, and a different train/test partition. Rankings are more robust than absolute figures, and their reproduction under changed conditions is evidence that the ordering reflects the data rather than either implementation.
+
+The \textbf{per-class profile matches closely}. \emph{Waste} recall is 0.9459 in both. \emph{Acceptable} precision differs by one ten-thousandth. The reference is uniformly slightly higher on the remaining cells, in the direction its protocol advantage predicts, and the largest per-cell divergence --- \emph{Inefficient} recall, 0.9452 here against 0.9736 --- is under three percentage points on a class of 73 test samples, or roughly two samples.
+
+Taken together, these support the conclusion a reproduction should reach: \textbf{the reimplementation behaves like the thing it reimplements}, notwithstanding the five documented hyperparameter deviations of §3.4.3. That matters because the counterfactual engine traverses this model's decision surface. If the reimplementation had produced a materially different model, any finding about counterfactuals generated from it would be a finding about an idiosyncratic artefact rather than about the method.
+
+\hypertarget{what-the-shap-attributions-say-about-the-process}{%
+\subsection{5.1.3 What the SHAP Attributions Say About the Process}\label{what-the-shap-attributions-say-about-the-process}}
+
+The global attribution ranking of §4.3.1 is the most substantively interesting result in the predictive half of this work, because it makes a claim about the process rather than about the model. The ranking is dominated by time-domain quantities: cycle time (0.0999), plasticizing time (0.0700) and filling time (0.0522) occupy the top three positions and together carry more attribution mass than the remaining ten parameters combined. Forces and pressures follow, temperatures come seventh and eighth, and torque and back-pressure measurements are effectively irrelevant at ranks 11 to 13.
+
+\textbf{This is physically coherent for the specific quality characteristic being predicted.} The label is not a defect classification but a photometric measurement: the general uniformity U\textsubscript{0} of a road lens, which quantifies how evenly the finished optic distributes light. Optical uniformity in a moulded lens is governed principally by two things --- the uniformity of packing, which determines local density and therefore local refractive index, and the distribution of residual stress and molecular orientation frozen into the part, which produces birefringence and local distortion of the optical surface. Both are dominated by the \emph{thermal and pressure history} of the melt, and the time-domain parameters are the most direct available summary of that history.
+
+Filling time governs shear rate and therefore the degree of molecular orientation locked into the skin layer as the flow front freezes. Plasticizing time reflects the residence and shear history of the melt in the barrel and therefore its thermal and rheological state at the moment of injection. Cycle time integrates cooling and holding and therefore determines how much of the shrinkage occurs under packing pressure and how much occurs freely after gate freeze --- which is precisely the mechanism that produces non-uniform density in a thick optical part.
+
+Melt and mold temperature ranking below the timings is initially counter-intuitive, since temperature is the parameter a moulder would name first. Two considerations reconcile it. First, the temperatures in this dataset have very narrow observed spread --- mold temperature has a standard deviation of 0.43 °C over a range of 3.75 °C (§4.7, §5.3.4) --- so a well-controlled parameter that barely varies cannot explain variation in the outcome regardless of its physical importance. Attribution measures explanatory power over the observed distribution, not physical significance in general, and a parameter held tightly constant will always rank low. Second, both Relief and ANOVA assign melt temperature a weight of exactly zero on this dataset while SHAP places it eighth of thirteen, which suggests that whatever contribution it makes is interactive rather than univariate --- visible to a tree ensemble and invisible to a univariate filter.
+
+That three methodologically unrelated procedures --- exact Shapley attribution over a random forest, a nearest-neighbour-based filter, and a univariate analysis of variance --- \textbf{all rank cycle time first} is the most robust statement the explanation layer supports. It is not a claim that cycle time \emph{causes} optical non-uniformity; it is a claim that, across three different notions of informativeness, cycle time carries more information about U\textsubscript{0} than any other recorded parameter.
+
+\textbf{A caveat that becomes central in §5.2.} The attribution ranking establishes which parameters are \emph{informative}. It does not establish which are \emph{manipulable}. Several of the highest-ranked quantities --- cycle time, plasticizing time, the torque and clamping-force peaks, screw position at end of hold --- are not machine setpoints at all but \emph{measured outcomes} of the cycle. An operator does not type a cycle time into the machine; cycle time is what results from the cooling-time setpoint, the clamping sequence, and the part's thermal behaviour. This distinction has no consequence for classification, where all that matters is whether a quantity is informative. It has a very large consequence for counterfactual recommendation, and §5.2.2 argues that it is part of the explanation for the central finding of this thesis.
+
+\hypertarget{the-error-structure-and-the-decision-threshold-question}{%
+\subsection{5.1.4 The Error Structure and the Decision-Threshold Question}\label{the-error-structure-and-the-decision-threshold-question}}
+
+The confusion matrix of §4.2.4 has a property that a purely accuracy-focused reading would miss: it is \textbf{block-diagonal}. All 18 test-split errors fall within \{\emph{Waste}, \emph{Acceptable}\} or within \{\emph{Target}, \emph{Inefficient}\}, and not a single sample crosses between the two blocks.
+
+This means the model's errors respect the ordinal structure of the underlying measurement. Every error is a confusion between photometrically adjacent bands, so the magnitude of every error is bounded by one band width. The model never mistakes a badly under-performing lens for an over-performing one, which for a quality-control application is close to the best achievable error structure: a classifier that occasionally confuses adjacent grades is operationally very different from one whose errors are unordered.
+
+The four \emph{Waste} → \emph{Acceptable} errors --- 1.37\% of the test split --- are the escapes: non-compliant lenses the model would pass. The four \emph{Acceptable} → \emph{Waste} errors are the false alarms. At this operating point the two are exactly balanced, which is a consequence of calibrating a probabilistic classifier on a balanced dataset rather than of any deliberate cost weighting.
+
+\textbf{Should a production deployment shift that balance?} The asymmetry argued in §3.9.1 says yes in principle: an escape reaches a customer as a compliance failure, while a false alarm costs one part. Shifting the decision threshold toward \emph{Waste} would trade false alarms for escapes at a rate governed by the local slope of the model's ROC curve.
+
+Two considerations complicate the recommendation, and neither is resolved by this work. First, the exchange rate is not known: how many additional scrapped compliant lenses buy one prevented escape depends on the density of the probability distribution near the threshold, which this thesis has not characterised. Second, and more importantly, the cost ratio is a business parameter that varies by customer contract, and a thesis has no basis for setting it. What can be said is that \textbf{the capability to shift it exists and is cheap} --- it requires only a decision rule over the existing probability vector, no retraining --- and that a deployment should treat the balance as a configurable business decision rather than inheriting the balanced default by accident. This is the same argument, in the classification layer, that §4.6.3 made for the counterfactual layer: the system has an operating envelope, and the default position within it should be chosen rather than accepted.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{the-circularity-problem}{%
+\section{5.2 The Circularity Problem}\label{the-circularity-problem}}
+
+\hypertarget{why-self-validated-counterfactuals-overstate-resolution}{%
+\subsection{5.2.1 Why Self-Validated Counterfactuals Overstate Resolution}\label{why-self-validated-counterfactuals-overstate-resolution}}
+
+The central result of this thesis is the pair of figures in §4.5.1: on the held-out test split, the engine resolves \textbf{95.24\%} of non-conforming cycles and an independent model confirms \textbf{6.43\%} of those resolutions. The same 140 recommendations produce both numbers.
+
+The mechanism is the one anticipated in §2.7.2 and it is worth stating without hedging. A counterfactual search terminates when the champion model is satisfied. Its reported resolution rate is therefore a measurement of the search procedure's competence at satisfying that model --- not a measurement of whether the recommendation is right. The criterion and the objective are the same object. A procedure optimised to reach a point where P(Acceptable) + P(Target) ≥ 0.55, evaluated by checking whether P(Acceptable) + P(Target) ≥ 0.55, cannot fail except through search failure.
+
+This would be a harmless tautology if trained models were faithful representations of the processes they model. The evidence assembled in §2.7.2 says they are not, in specific and documented ways {[}24{]}, {[}62{]}, {[}71{]}, {[}72{]}, {[}73{]}, {[}74{]}. And the results of §4.5 make the consequence concrete on a real manufacturing dataset: when a model with a different inductive bias, a different seed, and no involvement in the search is asked about the same 140 counterfactuals, it endorses nine.
+
+\textbf{The distributional evidence supports the artefact reading over the alternatives.} §4.5.2 eliminated the obvious competing explanations --- the verifier is not incompetent, the counterfactuals are not extreme, and the acceptance criterion is not trivially permissive. What remains is the nearest-neighbour result: the mean counterfactual sits \textbf{0.829 scaled units} from the nearest real conforming cycle in the training data, in a space where each parameter spans two units. The engine's outputs are not landing in the regions where conforming production has actually been observed. They are landing in regions the champion model \emph{labels} conforming --- which, following Laugel et al.~{[}62{]}, is exactly the definition of an unjustified counterfactual: a point continuously connected to the model's favourable region but not to the data's.
+
+\textbf{An additional mechanism specific to process data.} §5.1.3 observed that several of the most heavily attributed parameters are measured outcomes rather than setpoints. The Tier-1 search moves its five selected parameters \emph{independently}, each in the direction its LIME coefficient indicates. But cycle time, plasticizing time, the torque peaks and the clamping-force peak are not independently settable quantities; they are joint consequences of the machine's configuration and the polymer's behaviour. A recipe that reduces filling time by 0.41 s while increasing plasticizing time by 0.22 s and increasing cycle time by 0.08 s specifies a combination of \emph{measured outcomes} that may be jointly unreachable, because no setting of the machine's actual controls produces exactly that triple.
+
+This is precisely the objection Karimi et al.~{[}35{]} raise in moving from counterfactual explanation to intervention: in the presence of causal dependencies among features, setting a feature to its counterfactual value does not produce the counterfactual world, because downstream features move too. §3.6.5 anticipated the residual risk in the abstract --- the clip guarantees each parameter individually lies within its observed range but cannot guarantee the \emph{combination} is one the process could produce. The nearest-neighbour figure quantifies how large that residual is, and the verifier's 6.43\% is what it costs.
+
+A second learned model trained on real cycles has only ever seen jointly reachable combinations. Asked about a vector that is individually plausible in every coordinate but jointly unobserved, it has no particular reason to classify it as conforming --- and mostly does not.
+
+\hypertarget{why-the-ablation-comparison-generalises-the-finding}{%
+\subsection{5.2.2 Why the Ablation Comparison Generalises the Finding}\label{why-the-ablation-comparison-generalises-the-finding}}
+
+A single engine reporting a low confirmation rate is a fact about that engine. The ablation of §3.6.7 was built to test whether the finding characterises a method class, and §4.5.3 and §4.5.4 report what it found.
+
+The centroid ablation --- with SHAP feature selection and LIME directional guidance removed, and the acceptance criterion, champion model, verifier, step size and iteration budget held identical --- confirms at \textbf{10.00\%} on the test split against the three-tier engine's 6.43\%. McNemar's exact test on the paired per-sample outcomes cannot distinguish the two (\emph{p} = 0.180 on test, \emph{p} = 0.625 on validation).
+
+Three readings follow, and they must be kept separate.
+
+\textbf{Reading 1: the low confirmation rate is not attributable to the explanation components.} Removing SHAP and LIME entirely does not fix it. If the three-tier engine's poor independent corroboration were a consequence of SHAP selecting the wrong features or LIME indicating the wrong directions, a search that uses neither should behave differently. It does not. Whatever produces the gap is upstream of the feature-selection and direction-assignment machinery --- it is in the shared acceptance criterion, the shared model, and the shared paradigm of terminating when that model is satisfied. This is the argument by which the finding generalises from one algorithm to a method class, and it is the reason the ablation was built.
+
+\textbf{Reading 2: the ablation is nominally better, and this is not favourable to the proposed engine.} The direction of the difference is consistent across both splits: the ablation confirms more often (10.00\% against 6.43\% on test; 12.50\% against 11.11\% on validation). The method that removes this work's contribution to the search produces recommendations an independent model endorses more frequently. That is reported in §4.5.3 without softening and is restated here for the same reason.
+
+Its explanation is structural and coherent with the mechanism of §5.2.1. The ablation moves \emph{all thirteen} parameters toward the centroid of conforming training samples. It is therefore pulled continuously toward the region where real conforming cycles live, and its mean nearest-neighbour distance (0.686) is correspondingly lower than the three-tier engine's (0.829). Landing closer to observed conforming production is exactly what should make a second model more likely to agree. The two metrics tell one story.
+
+\textbf{Reading 3: both rates are low, and the difference between them is small relative to what they share.} 6.43\% and 10.00\% are both far from anything that would license calling either method's output verified. Approximate Wilson 95\% intervals computed from the reported counts are roughly 4--12\% for the three-tier engine (9/140) and 6--17\% for the ablation (14/140); they overlap substantially, which is the same information the McNemar result conveys. The honest summary is not ``the ablation wins'' but ``\textbf{neither approach produces recommendations that an independent model routinely endorses, and the difference between them is not resolvable at this sample size}.''
+
+\textbf{The limits of the inference.} §3.9.4 committed in advance to stating this carefully, and the commitment is honoured here. A non-significant McNemar result does not prove equivalence. With nine discordant pairs the test was underpowered against anything but a large effect, and a genuine difference of moderate size would very likely have gone undetected. What the result licenses is the conditional statement: \emph{the independent-confirmation rates of two structurally different search strategies are statistically indistinguishable on this data}, and that indistinguishability is \textbf{consistent with} the confirmation rate being a property of the shared approach. It is evidence for the generalisation, not a demonstration of it. §5.5 records the power limitation as a threat to conclusion validity.
+
+\hypertarget{implications-for-xai-practice-in-manufacturing}{%
+\subsection{5.2.3 Implications for XAI Practice in Manufacturing}\label{implications-for-xai-practice-in-manufacturing}}
+
+If the finding holds beyond this dataset --- and §5.5 is explicit that a single dataset cannot establish that --- three consequences follow for how explainable AI is evaluated and deployed in manufacturing.
+
+\textbf{Consequence 1: resolution rate should never be reported alone.} The literature reviewed in §2.7.1 documents that this is the prevailing practice: Nauta et al.~{[}70{]} found one XAI paper in three evaluating exclusively on anecdotal evidence, and Keane et al.~{[}36{]} found only 21\% of 100 counterfactual methods user-tested at all. A paper reporting that its engine resolves 95\% of defective cycles is making a claim its evaluation does not support, and a reader has no way to tell how much of that 95\% would survive contact with an independent check --- because the check was not performed. The minimum remedy is cheap: train a second model of a different family on the same training data, query it once per recommendation, and report the agreement rate alongside the resolution rate. The entire additional cost in this work was one MLP fit and one prediction per counterfactual.
+
+\textbf{Consequence 2: the desiderata must be reported as a set.} §4.5.5 is a clean demonstration of why. The three-tier engine wins decisively on sparsity (4.88 against 12.32 parameters) and proximity (0.516 against 0.678); the ablation wins on nearest-neighbour distance (0.686 against 0.829) and validator agreement. A paper reporting only sparsity and proximity would conclude the three-tier engine superior. A paper reporting only plausibility and independent validation would conclude the ablation superior. Both would be selective reporting of the same experiment. Because the desiderata conflict by construction (§2.4.4), any single-metric claim about counterfactual quality is uninterpretable.
+
+\textbf{Consequence 3: the operating point must be reported, and preferably the envelope around it.} §4.6 showed that the confirmation rate on this dataset ranges from 6.43\% to 85.71\% purely as a function of the acceptance threshold, and from 6.43\% to 13.33\% as a function of the iteration budget. A single reported figure is therefore a point on a curve, and a paper that does not say where on the curve it sits has under-specified its result. Had this work reported only its default configuration, it would have concealed the most practically useful thing it found.
+
+There is a fourth consequence that concerns deployment rather than evaluation, and it is the most consequential of the four. \textbf{An unverified recommendation presented in the same register as a verified one invites exactly the failure mode the human-factors literature warns about.} Parasuraman and Riley {[}89{]} distinguish \emph{use}, \emph{misuse}, \emph{disuse} and \emph{abuse} of automation, and identify misuse --- over-reliance on automation whose reliability the user cannot assess --- as the characteristic failure of decision-support systems. Lee and See {[}90{]} frame the design objective not as maximising trust but as achieving \emph{appropriate reliance}: trust calibrated to the system's actual reliability. Buçinca et al.~{[}91{]} show experimentally that explanations alone do not produce appropriate reliance and can increase over-reliance, and that interface designs which force deliberate engagement reduce it.
+
+A system that issues 140 confidently-worded parameter recipes of which nine carry independent corroboration, and does not distinguish the nine, is a system engineered for misuse. The design decisions of §3.6.6 and §3.7.5 --- surfacing the verifier's verdict in the interface, in the audit log, in the notification, and requiring the LLM shift report to state it --- are the minimum response. §5.2.5 argues they are not sufficient.
+
+\hypertarget{what-a-defensible-validation-protocol-would-require}{%
+\subsection{5.2.4 What a Defensible Validation Protocol Would Require}\label{what-a-defensible-validation-protocol-would-require}}
+
+The finding of this thesis bounds what may be claimed from a counterfactual RCA engine's self-report. It does not tell a practitioner what to do instead. This section sets out what a defensible protocol would require, ordered by increasing strength and cost, using the three-level taxonomy of §2.7.3.
+
+\textbf{Level 0 --- What is currently standard, and is insufficient.} Report the fraction of defective cases for which a counterfactual satisfying the generating model was found. This measures search competence and nothing else.
+
+\textbf{Level 1 --- Distributional grounding (cheap, necessary, insufficient).} Report at least one out-of-distribution measure alongside proximity and sparsity, as Keane et al.~{[}36{]} recommend: distance to the nearest same-class training instance, local outlier factor, or the connectedness criterion of Laugel et al.~{[}62{]}. Cost is negligible --- a nearest-neighbour query per counterfactual. This work reports mean nearest-neighbour distance for exactly this reason, and §4.5.2 shows it carrying real diagnostic weight. What it establishes is whether the recommendation lands where real conforming production lives. What it cannot establish is whether the recommendation would achieve the intended outcome.
+
+\textbf{Level 2 --- Independent model verification (moderate cost, the standard applied here).} Train a second model of a different family, on the same training data, with a different seed, taking no part in generation; query it once per recommendation; report the agreement rate over the full evaluation population, not over selected cases. Cost in this work was one MLP fit and 140 predictions.
+
+Its strength is that the two models' idiosyncratic boundary artefacts are unlikely to coincide, so agreement is meaningfully more informative than self-report. Its limitation must be stated with equal clarity: \textbf{both models are trained on the same data and share whatever biases that data carries}. Agreement bounds the risk of a model-specific artefact; it cannot exclude a shared one. A protocol wanting more should use an \emph{ensemble} of independent verifiers spanning several families, or a verifier trained on a disjoint data partition, or --- best --- a physics-based simulation that does not learn from the data at all.
+
+\textbf{Level 3 --- Process verification (definitive, expensive, not performed here).} Enact the recommendation on the machine and measure the resulting part. This is the only test that settles the question, because it is the only one that consults the process rather than a model of it.
+
+A minimally adequate protocol would be: for a random sample of recommendations stratified across the confirmed and unconfirmed groups, apply the recipe on a running machine, produce a defined number of cycles, measure the resulting parts by the same procedure that generated the training labels --- here, laboratory photometric analysis of U\textsubscript{0} --- and report the fraction of recommendations that move the part into the conforming band. The stratification matters: without it, the trial cannot establish whether the verifier's verdict predicts physical success, which is the question that would determine whether Level 2 is a useful proxy at all.
+
+The obstacles are real and are why this work did not perform it: access to an instrumented machine producing the same part, production time, photometric measurement capability, and tolerance for deliberately producing scrap during the trial. §6.4 identifies it as the principal item of future work.
+
+\textbf{The recommendation this thesis makes.} Level 2 should be the \emph{minimum} standard for any published claim about counterfactual RCA performance in manufacturing, because its cost is trivial relative to the claim it qualifies. Level 3 should be required before any claim that recommendations are corrective rather than hypothetical. And no work should report a resolution rate without at least Level 1 alongside it.
+
+\hypertarget{recipes-as-hypotheses-the-practical-payload}{%
+\subsection{5.2.5 Recipes as Hypotheses: the Practical Payload}\label{recipes-as-hypotheses-the-practical-payload}}
+
+The preceding sections could be read as a case against counterfactual root-cause analysis. They are not, and the distinction is the practical contribution of this thesis.
+
+\textbf{The gap does not invalidate the method. It bounds the claims that may be made from it.}
+
+Consider what the engine demonstrably does. It takes a defective cycle and returns, in under half a second, a ranked set of typically five parameter adjustments, each in engineering units, each within the machine's observed operating range, each accompanied by an attribution explaining why that parameter was selected and a local explanation indicating which direction moves the cycle toward the target band. The worked case of §4.4.4 lifts conforming confidence from 15.67\% to 74.29\% with a 0.46\% change in closing force, a 0.41 s reduction in filling time, and three smaller adjustments --- a coherent, small, executable intervention.
+
+That is a substantial narrowing of a search space. Without it, an operator facing a defective cycle has thirteen parameters and no ordering over them, and the classical practice described in §2.5.4 is to adjust one at a time and observe the next few shots. With it, the operator has five candidates, a direction for each, and a magnitude. \textbf{Even if only a minority of these recipes are correct, the recipe is a better starting hypothesis than an undirected search.}
+
+What the finding forbids is the next step: presenting the recipe as a \emph{verified corrective action}. The engine has not established that the recipe works. It has established that the champion model believes it works, and --- in 6.43\% of cases at the default configuration --- that a second, independent model agrees.
+
+The resulting position is a change of speech act rather than of function:
+
+\begin{quote}
+\textbf{A counterfactual recipe is a hypothesis for operator evaluation, not a verified corrective action.}
+\end{quote}
+
+The practical consequences are specific and mostly cheap.
+
+\textbf{Presentation.} The recipe should be framed as a candidate to try, not an instruction to execute. ``Suggested first adjustment to trial'' is a different message from ``corrective action,'' and the second is not supported by this evidence.
+
+\textbf{Verification status must be visible and differentiated.} The nine confirmed recommendations on the test split should not look like the 131 unconfirmed ones. §3.6.6 and §3.7.5 already surface the verdict; the argument here is that surfacing is not enough, and that unconfirmed recommendations should carry a visually distinct and less confident presentation. Buçinca et al.~{[}91{]} provide the relevant evidence: making the difference visible is weaker than making it \emph{require engagement}.
+
+\textbf{The operator's judgement is retained rather than replaced.} The system writes no setpoints back to the machine (§3.2.5). The person deciding whether to apply the recipe is the person who knows what the mould was doing yesterday, whether the resin lot changed, and whether the cooling water has been unstable --- that is, the person holding the information about the material and environmental causes that §2.2.3 established are absent from machine-parameter data entirely.
+
+\textbf{Outcomes should be captured.} The audit trail of §3.7.2 already records the recommendation and its verification status. Extending it to record whether the recipe was applied and what the next cycles produced would, over months of production, accumulate exactly the Level-3 evidence that §5.2.4 identifies as missing --- turning the deployment itself into the physical validation study.
+
+This position --- actionable guidance offered as hypothesis, with its epistemic status made explicit and the human decision retained --- is what the thesis argues counterfactual RCA can honestly deliver today. It is less than the literature typically claims. It is considerably more than nothing, and it is defensible.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{practical-implications-for-palestinian-manufacturing}{%
+\section{5.3 Practical Implications for Palestinian Manufacturing}\label{practical-implications-for-palestinian-manufacturing}}
+
+§2.2.5 established the deployment context that motivated this work: plastics manufacturers operating with manual visual inspection, limited capital for automation, scarce specialist expertise, and --- in many cases --- customer-driven pressure toward ISO 9001 certification. This section asks what would actually be required for such a firm to adopt the framework, and is deliberately concrete about what is easy, what is hard, and what this work has not solved.
+
+\hypertarget{computational-and-capital-feasibility}{%
+\subsection{5.3.1 Computational and Capital Feasibility}\label{computational-and-capital-feasibility}}
+
+On the cost side the picture is favourable, and this is the framework's clearest practical strength.
+
+\textbf{No additional sensing is required.} This is the design constraint the entire architecture was built around (§3.2.1), and it is the difference between a solution a small moulder can consider and one it cannot. The vision systems of §2.3.5 and the in-mould instrumentation of §2.3.3 both require capital expenditure per production cell and integration expertise; the framework here consumes parameters the machine already records as a matter of ordinary operation.
+
+\textbf{No specialised compute is required.} Every result in Chapter 4 was produced on CPU. Per-cycle analysis --- SHAP attribution, LIME explanation, iterative counterfactual search, and independent verification --- takes approximately 0.48 seconds (§4.1.2), against an injection moulding cycle time of roughly 75 seconds in this dataset. The margin is two orders of magnitude. A single commodity workstation can analyse every cycle of several machines in real time.
+
+\textbf{The software stack is open-source and containerised.} Python, scikit-learn, SHAP, LIME, Streamlit and SQLite carry no licence cost, and the Docker packaging of §3.8.2 means deployment does not require the recipient to reproduce a development environment.
+
+The residual costs are integration rather than capital: extracting cycle data from the machine controller --- via OPC UA where available (§2.6.1), or via the CSV export most controllers support --- and a person able to maintain the deployment. For a firm already running a maintenance function, the second is a training cost rather than a headcount cost.
+
+\hypertarget{the-real-barrier-supervision-not-compute}{%
+\subsection{5.3.2 The Real Barrier: Supervision, Not Compute}\label{the-real-barrier-supervision-not-compute}}
+
+The honest assessment is that computational feasibility is not the binding constraint, and it would be misleading for this thesis to present affordability as the principal contribution to the deployment problem.
+
+\textbf{The binding constraint is labelled data.} Every component of this framework is supervised. The classifier requires quality labels. The explanation layer explains that classifier. The counterfactual engine searches that classifier's decision surface. The verifier is a second supervised model. Without labels, none of it exists.
+
+In this dataset, the labels came from laboratory photometric measurement of general uniformity --- an instrument and a procedure that the lens manufacturer possessed because optical performance is the product specification. A Palestinian moulder producing crates, pipe fittings, or household goods has a quality criterion (dimensional tolerance, absence of visual defect, drop-test survival) but generally no automated instrument producing a per-cycle quantitative label. Their existing quality record is an operator's visual pass/fail, recorded on paper if at all, and not linked to the machine's parameter log for that specific cycle.
+
+Constructing a training set therefore requires a deliberate campaign: instrumenting the linkage between a cycle's parameter record and that cycle's quality outcome, sustained long enough and across enough conditions to cover the defect modes of interest. Silva et al.~{[}12{]} are one of the few studies to treat this as a first-class engineering problem, and their use of human-in-the-loop labelling is a realistic template. It is weeks of disciplined effort, not a software installation.
+
+Two mitigations are worth noting. First, the label need not be laboratory-grade: a consistently applied operator judgement, reliably linked to the correct cycle, is a usable supervision signal, and the conformance definition can be binary rather than four-class. Second, the labelling burden is one-off per product family rather than continuous, provided the drift monitoring of §3.7.3 is used to detect when the model's assumptions have expired.
+
+But the sequence matters, and stating it plainly is more useful to a practitioner than an optimistic summary: \textbf{a firm cannot deploy this framework and then acquire labels. It must acquire labels and then deploy the framework.}
+
+\hypertarget{choosing-an-operating-point}{%
+\subsection{5.3.3 Choosing an Operating Point}\label{choosing-an-operating-point}}
+
+§4.6.3 established that the engine has a two-dimensional operating envelope and that the default configuration sits at its permissive corner. §5.3 is the place to say what a deployment should do about that.
+
+The choice is governed by the relative cost of two errors: an uncorroborated recommendation acted upon (a wasted intervention, potentially a disturbed process), and a declined recommendation (a defect the system could not advise on, referred to manual inspection). The exchange rate between them is a plant-specific business parameter this thesis has no data to set. What the sweep provides is the menu.
+
+\textbf{Table 5.1.} Candidate operating points on the test-split envelope, with their characteristics. Derived from Tables 4.21 and 4.23.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Configuration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Coverage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Independent corroboration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Character
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Threshold 0.55, 150 iter (default) & 95.24\% & 6.43\% & Maximum coverage, minimum corroboration \\
+Threshold 0.55, 10 iter & 61.22\% & 13.33\% & Cheap gain: doubles corroboration for a third of coverage \\
+Threshold 0.75, 150 iter & 74.83\% & 21.82\% & Balanced; Tier 2 becomes active \\
+Threshold 0.85, 150 iter & 30.61\% & 44.44\% & Conservative; most cycles escalated \\
+Threshold 0.95, 150 iter & 4.76\% & 85.71\% & Advisory only on near-certain cases \\
+\end{longtable}
+
+For a \textbf{first deployment in a firm with no prior experience of AI decision support}, the argument favours a conservative point --- threshold 0.75 or above --- for a reason that is behavioural rather than statistical. Lee and See {[}90{]} frame the design objective as \emph{appropriate reliance}: trust calibrated to actual reliability. A system that issues an advisory on almost every defective cycle, most of which cannot be corroborated, will produce visible failures early, and the documented response to that is \emph{disuse} --- the operator stops consulting the system at all {[}89{]}. A system that advises less often but is right more often when it does builds the calibrated trust on which later expansion of its scope depends. Coverage can be widened after the plant has evidence about the system's reliability; credibility, once lost on a shop floor, is not cheaply recovered.
+
+The \textbf{iteration-budget finding of §4.6.2 is the cheapest available improvement} and deserves emphasis: reducing the budget from 150 to 10 doubles independent corroboration (6.43\% → 13.33\% on test, 11.11\% → 22.22\% on validation) at a cost of a third of coverage, and simultaneously reduces runtime. Since the results at 50 and 150 iterations are byte-identical on both splits, the default budget is at minimum three times larger than necessary and should be reduced regardless of where else on the envelope a deployment sits.
+
+\hypertarget{iso-9001-alignment-and-an-important-caveat}{%
+\subsection{5.3.4 ISO 9001 Alignment --- and an Important Caveat}\label{iso-9001-alignment-and-an-important-caveat}}
+
+§2.6.2 argued that explainability is not only a trust property but a compliance one, and the framework's alignment with ISO 9001:2015 {[}8{]} is genuine in several respects.
+
+\textbf{Traceability (§3.7.2) maps directly onto the standard's requirements} for control of nonconforming output and documented corrective action. The audit trail records, per cycle, what was predicted, with what confidence, what was recommended, and --- importantly --- whether that recommendation was independently corroborated. That last field is unusual and valuable: an auditor can distinguish corroborated from uncorroborated advice after the fact, which an audit trail recording only the recommendation could not support.
+
+\textbf{Explanation supports the standard's evidence-based decision-making clause.} A defect record that says ``flagged non-conforming, principal contributions from filling time and plasticizing time, recommended adjustments as follows'' is an evidence trail; a record that says ``flagged non-conforming'' is not.
+
+\textbf{The process-capability module, however, cannot be used as it stands, and this must be stated plainly.} §3.7.1 recorded that the specification limits in \texttt{config/constraints.yaml} are the observed minimum and maximum of the historical dataset, not sourced customer or engineering limits. The consequences are visible in the exported results: 12 of the 13 parameters are classified ``Not Capable,'' with Cpk values from 0.272 (filling time) to 0.900 (torque peak), and only melt temperature reaching ``Capable'' at Cpk 1.493.
+
+\textbf{These verdicts are close to tautological and must not be reported as findings about the iGuzzini process.} If the specification window is defined as the observed range of the data, then the data fills the window by construction, and Cp reduces to approximately (observed range)/(6σ) --- a statistic about the shape of the parameter's distribution, not about its conformance to a requirement. A parameter with a roughly normal distribution whose observed range spans about six standard deviations will return Cp ≈ 1 and be classified marginal or not capable no matter how well controlled it actually is. Cycle time's Cp of 0.389 reflects an observed range of only about 2.3σ, which is a statement about the tails of that distribution rather than about capability.
+
+The module therefore demonstrates a \emph{capability-monitoring mechanism} awaiting real specification limits. A deployment must obtain the limits from the customer drawing or the internal engineering specification before any Cp/Cpk figure it produces means anything. This is a five-minute configuration change and a prerequisite for the module's output being usable at all --- and it is exactly the kind of caveat that, left unstated, would allow a reader to take ``12 of 13 parameters not capable'' as a finding about a real production line.
+
+\hypertarget{operators-training-and-knowledge-transfer}{%
+\subsection{5.3.5 Operators, Training, and Knowledge Transfer}\label{operators-training-and-knowledge-transfer}}
+
+§2.2.5 and §2.6.2 argued that explainability serves a workforce-development function in settings where formal process expertise is scarce: an explanation that attributes a defect to a specific machine setting transfers process knowledge to the person reading it.
+
+The results give this argument partial support and one qualification.
+
+\textbf{Support:} the attributions are stable, externally corroborated, and expressed in parameters an operator recognises. Three independent importance methods rank cycle time first (§4.3.2). Recipes average 4.88 parameters and are delivered in engineering units with explicit directions (§4.4.4). An operator repeatedly seeing that filling time and plasticizing time dominate defect explanations is acquiring a real and correct generalisation about this process.
+
+\textbf{Qualification:} the parameters the model finds most informative are not, in several cases, parameters the operator directly sets (§5.1.3). Telling an operator that cycle time is the dominant driver is true and useful as process understanding; telling them to increase cycle time by 0.08 s is an instruction they cannot straightforwardly execute, because cycle time is an outcome of the cooling-time setpoint and the clamping sequence rather than a field on the control panel. A deployment should therefore \textbf{map recommendations from measured quantities onto the setpoints that govern them} before presenting them --- a translation layer this work does not implement and which would require machine-specific knowledge of the controller. Its absence is a genuine gap between the artefact evaluated here and a deployable tool, and §6.4 records it as future work.
+
+The role separation of §3.7.7 is the right structure for this --- operator, engineer, and quality manager need different depths of the same analysis --- but as implemented it is a soft interface gate with no authentication backend and should not be described as access control. A deployment handling commercially sensitive parameter recipes would need authenticated identity, enforced authorisation, and an on-premises replacement for the third-party messaging transport of §3.7.6.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{limitations}{%
+\section{5.4 Limitations}\label{limitations}}
+
+This section states the limitations of the work directly and without mitigation language. They are ordered from narrowest to broadest, and the strongest is stated last.
+
+\textbf{L1 --- Single dataset, single product, single manufacturer.} All results derive from one dataset: 1,451 road lenses produced by one manufacturer on one machine over a small number of production days. Nothing in this work establishes that the findings transfer to a different part geometry, a different polymer, a different machine, or a different quality criterion. The counterfactual finding in particular could in principle be specific to a dataset in which the conforming and non-conforming regions happen to be arranged in a way that makes model-satisfying counterfactuals easy to reach and jointly implausible.
+
+\textbf{L2 --- Small evaluation population.} The test split contains 291 samples, of which 147 are non-conforming and 140 receive a recommendation. The headline confirmation figure of 6.43\% rests on 9 confirmations out of 140; an approximate Wilson 95\% interval computed from those counts spans roughly 4\% to 12\%. The paired comparison against the ablation rests on 9 discordant pairs. These are small numbers, and the precision implied by quoting figures to two decimal places is not warranted by them.
+
+\textbf{L3 --- Proposal objective 4 was not delivered.} The research proposal committed to acquiring a new dataset or generating an augmented one to test the enhanced model against a second data source. This was not done. The comparative work in this thesis is instead the centroid-ablation study of §3.6.7, which addresses a different and --- in the author's view --- more important question, but which is not what was proposed. The substitution is recorded here rather than passed over silently.
+
+\textbf{L4 --- Hyperparameters inherited, not tuned.} The champion's configuration is adopted from Polenta et al.~{[}5{]} with five documented deviations (§3.4.3). No hyperparameter search was conducted in this work. It is therefore possible that a tuned configuration would classify better, and possible --- though there is no evidence either way --- that a differently-shaped decision surface would yield different counterfactual behaviour.
+
+\textbf{L5 --- Single random seed throughout.} The data split, the champion, and the verifier each use one fixed seed (42, 42, 7). No result in this thesis is repeated across seeds. Consequently no variance estimate exists for any headline figure, and it is not known how much of the 6.43\% confirmation rate would move under a different partition of the same data.
+
+\textbf{L6 --- Drift monitoring demonstrated on synthetic perturbation only.} The reference and current windows derive from the same stratified split, so no real drift is present and none is reported (§4.7). The study establishes that PSI triggers at k = 1σ for all 13 parameters under controlled single-parameter shifts. It does not establish that the detector would catch the gradual, multi-parameter, correlated drift a real machine produces. The Page-Hinkley detector is implemented and exercised but detects nothing on data with no temporal structure, and no result from it is claimed.
+
+\textbf{L7 --- Process-capability limits are assumed, not sourced.} As set out in §5.3.4, the Cp/Cpk figures are computed against the observed data range and are close to tautological. No capability claim about the real process is made or supportable.
+
+\textbf{L8 --- Role-based access is an interface concept, not a security control.} The gate warns rather than blocks and has no authentication backend (§3.7.7).
+
+\textbf{L9 --- The verifier is a single model, not an ensemble or a simulation.} One independently trained MLP adjudicates every recommendation. A stronger design would use several verifiers spanning multiple families, or a verifier trained on a disjoint data partition, or a physics-based simulation. With a single verifier, a systematic error in that one model would propagate into every reported confirmation rate.
+
+\textbf{L10 --- Recommendations are not mapped from measured quantities onto setpoints.} Several of the parameters the engine adjusts are measured outcomes rather than machine setpoints (§5.1.3, §5.3.5). The recipes are therefore not directly executable on a control panel without a translation step the framework does not implement, and this may itself contribute to the joint-implausibility mechanism proposed in §5.2.1.
+
+\textbf{L11 --- The expert evaluation is limited in scale.} \emph{{[}If the sub-study is completed: state realised n and reiterate that it is descriptive rather than inferential. If it is not completed: state that the instrument was designed but not administered, and that no expert-evaluation result is claimed.{]}} In either case, expert plausibility judgement and recommendation correctness are different constructs, and the sub-study cannot substitute for the validation question.
+
+\textbf{L12 --- No physical validation. No counterfactual recipe generated in this work was ever executed on an injection moulding machine.}
+
+This is the strongest limitation and it deserves to be stated without qualification. The central claim of this thesis concerns the gap between a model's self-report and an independent check on its recommendations. The independent check used is a second learned model --- which is itself a proxy. Both models were trained on the same 870 samples and share whatever biases those samples carry, so agreement between them bounds the risk of a model-specific artefact but cannot exclude a shared one, and disagreement establishes that one model rejects what another accepts, not that the recommendation is wrong.
+
+\textbf{Only physical trial on an operating machine, with the resulting parts measured by the same photometric procedure that produced the training labels, would definitively confirm or refute a counterfactual recipe.} That trial has not been performed. Every statement in this thesis about the quality of the engine's recommendations is therefore a statement about how two learned models relate to one another, not about how either relates to the process. §5.2.4 specifies what such a trial would require and §6.4 identifies it as the principal item of future work.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{threats-to-validity}{%
+\section{5.5 Threats to Validity}\label{threats-to-validity}}
+
+\hypertarget{internal-validity}{%
+\subsection{5.5.1 Internal Validity}\label{internal-validity}}
+
+\textbf{Data leakage.} The principal internal threat in a study of this design is that information from the evaluation splits reaches a component that is later evaluated on them. Four specific controls address it: the scaler is fitted on the training split only; the verifier is fitted on the training split only; the Tier-2 conforming anchor pool is drawn from the training split only; and the ablation centroid is computed from the training split only. This guarantee is stated in the comparison script and holds for every result reported. The residual risk is that the validation split informed champion selection, which is why validation figures are never reported as headline results (§3.9.5) --- and §4.5.1 shows that discipline mattering, since the validation confirmation rate (11.11\%) is materially more favourable than the test figure (6.43\%).
+
+\textbf{Selection bias in model choice.} Selecting on cross-validation mean rather than single-split accuracy localises the selection decision within the training split {[}83{]}, {[}84{]}. Had selection used the validation split, XGBoost would have been chosen and the validation figures would have been optimistically biased for it.
+
+\textbf{Seed dependence.} As stated in L5, all results rest on a single seed configuration. A different partition could produce different figures, and no repetition was performed to estimate how different.
+
+\textbf{Inherited configuration.} The champion's hyperparameters were adopted rather than tuned (L4). The deviation analysis of §3.4.3 documents each difference and resolves the depth ambiguity empirically, but it does not establish that the inherited configuration is optimal for this partition.
+
+\hypertarget{external-validity}{%
+\subsection{5.5.2 External Validity}\label{external-validity}}
+
+\textbf{Single-context generalisation is not established.} L1 states the position: one dataset, one product, one machine, one manufacturer, one quality criterion. Every finding in this thesis is a finding about that context.
+
+\textbf{The class balance is not representative of production.} The dataset is near-balanced --- 370 \emph{Waste}, 406 \emph{Acceptable}, 310 \emph{Target}, 360 \emph{Inefficient} --- with roughly half of all cycles non-conforming. A production line running in control does not scrap half its output. The dataset was evidently constructed to span the quality range rather than to reflect a steady-state production distribution, which is appropriate for benchmarking and misleading for estimating deployed performance. On a real line with a 2\% defect rate, the classifier would face a severely imbalanced problem, accuracy would cease to be an informative metric, and the RCA engine would be invoked far less often and on a differently distributed population.
+
+\textbf{The counterfactual finding may or may not generalise.} The ablation comparison (§5.2.2) is evidence that the finding is a property of the approach rather than of one algorithm, but it is evidence from \emph{one dataset}. Establishing that self-referential validation systematically overstates counterfactual quality would require replication across several manufacturing datasets, and this thesis does not provide it. The claim made is that the gap exists and is large \emph{here}, and that the mechanism proposed for it is general --- not that the magnitude transfers.
+
+\textbf{The deployment context is characterised from thin evidence.} As stated in §2.2.5, the account of Palestinian plastics manufacturing rests on a small and dated literature, and no field data were collected. The deployment discussion of §5.3 is therefore a reasoned argument from stated constraints, not an empirical finding about local factories.
+
+\hypertarget{construct-validity}{%
+\subsection{5.5.3 Construct Validity}\label{construct-validity}}
+
+\textbf{The central construct is measured by a proxy.} The construct of interest is \emph{whether a recommended parameter adjustment would move the part into the conforming band on a real machine}. The measure used is \emph{whether a second learned model classifies the counterfactual vector as conforming}. These are not the same thing, and the gap between them is L12. Everything in §4.5 should be read as measuring the proxy.
+
+\textbf{The plausibility metric is structurally biased.} Mean nearest-neighbour distance rewards methods that move toward the conforming data mass. The centroid ablation does exactly that by construction, so its superior score on this metric is partly a measure of alignment between its objective and the metric's definition. This was stated in advance (§3.6.7) and again at the point of reporting (§4.5.5), but it remains a construct-validity limitation of that particular comparison.
+
+\textbf{Resolution rate mixes two quantities.} As §4.4.1 established, the 95.24\% figure has a denominator of all non-conforming cycles but excludes seven Tier-0 short-circuits from the numerator. Read as a measure of search success it understates (the search succeeded on 140 of the 140 cycles it attempted); read as a measure of population coverage it is correct. Both readings are given, but a single number carrying two meanings is a construct weakness.
+
+\textbf{The verifier flag carries two meanings.} \texttt{validator\_ok} is true both for a confirmed counterfactual and for a Tier-0 cycle the engine declined to modify. §4.5.4 documents the consequence --- the McNemar contingency row totals exceed the confirmed counts by exactly seven --- and shows that it does not affect the test, since the concordant cell does not enter the statistic. It nonetheless means the flag is not a clean single-construct indicator.
+
+\textbf{Capability indices measure the wrong thing.} As set out in §5.3.4 and L7, Cp and Cpk computed against observed data ranges are statistics about distribution shape, not about conformance to a requirement.
+
+\hypertarget{conclusion-validity}{%
+\subsection{5.5.4 Conclusion Validity}\label{conclusion-validity}}
+
+\textbf{The paired test is underpowered.} McNemar's exact test was conducted on 9 discordant pairs on the test split. A test with that many discordant observations has low power against anything but a large effect, so the non-significant result (\emph{p} = 0.180) is weak evidence of equivalence and is not treated as more (§5.2.2). The generalisation from one algorithm to a method class rests on this test plus the structural argument about what the two methods share, and the structural argument is doing much of the work.
+
+\textbf{Small counts at the extremes of the sweep.} The most striking figures in §4.6 --- 85.71\% confirmation at threshold 0.95 on test, 100\% on validation --- rest on 7 and 4 resolved cases respectively. The monotone \emph{direction} of the trade-off is supported across ten configurations and two splits; the values at the tight end are not stable estimates and should not be quoted as achievable operating characteristics without replication.
+
+\textbf{No confidence intervals were computed in the original analysis.} The approximate Wilson intervals given in §5.2.2 and L2 were derived here from the reported counts; the evaluation scripts report point estimates only. A stronger design would bootstrap the confirmation rate over resampled evaluation populations and report intervals throughout.
+
+\textbf{No correction for multiple comparisons.} Two McNemar tests and three Spearman correlations are reported. None is corrected for multiplicity. Given that no result is claimed on the basis of a marginal p-value --- the two McNemar tests are non-significant and the three correlations have p between 0.0 and 0.029 --- the omission does not affect any conclusion, but it is recorded.
+
+\textbf{Single execution.} Every reported figure comes from one run of one configuration on one seed (L5). Nothing in the evaluation estimates run-to-run variance, and the LIME component is stochastic (§4.3.3), so a repetition would not return identical counterfactual recipes in every case.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{summary}{%
+\section{5.6 Summary}\label{summary}}
+
+This chapter has argued four things.
+
+First, the predictive and explanatory layers are sound. The classifier reproduces the reference study's algorithm ranking and per-class profile, its errors respect the ordinal structure of the photometric measurement without a single cross-block confusion, and its attributions are corroborated by two model-free importance methods that independently rank the same parameter first. The substrate on which the counterfactual work rests is not in question.
+
+Second, the circularity finding is a property of how counterfactual explanations are validated, not a defect of that substrate. A search that terminates when a model is satisfied, evaluated by asking whether that model is satisfied, measures its own competence. When an independent model is asked instead, 6.43\% of recommendations survive. Removing the explanation components does not repair this and if anything slightly improves it, which --- together with the structural similarity of the two methods --- is evidence that the gap belongs to the shared approach. A mechanism specific to process data compounds it: several of the most heavily attributed parameters are measured outcomes rather than setpoints, so a search that moves them independently can specify combinations the machine cannot produce.
+
+Third, the finding bounds claims rather than invalidating the method. A five-parameter, bounded, directed recipe delivered in under half a second is a substantial narrowing of a thirteen-parameter search space, and a better starting hypothesis than the trial-and-error practice it would replace. What the evidence forbids is calling it a verified corrective action. Presenting counterfactual recipes as hypotheses for operator evaluation, with verification status visibly differentiated and the human decision retained, is what this thesis argues the method can honestly deliver today.
+
+Fourth, deployment in the target context is computationally and financially feasible but supervision-limited. The framework requires no added sensors, no specialised compute, and no licensed software; it requires labelled data, which the intended adopters do not currently produce. A conservative operating point is recommended for a first deployment, on grounds of calibrated trust rather than statistics, and the iteration-budget reduction of §4.6.2 is available as a free improvement.
+
+The work's limitations are extensive and are stated in §5.4 without mitigation. The strongest is that no recipe generated here was ever executed on a machine, and that the independent check on which the central finding rests is itself a second learned model rather than the process. Chapter 6 states the conclusions this evidence supports and sets out what would be required to strengthen them.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}

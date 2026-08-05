@@ -1,0 +1,238 @@
+\hypertarget{artefact-index}{%
+\chapter{Artefact Index}\label{artefact-index}}
+
+Every quantitative claim in this thesis traces to a file in the project repository, and every such file traces to the script that produced it and the data it consumed. This appendix reproduces that mapping. It is derived from \texttt{thesis\_assets/MANIFEST.md} and \texttt{models/ARTIFACTS.md}.
+
+\textbf{Repository:} \texttt{github.com/obadaqw/Thesis\_Industrial\_AI\_V2}
+
+\hypertarget{d.1-reproduction-procedure}{%
+\section{D.1 Reproduction Procedure}\label{d.1-reproduction-procedure}}
+
+The complete result set regenerates from raw data in two stages:
+
+\begin{verbatim}
+# Stage 1 — all evaluation artefacts (~3–4 h on CPU)
+bash scripts/run_all_evaluations.sh
+
+# Stage 2 — all thesis figures and tables
+bash scripts/build_thesis_assets.sh
+\end{verbatim}
+
+Stage 1 executes, in dependency order: the data pipeline; training of all six candidate algorithms; the tree-depth verification; test-set evaluation; RCA batch evaluation on the validation and test splits; the tier sensitivity sweep on both splits; the method comparison on both splits; and the drift validation sweep. Stage 2 executes: dataset statistics export; XAI batch export; RCA worked-case export; Quality 4.0 module export; figure generation; and table export.
+
+\textbf{Non-overwriting outputs.} Evaluation scripts write to split-suffixed filenames and do not overwrite existing results, so a re-run cannot silently replace a figure already cited in this thesis.
+
+\textbf{Seeds.} 42 for the data split and champion model; 7 for the independent verifier; 42 for the SHAP beeswarm subsample.
+
+\hypertarget{d.2-key-results-summary}{%
+\section{D.2 Key Results Summary}\label{d.2-key-results-summary}}
+
+\textbf{Table D.1.} Headline figures and their source files.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source file
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+RF cross-validation mean accuracy (5-fold, training split) & 94.71\% & \texttt{models/experiments.json} \\
+RF held-out test accuracy (n = 291) & \textbf{93.81\%} & \texttt{models/test\_evaluation.json} \\
+\emph{Waste} recall, test split & 94.59\% & \texttt{models/test\_evaluation.json} \\
+Non-conformance recall, test split & 94.56\% & \texttt{models/test\_evaluation.json} \\
+RCA resolution rate, validation split & 97.96\% & \texttt{models/rca\_evaluation\_val.json} \\
+RCA resolution rate, test split & \textbf{95.24\%} & \texttt{models/rca\_evaluation\_test.json} \\
+Validator agreement rate, validation split & 11.11\% & \texttt{models/rca\_evaluation\_val.json} \\
+Validator agreement rate, test split & \textbf{6.43\%} & \texttt{models/rca\_evaluation\_test.json} \\
+3-tier vs.~ablation sparsity, validation & 4.9 vs.~12.4 features & \texttt{models/rca\_comparison\_val.json} \\
+3-tier vs.~ablation sparsity, test & 4.9 vs.~12.3 features & \texttt{models/rca\_comparison\_test.json} \\
+McNemar exact p, validation split & 0.625 (not significant) & \texttt{models/rca\_comparison\_val.json} \\
+McNemar exact p, test split & \textbf{0.180 (not significant)} & \texttt{models/rca\_comparison\_test.json} \\
+PSI trigger magnitude & k = 1σ, all 13 parameters & \texttt{models/drift\_validation.json} \\
+Realised maximum tree depth (configured 79) & 20 & \texttt{models/tree\_depth.json} \\
+\end{longtable}
+
+\hypertarget{d.3-chapter-3-assets}{%
+\section{D.3 Chapter 3 Assets}\label{d.3-chapter-3-assets}}
+
+\textbf{Table D.2.} Chapter 3 figures and tables.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Asset
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Script
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{fig\_ch3\_class\_distribution} & Figure & Class counts across train/val/test & \texttt{generate\_thesis\_figures.py} & \texttt{class\_distribution.json} & all \\
+\texttt{fig\_ch3\_correlation\_heatmap} & Figure & 13 × 13 Pearson correlation & \texttt{generate\_thesis\_figures.py} & \texttt{correlation\_matrix.csv} & train \\
+\texttt{fig\_ch3\_feature\_ranges} & Figure & Standardised box plot, 13 parameters & \texttt{generate\_thesis\_figures.py} & \texttt{raw\_data.csv} & full \\
+\texttt{tbl\_ch3\_feature\_specification} & Table & 13 parameters: unit, min/max/mean/median/std & \texttt{export\_thesis\_tables.py} & \texttt{feature\_specification.json} & full (raw) \\
+\texttt{tbl\_ch3\_class\_distribution} & Table & Class counts and percentages, full + per split & \texttt{export\_thesis\_tables.py} & \texttt{class\_distribution.json} & all \\
+\texttt{tbl\_ch3\_split\_summary} & Table & Split sizes, proportions, seed, stratification check & \texttt{export\_thesis\_tables.py} & \texttt{split\_summary.json} & all \\
+\texttt{tbl\_ch3\_hyperparameter\_provenance} & Table & RF hyperparameter mapping vs.~reference & \texttt{export\_thesis\_tables.py} & \texttt{docs/hyperparameter\_provenance.md} & n/a \\
+\texttt{tbl\_ch3\_tree\_depth} & Table & Configured vs.~realised RF tree depth & \texttt{export\_thesis\_tables.py} & \texttt{models/tree\_depth.json} & train \\
+\end{longtable}
+
+\hypertarget{d.4-chapter-4-assets}{%
+\section{D.4 Chapter 4 Assets}\label{d.4-chapter-4-assets}}
+
+\textbf{Table D.3.} Chapter 4 figures.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Asset
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Section
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{fig\_ch4\_algorithm\_comparison} & 4.2.1 & Six-algorithm CV mean ± std & \texttt{experiments.json} \\
+\texttt{fig\_ch4\_confusion\_matrix\_test} & 4.2.4 & 4 × 4 confusion matrix, counts + row \% & \texttt{test\_evaluation.json} \\
+\texttt{fig\_ch4\_per\_class\_vs\_baseline} & 4.2.5 & Per-class metrics vs.~reference RF row & \texttt{test\_evaluation.json} + \texttt{POLENTA\_TABLE10\_RF} \\
+\texttt{fig\_ch4\_shap\_global\_bar} & 4.3.1 & Mean \textbar SHAP\textbar{} per parameter & \texttt{shap\_global\_importance.json} \\
+\texttt{fig\_ch4\_shap\_beeswarm} & 4.3.1 & SHAP summary, \emph{Target} class, 200-sample draw & \texttt{shap\_global\_importance.json} \\
+\texttt{fig\_ch4\_shap\_local\_waterfall} & 4.3.3 & Local SHAP, test indices 8, 5, 0 & \texttt{local\_explanations.json} \\
+\texttt{fig\_ch4\_lime\_local} & 4.3.3 & LIME coefficients, same three cases & \texttt{local\_explanations.json} \\
+\texttt{fig\_ch4\_importance\_method\_comparison} & 4.3.2 & SHAP vs.~Relief vs.~ANOVA ranks & \texttt{shap\_vs\_filters.json} \\
+\texttt{fig\_ch4\_top\_adjusted\_features} & 4.4.3 & Adjustment frequency, top five & \texttt{rca\_evaluation\_test.json} \\
+\texttt{fig\_ch4\_method\_comparison\_metrics} & 4.5.5 & Proximity, sparsity, NN distance by method & \texttt{rca\_comparison\_test.json} \\
+\texttt{fig\_ch4\_validator\_by\_split\_method} & 4.5.3 & Validator rate, both methods × both splits & \texttt{rca\_comparison\_\{val,test\}.json} \\
+\texttt{fig\_ch4\_tier\_distribution} & 4.6.1 & RCA outcomes across five thresholds & \texttt{tier\_sensitivity\_test.json} \\
+\textbf{\texttt{fig\_ch4\_tradeoff\_resolution\_validator}} & \textbf{4.6.1} & \textbf{Central result figure: resolution vs.~validator agreement across thresholds} & \texttt{tier\_sensitivity\_test.json} \\
+\texttt{fig\_ch4\_tradeoff\_maxiter} & 4.6.2 & Same trade-off across iteration budgets & \texttt{tier\_sensitivity\_test.json} \\
+\texttt{fig\_ch4\_psi\_sensitivity} & 4.7 & PSI vs.~k·σ shift, 13 parameters & \texttt{drift\_validation.csv} \\
+\end{longtable}
+
+\textbf{Table D.4.} Chapter 4 tables.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Asset
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Section
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Source
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{tbl\_ch4\_algorithm\_comparison} & 4.2.1 & Six algorithms: CV mean/std, val acc/F1 & \texttt{experiments.json} \\
+\texttt{tbl\_ch4\_test\_performance} & 4.2.2 & Headline test metrics & \texttt{test\_evaluation.json} \\
+\texttt{tbl\_ch4\_per\_class\_metrics} & 4.2.3 & Precision/recall/support per class & \texttt{test\_evaluation.json} \\
+\texttt{tbl\_ch4\_confusion\_matrix} & 4.2.4 & 4 × 4 matrix with totals & \texttt{test\_evaluation.json} \\
+\texttt{tbl\_ch4\_baseline\_comparison} & 4.2.5 & This work vs.~reference, with protocol note & \texttt{test\_evaluation.json} \\
+\texttt{tbl\_ch4\_shap\_global\_ranking} & 4.3.1 & 13 parameters by mean \textbar SHAP\textbar{} & \texttt{shap\_global\_importance.json} \\
+\texttt{tbl\_ch4\_importance\_method\_comparison} & 4.3.2 & SHAP/impurity/Relief/ANOVA + Spearman r & \texttt{shap\_vs\_impurity.json}, \texttt{shap\_vs\_filters.json} \\
+\texttt{tbl\_ch4\_rca\_summary} & 4.4.1 & Tier counts, resolution, validator rate, both splits & \texttt{rca\_evaluation\_\{val,test\}.json} \\
+\texttt{tbl\_ch4\_counterfactual\_case} & 4.4.4 & Confirmed worked case, engineering units & \texttt{counterfactual\_case\_table.csv} \\
+\texttt{tbl\_ch4\_method\_comparison} & 4.5.3 & All five metrics, both methods, both splits, McNemar p & \texttt{rca\_comparison\_\{val,test\}.json} \\
+\texttt{tbl\_ch4\_tier\_sensitivity} & 4.6 & All eight sweep configurations, both splits & \texttt{tier\_sensitivity\_\{val,test\}.json} \\
+\texttt{tbl\_ch4\_drift\_sensitivity} & 4.7 & PSI at each k·σ per parameter & \texttt{drift\_validation.csv} \\
+\end{longtable}
+
+\hypertarget{d.5-supporting-data-exhibits}{%
+\section{D.5 Supporting Data Exhibits}\label{d.5-supporting-data-exhibits}}
+
+\textbf{Table D.5.} Narrative exhibits in \texttt{thesis\_assets/data/}.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+File
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Feeds
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Split
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{feature\_specification.json} & App. A & Per-parameter units and descriptive statistics & raw \\
+\texttt{class\_distribution.json} & Ch3 & Class counts and percentages, full and per split & all \\
+\texttt{correlation\_matrix.csv} & Ch3 & 13 × 13 Pearson correlation & train \\
+\texttt{split\_summary.json} & Ch3 & Split sizes, proportions, seed, stratification check & all \\
+\texttt{shap\_global\_importance.json} & Ch4 & Mean \textbar SHAP\textbar, aggregated and per class & train \\
+\texttt{shap\_vs\_impurity.json} & Ch4 & SHAP vs.~RF impurity, Spearman r = 1.000 & train \\
+\texttt{shap\_vs\_filters.json} & Ch4 & SHAP vs.~Relief (r = 0.659) and ANOVA (r = 0.604) & train / reference \\
+\texttt{local\_explanations.json} & Ch4 & Three worked cases: values, probabilities, SHAP, LIME & test \\
+\texttt{shap\_lime\_agreement.json} & §4.3.3 & SHAP--LIME rank agreement, 50 test cycles & test \\
+\texttt{lime\_stability.json} & §4.3.3 & LIME repeatability, 10 runs on one fixed cycle & test \\
+\texttt{xai\_timing.json} & §4.3.4 & SHAP/LIME wall-clock timing, cache hit rate & test \\
+\texttt{counterfactual\_cases.json} & §4.4.4 & Three worked RCA cases: confirmed, unconfirmed, Tier-0 & test \\
+\texttt{counterfactual\_case\_table.csv} & Table 4.16 & Confirmed case, flattened to engineering units & test \\
+\texttt{unresolved\_analysis.json} & §4.4.1 & The 7 excluded cases compared against the 140 resolved & test \\
+\texttt{process\_capability.json} & §5.3.4 & Cp/Cpk per parameter --- \textbf{limits ASSUMED, see file header} & full (raw) \\
+\texttt{oee\_simulation.json} & §3.7.4 & One representative OEE scenario & test (replayed) \\
+\texttt{traceability\_sample.json} & §3.7.2 & Five audit-trail records --- \textbf{see provenance note in file} & test \\
+\texttt{llm\_report\_sample.md} & §3.7.5 & One verbatim shift-report exhibit (test index 39) & test \\
+\end{longtable}
+
+\hypertarget{d.6-provenance-notes-attached-to-specific-artefacts}{%
+\section{D.6 Provenance Notes Attached to Specific Artefacts}\label{d.6-provenance-notes-attached-to-specific-artefacts}}
+
+Three artefacts carry provenance qualifications recorded in the files themselves and reproduced here, because a reader consulting the repository should encounter them at the same time as the data.
+
+\textbf{\texttt{process\_capability.json} --- assumed specification limits.} The USL and LSL values are read from \texttt{config/constraints.yaml}, whose own header records that it was auto-generated from \texttt{raw\_data.csv}. They are therefore the \textbf{observed minimum and maximum of the historical dataset, not sourced customer or engineering specification limits.} Cp and Cpk computed against them are statistics about distribution shape, not capability assessments. See §5.3.4.
+
+\textbf{\texttt{traceability\_sample.json} --- replayed, not logged.} No interactive session had populated \texttt{data/cycle\_history.db} at export time. Rather than fabricate audit records, the export script replayed five genuine, already-computed RCA outcomes from \texttt{models/rca\_results\_test.csv} through the real \texttt{cycle\_store.log\_cycle()} and \texttt{get\_recent()} functions against a throwaway SQLite file. The production database was not written to. No fields required anonymisation: the schema records only timestamp and outcome fields, no operator or personal data.
+
+\textbf{\texttt{fig\_ch4\_per\_class\_vs\_baseline} and \texttt{tbl\_ch4\_baseline\_comparison} --- protocol mismatch.} These compare against the Random Forest row of Polenta et al.~{[}5{]}, Table 10, transcribed verbatim into the \texttt{POLENTA\_TABLE10\_RF} constant in both the figure and table scripts. The reference's values are summed across the five folds of stratified cross-validation over the full 1,451-sample dataset; this work's are from a single held-out split of 291. The comparison is directionally indicative only, and both outputs carry the caveat in their own captions.
+
+\hypertarget{d.7-assets-requiring-manual-production}{%
+\section{D.7 Assets Requiring Manual Production}\label{d.7-assets-requiring-manual-production}}
+
+\texttt{thesis\_assets/figures/appendix/} contains a checklist rather than rendered figures. The eight application screenshots of Appendix F require an interactive session and cannot be produced by a script. \texttt{MANIFEST.md}, \texttt{CAPTIONS.md}, and the appendix README are hand-authored and are \textbf{not} regenerated by \texttt{build\_thesis\_assets.sh}; they must not be deleted when regenerating.

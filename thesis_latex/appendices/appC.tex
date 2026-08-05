@@ -1,0 +1,207 @@
+\hypertarget{expert-evaluation-questionnaire-instrument}{%
+\chapter{Expert Evaluation Questionnaire Instrument}\label{expert-evaluation-questionnaire-instrument}}
+
+This appendix reproduces the instrument designed for the expert evaluation sub-study specified in §3.9.6 and reported in §4.8. It is reproduced in full whether or not responses were collected, so that the design is auditable and the study replicable.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.1-administration-notes-not-shown-to-participants}{%
+\section{C.1 Administration Notes (not shown to participants)}\label{c.1-administration-notes-not-shown-to-participants}}
+
+\textbf{Purpose.} To assess whether the system's explanations and corrective recommendations are intelligible and credible to people with domain expertise in injection molding or industrial quality control.
+
+\textbf{Design principle --- the verifier's verdict is withheld.} Participants see two RCA cases: one that the independent verifier confirmed and one that it did not. \textbf{Participants are not told which is which, and are not told that a verifier exists.} This is the analytically central feature of the design: it tests whether expert judgement independently distinguishes the cases the verifier distinguishes. Disclosing the verdict would anchor the responses and destroy the comparison.
+
+\textbf{Case order is counterbalanced.} Half of participants receive the confirmed case first (Case A = test index 39), half receive the unconfirmed case first (Case A = test index 5), to control for order effects.
+
+\textbf{Language.} The instrument may be administered in Arabic or English at the participant's preference. If translated, the translation should be reviewed by a second Arabic-speaking engineer for terminological accuracy, and the language used recorded with each response.
+
+\textbf{Estimated completion time.} 20--25 minutes.
+
+\textbf{Analysis.} Descriptive only --- per-construct medians and full response distributions, plus a within-participant comparison of ratings between the confirmed and unconfirmed cases. \textbf{No significance testing is performed}, for the reasons given in §3.9.6 and §4.8.4.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.2-participant-information-and-consent}{%
+\section{C.2 Participant Information and Consent}\label{c.2-participant-information-and-consent}}
+
+\begin{quote}
+\textbf{Study title:} Evaluating the interpretability of an AI-based quality control system for injection molding
+
+\textbf{Researcher:} Obadah AlQawasema, Intelligent Systems Master Program, Palestine Polytechnic University
+\textbf{Supervisor:} \emph{{[}Insert name{]}}
+
+\textbf{What this study is about.} You are being invited to review the output of a software system that predicts the quality of injection-molded parts from machine process data, explains its predictions, and recommends corrective parameter adjustments. We would like your professional judgement on whether that output is clear and credible.
+
+\textbf{What you will be asked to do.} You will be shown two production cycles. For each, you will see the machine's recorded process parameters, the system's quality classification, an explanation of which parameters drove that classification, and the adjustments the system recommends. You will then answer several rating questions and, if you wish, add comments. This takes approximately 20--25 minutes.
+
+\textbf{There are no right or wrong answers.} We are evaluating the system, not you. Critical responses are as valuable as positive ones and more useful to the research.
+
+\textbf{What we record.} Your responses, your professional role, and your years of experience in a broad band. \textbf{We do not record your name, your employer, or any other identifying information.} Results are reported only in aggregate, and no response will be attributable to an individual.
+
+\textbf{Voluntary participation.} Participation is entirely voluntary. You may decline to answer any question and may stop at any point without giving a reason and without consequence.
+
+\textbf{Use of results.} Aggregated, anonymous results will appear in a Master's thesis submitted to Palestine Polytechnic University and may appear in subsequent academic publication.
+
+\textbf{Questions.} \emph{{[}Insert researcher contact e-mail{]}}
+
+$\square$ I have read and understood the above, and I agree to take part.
+\end{quote}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.3-section-1-background-3-items}{%
+\section{C.3 Section 1 --- Background (3 items)}\label{c.3-section-1-background-3-items}}
+
+\textbf{B1.} Which best describes your current role?
+$\square$ Process engineer $\square$ Quality manager or quality engineer $\square$ Machine operator or technician $\square$ Production manager $\square$ Academic or researcher $\square$ Other: \_\_\_\_\_\_
+
+\textbf{B2.} How many years have you worked with injection molding or plastics processing?
+$\square$ Under 2 $\square$ 2--5 $\square$ 6--10 $\square$ 11--20 $\square$ Over 20
+
+\textbf{B3.} How would you describe your prior experience with AI or machine learning tools in a production setting?
+$\square$ None $\square$ Have read about them $\square$ Have used one $\square$ Have deployed or maintained one
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.4-section-2-case-presentation}{%
+\section{C.4 Section 2 --- Case Presentation}\label{c.4-section-2-case-presentation}}
+
+\emph{Each case is presented on its own page in the following format. The two cases are drawn from the held-out test split of the road-lens dataset and are reproduced exactly as the system generated them.}
+
+\begin{quote}
+\hypertarget{case-a-b}{%
+\subsection{Case {[}A / B{]}}\label{case-a-b}}
+
+\textbf{Recorded process parameters for this production cycle}
+
+\emph{{[}Table of all thirteen parameters with their recorded values in engineering units, as specified in Appendix A.{]}}
+
+\textbf{System classification:} \emph{{[}e.g.~Waste --- non-conforming{]}}
+\textbf{System confidence that the part conforms:} \emph{{[}e.g.~15.7\%{]}}
+
+\textbf{Explanation --- the parameters the system identified as most influential for this cycle:}
+
+\emph{{[}The five top-ranked parameters by local attribution, with the direction of each parameter's influence.{]}}
+
+\textbf{Recommended adjustments}
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Parameter & Current & Suggested & Change & Direction \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\emph{{[}five rows, engineering units{]}} & & & & \\
+\end{longtable}
+
+\textbf{System confidence after the recommended adjustments:} \emph{{[}e.g.~74.3\%{]}}
+\end{quote}
+
+\textbf{Case source data.} The confirmed case is test-split index 39, reproduced as Table 4.16. The unconfirmed case is test-split index 5, recorded in \texttt{thesis\_assets/data/counterfactual\_cases.json}. Both are genuine system outputs; neither has been edited.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.5-section-3-rating-items-per-case}{%
+\section{C.5 Section 3 --- Rating Items (per case)}\label{c.5-section-3-rating-items-per-case}}
+
+\emph{Each item is answered on a five-point scale: 1 = Strongly disagree, 2 = Disagree, 3 = Neither agree nor disagree, 4 = Agree, 5 = Strongly agree.}
+
+\textbf{Table C.1.} Likert constructs and their items.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Code
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Construct
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Item wording
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{C1} & Explanation clarity & The explanation makes it clear which process parameters drove this classification. \\
+\textbf{C2} & Recommendation plausibility & The recommended adjustments are plausible as a process intervention on a real machine. \\
+\textbf{C3} & Behavioural intention & I would be willing to apply these adjustments on a running machine. \\
+\textbf{C4} & System trust & I would trust a system of this kind as a decision-support tool in quality control. \\
+\end{longtable}
+
+Each rating item is followed by:
+
+\begin{quote}
+\textbf{Please explain your rating briefly.} (free text) \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+\end{quote}
+
+Two further per-case items:
+
+\textbf{C5.} Are there any parameters you would have expected the system to change that it did not? (free text)
+
+\textbf{C6.} Are there any recommended changes that you consider unwise, impractical, or impossible on a real machine? If so, which, and why? (free text)
+
+\emph{Item C6 is the most diagnostically important free-text field. It is the only route by which a participant can surface the setpoint-versus-measured-outcome problem identified in §5.1.3 without being prompted toward it.}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.6-section-4-overall-items-asked-once-after-both-cases}{%
+\section{C.6 Section 4 --- Overall Items (asked once, after both cases)}\label{c.6-section-4-overall-items-asked-once-after-both-cases}}
+
+\textbf{O1.} Considering both cases, which of the two sets of recommendations did you find more credible?
+$\square$ Case A $\square$ Case B $\square$ About the same $\square$ Neither was credible
+
+\textbf{O2.} Please explain your answer to O1. (free text)
+
+\emph{Items O1--O2 are the primary analytical instrument of the sub-study. Whether expert judgement aligns with the independent verifier's verdict is the question these two items exist to answer.}
+
+\textbf{O3.} In your view, how should output of this kind be presented to a machine operator?
+$\square$ As an instruction to carry out
+$\square$ As a suggestion to consider
+$\square$ As one input among several, alongside the operator's own judgement
+$\square$ It should not be shown to operators at all
+$\square$ Other: \_\_\_\_\_\_
+
+\textbf{O4.} What would have to be true for you to rely on a system of this kind in your own work? (free text)
+
+\textbf{O5.} Any other comments on the system, the explanations, or the recommendations. (free text)
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.7-response-recording-template}{%
+\section{C.7 Response Recording Template}\label{c.7-response-recording-template}}
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Field & Values \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Participant code & P01, P02, \ldots{} (sequential; no link to identity) \\
+Role (B1), Experience band (B2), AI exposure (B3) & --- \\
+Case order received & Confirmed-first / Unconfirmed-first \\
+Language of administration & Arabic / English \\
+C1--C4 per case & 1--5 \\
+C5, C6 per case & Free text \\
+O1--O5 & --- \\
+Date of completion & --- \\
+\end{longtable}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{c.8-known-limitations-of-the-instrument}{%
+\section{C.8 Known Limitations of the Instrument}\label{c.8-known-limitations-of-the-instrument}}
+
+These are stated here, and again in §4.8.4, so that the instrument is not read as stronger than it is.
+
+\textbf{It measures credibility, not correctness.} Expert plausibility judgement and recommendation correctness are different constructs. An expert may find a recommendation plausible and be wrong; a correct recommendation may be counter-intuitive. This instrument complements the independent-validation protocol of §3.9.3 and cannot substitute for it.
+
+\textbf{It measures reading, not use.} Participants judge a static case presentation rather than using the running system, so the results speak to the intelligibility of the output rather than to the usability of the application.
+
+\textbf{Two cases cannot establish a pattern.} Items O1--O2 test whether expert judgement aligns with the verifier's verdict on a single pair. A properly powered version of that test would require many stratified pairs per participant, which the estimated completion time does not permit.
+
+\textbf{The sample is not random.} Participants recruited through professional contacts may be more favourably disposed toward digital quality tools than the population a deployment would encounter.

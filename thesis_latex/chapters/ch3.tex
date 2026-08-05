@@ -1,0 +1,872 @@
+\hypertarget{methodology-and-system-design}{%
+\chapter{Methodology and System Design}\label{methodology-and-system-design}}
+
+\hypertarget{research-design}{%
+\section{3.1 Research Design}\label{research-design}}
+
+\hypertarget{design-science-framing}{%
+\subsection{3.1.1 Design-Science Framing}\label{design-science-framing}}
+
+This research produces and evaluates an artefact: a software framework that predicts injection-molding quality from machine-native process parameters, explains each prediction, converts that explanation into a corrective parameter recommendation, and subjects the recommendation to an independent check. The appropriate methodological frame for work of this shape is design science, which Hevner et al.~{[}77{]} characterise as the creation and evaluation of purposeful IT artefacts intended to solve identified organisational problems, and which Peffers et al.~{[}78{]} operationalise as a six-activity process: problem identification, definition of objectives, design and development, demonstration, evaluation, and communication.
+
+Design science is the right frame here for a specific reason rather than a general one. The central finding of this thesis --- the gap between what a counterfactual root-cause engine reports about its own success and what an independent verifier confirms --- could not have been obtained by analysis alone. It required building a working engine, running it over a full held-out population, and instrumenting it to report both quantities. The artefact is not an illustration of the finding; it is the instrument that produces it.
+
+Table 3.1 maps the design-science activities of Peffers et al.~onto the structure of this thesis.
+
+\textbf{Table 3.1.} Design-science activities mapped to thesis structure.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Activity
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Instantiation in this work
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Location
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Problem identification & Manual quality control in under-digitized molding SMEs; disconnect between prediction and corrective action & §1.2, §2.2.5 \\
+Objectives of a solution & Interpretable, machine-native, verified corrective guidance & §1.4, §2.8 \\
+Design and development & Six-algorithm model selection, XAI layer, three-tier counterfactual engine, independent verifier, Quality 4.0 modules & Chapter 3 \\
+Demonstration & Deployed multi-page application exercised over the held-out test population & §3.8, Appendix A \\
+Evaluation & Classification metrics, counterfactual metrics, independent validation, ablation, statistical testing, sensitivity sweep & §3.9, Chapter 4 \\
+Communication & This thesis; public repository & --- \\
+\end{longtable}
+
+\hypertarget{research-questions-and-their-methodological-consequences}{%
+\subsection{3.1.2 Research Questions and Their Methodological Consequences}\label{research-questions-and-their-methodological-consequences}}
+
+Four research questions drive the design, and each imposes a specific requirement on the method.
+
+\textbf{RQ1 --- Can a reproducible multi-class classifier for molded-product quality be established from machine-native process-parameter data alone?} This requires a defensible model-selection protocol and a held-out test split that is touched exactly once. It is addressed in §3.3, §3.4 and §3.9.5.
+
+\textbf{RQ2 --- Can SHAP and LIME provide operator-interpretable explanations at both global and local scope, and do they agree with importance measures that do not consult the model?} This requires both a global and a local explanation capability, a defined division of labour between them, and an external point of comparison. It is addressed in §3.5 and §3.9.2.
+
+\textbf{RQ3 --- Can counterfactual search convert those explanations into actionable, physically bounded parameter recipes?} This requires a counterfactual search that respects physical bounds and reports its adjustments in engineering units. It is addressed in §3.6.
+
+\textbf{RQ4 --- Do counterfactual recipes validated by the generating classifier survive validation by an independent model, and is any resulting discrepancy a property of one algorithm or of the method class?} This is the question that determines the shape of the entire evaluation. It requires three things that a conventional counterfactual study does not provide: a verifier that takes no part in generation (§3.6.6), an ablated baseline against which the finding can be tested for generality (§3.6.7), and a paired statistical test appropriate to per-sample binary outcomes (§3.9.4).
+
+\textbf{RQ5 --- How do the resulting artefacts integrate into a Quality 4.0 framework aligned with ISO 9001?} This requires the supporting modules of §3.7 to be specified and their claims bounded: process capability against real rather than assumed limits, traceability adequate to the standard's corrective-action clauses, drift detection usable without labels, and operator-facing delivery. It is addressed in §3.7 and evaluated in §4.7 and §5.3.4.
+
+\hypertarget{justification-of-the-quantitative-artefact-centred-approach}{%
+\subsection{3.1.3 Justification of the Quantitative, Artefact-Centred Approach}\label{justification-of-the-quantitative-artefact-centred-approach}}
+
+Three alternatives were considered and rejected.
+
+A \textbf{purely analytical study} --- arguing from the literature that self-referential validation is unsound --- was rejected because Section 2.7 shows that this argument already exists {[}62{]}, {[}70{]}, {[}36{]} and has not changed practice. What is missing is a measurement, and a measurement requires an instrument.
+
+A \textbf{human-subjects study} as the primary method --- asking process engineers to judge the plausibility of counterfactual recommendations --- was rejected as the \emph{primary} evaluation for two reasons. Expert availability in the local industrial context is limited, so the sample would be small; and expert judgement of a recommendation's plausibility is a different construct from the recommendation's correctness, which is what RQ4 asks about. A structured expert evaluation is retained as a secondary sub-study (§3.9.6) and its limitations are stated there.
+
+A \textbf{physical validation trial} --- enacting recommendations on a running machine --- is the methodologically ideal test and is not available. It requires access to an instrumented injection molding machine producing the same road-lens part, production time, photometric measurement capability, and tolerance for deliberately producing scrap. Its absence is the principal limitation of this work and is stated as such in §3.9.3, §5.5 and §6.3 rather than being minimised.
+
+What remains is a quantitative, artefact-centred design in which the artefact is instrumented to report, over a complete held-out population, both the quantity the field conventionally reports and the quantity it does not.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{dataset}{%
+\section{3.2 Dataset}\label{dataset}}
+
+\hypertarget{source-and-provenance}{%
+\subsection{3.2.1 Source and Provenance}\label{source-and-provenance}}
+
+The dataset is the road-lens production dataset released by Polenta et al.~{[}5{]} alongside their comparison of machine learning techniques for quality classification of molded products. It comprises 1,451 samples, each corresponding to one injection-molded road lens produced by iGuzzini Illuminazione on an Engel E-MAC 310/100 machine, collected across multiple production days. Each sample is a vector of 13 process parameters recorded by the machine's own control system for that cycle, paired with a quality label obtained by laboratory photometric analysis of the resulting lens.
+
+Three properties make this dataset unusually well suited to the present work, and it is worth being explicit about them because the choice of dataset constrains what can be claimed.
+
+First, it is \textbf{machine-native by construction}. Every feature is a quantity the machine already records; none derives from an added in-mold sensor, a vision system, or a laboratory instrument. A method developed on this dataset is therefore deployable on a machine with no additional instrumentation, which is precisely the constraint identified in §2.2.5.
+
+Second, it is \textbf{real rather than simulated}. The authors state that the need to use only real data --- not simulated or synthetic values --- was among the considerations that led them to classical ML on hand-crafted features. Counterfactual recommendations derived from simulated data would inherit the simulator's assumptions about the parameter--quality relationship, which would make any subsequent validation finding uninterpretable.
+
+Third, it is \textbf{fully reproducible}. Both the data and the comparison source code were publicly released, which is what makes the baseline comparison in §4.2.5 possible at all, and what allows the hyperparameter provenance analysis of §3.4.3 to be conducted against a documented reference rather than a reported summary.
+
+The dataset is used here without modification. No samples were removed, no features engineered, and no synthetic augmentation applied. The raw file is stored at \texttt{data/raw/raw\_data.csv} in the project repository.
+
+\hypertarget{the-thirteen-process-parameters}{%
+\subsection{3.2.2 The Thirteen Process Parameters}\label{the-thirteen-process-parameters}}
+
+Table 3.2 lists the 13 parameters, their units, and their physical meaning. Column names are given exactly as they appear in the dataset and in the implementation, because several use the machine manufacturer's abbreviation codes and consistency between thesis and code matters for reproducibility.
+
+\textbf{Table 3.2.} The thirteen machine-native process parameters.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\#
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Parameter (dataset column)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Unit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Physical meaning
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Process stage
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & Melt temperature & °C & Temperature of the polymer before injection into the mold & Plasticizing \\
+2 & Mold temperature & °C & Temperature of the mold & Cooling \\
+3 & time\_to\_fill & s & Time taken to fill the mold cavity & Injection \\
+4 & ZDx -- Plasticizing time & s & Time to plasticize the material for one shot & Plasticizing \\
+5 & ZUx -- Cycle time & s & Time to complete the entire cycle for one product & Whole cycle \\
+6 & SKx -- Closing force & N & Closing force applied to the mold & Clamping \\
+7 & SKs -- Clamping force peak value & N & Peak value of the mold closing force & Clamping \\
+8 & Ms -- Torque peak value current cycle & N·m & Peak torque on the injection screw & Plasticizing \\
+9 & Mm -- Torque mean value current cycle & N·m & Mean torque on the injection screw & Plasticizing \\
+10 & APSs -- Specific back pressure peak value & bar & Peak resistance against the injection screw & Plasticizing \\
+11 & APVs -- Specific injection pressure peak value & bar & Peak injection pressure & Injection \\
+12 & CPn -- Screw position at the end of hold pressure & cm & Screw position at the end of the holding phase & Packing \\
+13 & SVo -- Shot volume & cm³ & Volume of material injected & Injection \\
+\end{longtable}
+
+The parameters span all five process stages identified in §2.2.1, which is important for the counterfactual application: a corrective recommendation can in principle address a fault originating at any stage of the cycle rather than being confined to one subsystem. Descriptive statistics for each parameter (minimum, maximum, mean, median, standard deviation, computed over the full raw dataset) are exported to \texttt{thesis\_assets/data/feature\_specification.json} and tabulated in Appendix B; the Pearson correlation structure across the 13 parameters, computed on the training split, is exported to \texttt{thesis\_assets/data/correlation\_matrix.csv} and shown as a heatmap in Chapter 4.
+
+\hypertarget{quality-classes-and-the-conformance-definition}{%
+\subsection{3.2.3 Quality Classes and the Conformance Definition}\label{quality-classes-and-the-conformance-definition}}
+
+The dataset carries a four-valued quality label derived from photometric general uniformity U\textsubscript{0}, as set out in §2.2.4. Two mappings must be stated precisely here, because they are used throughout the remainder of the thesis and any inconsistency between them would invalidate the reported results.
+
+\textbf{Label shift.} The raw dataset encodes quality with 1-based labels 1--4. scikit-learn estimators require 0-based class indices. The pipeline therefore applies a uniform shift of −1. Table 3.3 gives the complete mapping.
+
+\textbf{Table 3.3.} Quality class mapping and conformance definition.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Raw label
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Model class
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Class name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Photometric criterion
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Conforming?
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & 0 & Waste & U\textsubscript{0} \textless{} 0.40 & No \\
+2 & 1 & Acceptable & 0.40 ≤ U\textsubscript{0} \textless{} 0.45 & \textbf{Yes} \\
+3 & 2 & Target & 0.45 ≤ U\textsubscript{0} ≤ 0.50 & \textbf{Yes} \\
+4 & 3 & Inefficient & U\textsubscript{0} \textgreater{} 0.50 & No \\
+\end{longtable}
+
+\textbf{Conformance definition.} Throughout this thesis:
+
+\begin{quote}
+\textbf{Conforming = \{Acceptable, Target\} = model classes \{1, 2\}.}
+\end{quote}
+
+This definition is stated once, here, and used without variation in every subsequent chapter, in the acceptance criterion of the counterfactual engine (§3.6.1), in the independent verifier (§3.6.6), in the Tier-2 anchor pool (§3.6.3), in the ablation centroid (§3.6.7), and in every metric reported in Chapter 4. In the implementation it appears as the constant \texttt{TARGET\_CLASSES\ =\ \{1,\ 2\}} in \texttt{src/counterfactual\_rca.py}, imported by every downstream module so that a single definition governs the entire system.
+
+Two aspects of this definition require justification, since a reader might reasonably expect a different one.
+
+\emph{Why is Inefficient non-conforming?} Because an \emph{Inefficient} lens, while compliant with UNI EN 13201-2:2016, is produced with an unnecessary expenditure of machine resources, and the manufacturer's stated production objective excludes it. Treating it as conforming would define away half of the correctable production problem. The engine's task is to move a cycle to the manufacturer's target band, not merely to the regulatory minimum.
+
+\emph{Why is the target a two-class band rather than the single Target class?} Because \emph{Acceptable} parts are accepted and shipped. An engine that treated only \emph{Target} as success would recommend corrections for parts that require none, generating unnecessary process disturbance. The two-class band matches the operational decision the system is meant to support.
+
+A consequence of this definition, which is stated here so that it is not mistaken for a defect later, is that the non-conforming population comprises both \emph{Waste} (under-performing) and \emph{Inefficient} (over-performing) cycles. These require corrections in opposite directions. A counterfactual engine operating on this dataset must therefore be capable of bidirectional correction, and the design in §3.6 reflects that.
+
+\hypertarget{class-distribution-and-balance}{%
+\subsection{3.2.4 Class Distribution and Balance}\label{class-distribution-and-balance}}
+
+The full dataset is relatively balanced across the four classes: 370 \emph{Waste} (25.5\%), 406 \emph{Acceptable} (28.0\%), 310 \emph{Target} (21.4\%), and 360 \emph{Inefficient} (24.8\%). No class constitutes less than a fifth or more than three-tenths of the data.
+
+This has a direct methodological consequence. Because no class is severely under-represented, no resampling, class weighting, or synthetic minority oversampling was applied. Accuracy is therefore a meaningful headline metric on this dataset in a way that it would not be on a heavily imbalanced production dataset --- though per-class recall remains the operationally decisive measure, for the reasons given in §3.9.1. This balance is a property of the reference dataset, not of injection molding generally; a real production line running in control would produce far fewer \emph{Waste} cycles, and §5.5 addresses what that implies for transfer of these results.
+
+Grouping by conformance: 716 conforming cycles (49.3\%) and 735 non-conforming (50.7\%). Roughly half of the dataset is therefore eligible for root-cause analysis, giving 147 non-conforming cycles in each of the validation and test splits --- the denominator against which every RCA result in Chapter 4 is reported.
+
+Per-split class counts and proportions are exported to \texttt{thesis\_assets/data/class\_distribution.json} and tabulated in \texttt{tbl\_ch3\_class\_distribution}.
+
+\hypertarget{ethical-considerations-and-data-licensing}{%
+\subsection{3.2.5 Ethical Considerations and Data Licensing}\label{ethical-considerations-and-data-licensing}}
+
+The dataset contains no personal data. Each record describes a machine cycle: temperatures, pressures, times, forces, and a photometric measurement of the resulting part. There are no human subjects, no identifiers, and no information about individual operators. The research therefore raises no data-protection or informed-consent issues at the dataset level, and no ethics approval was required for the dataset component of the work.
+
+The data were released publicly by their authors for the explicit purpose of benchmarking, in a repository accompanying an open-access publication {[}5{]}. Use in this thesis is consistent with that stated purpose. The source is cited at every point where the data, the derived class definitions, or the reference hyperparameters are used, and the reference publication's own results are reported as the authors reported them rather than being restated in more favourable terms.
+
+Two further considerations apply to the artefact rather than the data.
+
+\textbf{Commercial sensitivity of process parameters.} Machine settings are commercially meaningful: a competitor holding a manufacturer's parameter recipes holds part of its process knowledge. A system that generates and transmits parameter recommendations --- including, in this implementation, over a third-party messaging channel (§3.7.6) --- therefore handles sensitive industrial data even though it handles no personal data. §3.7.6 states the resulting deployment caveat.
+
+\textbf{Operator effects.} A system that issues corrective instructions to an operator alters the distribution of responsibility on the shop floor. If the recommendation is followed and the outcome is poor, the question of accountability is not resolved by the software. This is one reason the system is designed to present recommendations for human decision rather than to write setpoints back to the machine, and one reason the verifier's confirmation status is displayed to the operator alongside every recommendation rather than being suppressed when unfavourable (§3.6.6).
+
+The expert evaluation sub-study (§3.9.6) does involve human participants. Its consent procedure and data handling are described there.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{preprocessing-pipeline}{%
+\section{3.3 Preprocessing Pipeline}\label{preprocessing-pipeline}}
+
+The preprocessing pipeline is implemented in \texttt{src/data\_pipeline.py} and executes four steps. It is deliberately minimal: the fewer transformations applied, the more directly a counterfactual expressed in the transformed space can be translated back into a machine setting an operator can dial in.
+
+\textbf{Step 1 --- Loading and column normalisation.} The raw CSV is loaded with an encoding fallback (UTF-8, then CP-1252), and leading and trailing whitespace is stripped from all column names. The latter is not cosmetic: unstripped column names were an early source of key-lookup failures across modules that reference features by name.
+
+\textbf{Step 2 --- Feature/target separation.} The target column \texttt{quality} is separated from the feature matrix. Any identifier-like columns present (\texttt{id}, \texttt{cycle\_id}, \texttt{row\_number}, \texttt{quality\_type}, \texttt{defect\_type}) are dropped defensively if they exist, so that no index-like artefact can leak class information into the model. In the released dataset this leaves exactly the 13 parameters of Table 3.2.
+
+\textbf{Step 3 --- Stratified three-way split.} The data are partitioned 60\% / 20\% / 20\% into training, validation, and test sets using two successive calls to scikit-learn's \texttt{train\_test\_split}, both stratified on the raw quality label and both with \texttt{random\_state=42}. The first call separates 60\% training from a 40\% remainder; the second halves the remainder into validation and test.
+
+Realised sizes are \textbf{870 training / 290 validation / 291 test} (proportions 0.5996 / 0.1999 / 0.2006). Stratification was verified after the fact by comparing per-class proportions in each split against the full-dataset proportions: the maximum absolute deviation across all classes and all splits is \textbf{0.002}, confirming that class balance is preserved in every partition. This check is implemented in \texttt{scripts/export\_dataset\_stats.py} and its output stored in \texttt{thesis\_assets/data/split\_summary.json}.
+
+The three-way split is used rather than a two-way split with cross-validation for a specific reason connected to RQ4. The validation split has a job --- model selection and, in the tier-sensitivity work, characterisation of the engine's configuration space. Any split used for those purposes is no longer a clean estimate of generalisation performance. The test split exists so that one clean estimate remains. §3.9.5 states the discipline governing its use.
+
+\textbf{Step 4 --- Scaling.} All 13 features are scaled to the interval {[}−1, 1{]} using scikit-learn's \texttt{MinMaxScaler(feature\_range=(-1,\ 1))}. The scaler is \textbf{fitted on the training split only} and then applied to the validation and test splits.
+
+Two justifications, one standard and one specific to this work.
+
+\emph{Leakage prevention.} Fitting the scaler on the full dataset would let the minimum and maximum of the held-out data influence the transformation applied to the training data, a subtle form of information leakage that inflates held-out performance. Fitting on the training split alone eliminates it. A consequence, verified in the test suite, is that training data lie exactly within {[}−1, 1{]} while validation and test data may lie marginally outside it where a held-out sample exceeds the training range.
+
+\emph{Counterfactual search geometry.} The choice of a bounded, symmetric scaled space is not merely conventional here --- it is load-bearing for the counterfactual engine. Because every feature occupies the same interval, a fixed step size (§3.6) means the same relative movement for every parameter, so the search does not implicitly privilege high-variance features. And because the interval is bounded, the physical bound enforcement of §3.6.5 reduces to a clip operation at {[}−1, 1{]}, which is both exact and cheap enough to apply at every iteration.
+
+The pipeline additionally persists the untransformed training mean and standard deviation of each feature to \texttt{models/checkpoints/train\_stats.pkl}. These support the z-score component-health monitor (§3.7) and the σ-scaled synthetic drift injection used to validate the drift detector (§3.7.3), both of which need statistics in physical rather than scaled units.
+
+Artefacts written: the six split CSVs under \texttt{data/processed/}, the fitted scaler, the feature-name list, and the training statistics under \texttt{models/checkpoints/}. Persisting the splits as CSVs rather than regenerating them on demand guarantees that every downstream script --- model training, XAI export, RCA evaluation, comparison, sensitivity sweep --- operates on byte-identical data.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{model-selection}{%
+\section{3.4 Model Selection}\label{model-selection}}
+
+\hypertarget{candidate-algorithms}{%
+\subsection{3.4.1 Candidate Algorithms}\label{candidate-algorithms}}
+
+Six algorithms were trained and compared, implemented in \texttt{src/model\_factory.py} behind a common interface so that each is trained, cross-validated, and recorded identically:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Random Forest (RF)} --- bagged decision-tree ensemble with randomised feature subsampling at each split {[}79{]}.
+\item
+  \textbf{XGBoost (XGB)} --- regularised gradient boosting with second-order optimisation {[}80{]}.
+\item
+  \textbf{Gradient Boosting (GB)} --- scikit-learn's gradient-boosted tree ensemble.
+\item
+  \textbf{Multilayer Perceptron (MLP)} --- feed-forward neural network.
+\item
+  \textbf{Decision Tree (DT)} --- single CART tree.
+\item
+  \textbf{k-Nearest Neighbours (KNN)} --- instance-based classifier.
+\end{itemize}
+
+The selection of candidates is deliberate rather than exhaustive. It mirrors the six algorithms compared by Polenta et al.~{[}5{]} --- KNN, decision tree, random forest, gradient-boosted trees, SVM, and MLP --- with one substitution: XGBoost replaces SVM. The substitution is made because the downstream explanation layer requires a model amenable to TreeSHAP (§3.5.1), and because gradient boosting in its modern regularised form is the strongest tree-based competitor to random forest on tabular data of this scale. Retaining the remaining five preserves comparability with the reference study's algorithm ranking.
+
+The candidate set spans four distinct inductive biases --- bagged ensembles, boosted ensembles, a single axis-aligned tree, a distance-based learner, and a differentiable function approximator --- which matters beyond model selection: the independent verifier of §3.6.6 must come from a family different from the champion, and establishing the performance of that family here is what makes the choice defensible rather than arbitrary.
+
+Five of the six use scikit-learn {[}81{]}; XGBoost uses its own library with the scikit-learn API.
+
+\hypertarget{selection-protocol}{%
+\subsection{3.4.2 Selection Protocol}\label{selection-protocol}}
+
+Each candidate is fitted on the training split (n = 870) and evaluated by \textbf{stratified five-fold cross-validation within that split}, yielding a mean and standard deviation of fold accuracy. Each is additionally scored once on the validation split (n = 290). Both figures are written to \texttt{models/experiments.json} by \texttt{src/experiment\_tracker.py}, which maintains an append-only record of every training run.
+
+The champion is selected by the \textbf{highest cross-validation mean accuracy}, implemented in \texttt{get\_champion()}, which ranks on \texttt{cv\_mean}. The test split is not consulted at any point in the selection.
+
+Cross-validation is confined to the training split rather than run over the full dataset. This differs from the reference study's protocol, which cross-validates over all 1,451 samples, and the difference is deliberate: the present work needs a held-out test split that has never participated in any selection decision, which is incompatible with cross-validating over everything. §4.2.5 states the resulting non-comparability of the two accuracy figures explicitly, and §3.4.3 records it as a documented deviation.
+
+\hypertarget{hyperparameter-provenance-and-deviation-analysis}{%
+\subsection{3.4.3 Hyperparameter Provenance and Deviation Analysis}\label{hyperparameter-provenance-and-deviation-analysis}}
+
+\textbf{The champion's hyperparameters are adopted from Polenta et al.~{[}5{]}, Table 5. They are not tuned in this work.} This is stated plainly because the alternative --- presenting adopted values as though they were the product of a search conducted here --- would misrepresent the work. The full mapping, with each deviation classified and justified, is maintained in \texttt{docs/hyperparameter\_provenance.md} and reproduced as Table 3.4.
+
+\textbf{Table 3.4.} Champion Random Forest hyperparameter provenance.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Hyperparameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Polenta et al.~(2022)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+This implementation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Status
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{n\_estimators} & 151 & 151 & Identical \\
+\texttt{min\_samples\_leaf} & 2 & 2 & Identical \\
+\texttt{min\_samples\_split} & 4 & 4 & Identical \\
+\texttt{criterion} & gain ratio (best config) & \texttt{\textquotesingle{}entropy\textquotesingle{}} (information gain) & Deviation --- §1 \\
+\texttt{max\_depth} & 79 (gain ratio row) / 140 (information gain row) & 79 & Deviation --- §2 \\
+Ensemble type & ExtraTrees & \texttt{RandomForestClassifier} & Deviation --- §3 \\
+Features per split & int(ln(m)+1) = 3 for m = 13 & \texttt{\textquotesingle{}sqrt\textquotesingle{}} → int(√13) = 3 & Equivalent --- §4 \\
+Evaluation protocol & 5-fold CV, full dataset & Single held-out split & Deviation --- §5 \\
+\texttt{random\_state} & Not specified & 42 & Addition (reproducibility) \\
+\end{longtable}
+
+\textbf{Deviation §1 --- Splitting criterion.} The reference paper's best configuration uses the gain ratio criterion, which normalises information gain by split entropy. scikit-learn's \texttt{RandomForestClassifier} implements only \texttt{\textquotesingle{}gini\textquotesingle{}} and \texttt{\textquotesingle{}entropy\textquotesingle{}}; gain ratio is unavailable. This work therefore uses \texttt{criterion=\textquotesingle{}entropy\textquotesingle{}}, corresponding to information gain --- the criterion of the paper's \emph{second-best} row. The paper reports 95.04\% for gain ratio against 94.68\% for information gain, a difference of 0.36 percentage points within its own protocol. That figure is an upper bound on what is attributable to this deviation.
+
+\textbf{Deviation §2 --- Maximum depth.} The two relevant rows of the paper's Table 5 specify max\_depth 79 (gain ratio) and 140 (information gain). This implementation combines \texttt{criterion=\textquotesingle{}entropy\textquotesingle{}} from the second row with \texttt{max\_depth=79} from the first, so the two parameters originate from different rows. Rather than leave this as an unresolved inconsistency, it was tested empirically. \texttt{scripts/check\_tree\_depth.py} measures the realised depth of all 151 fitted estimators; the results, stored in \texttt{models/tree\_depth.json}, are given in Table 3.5.
+
+\textbf{Table 3.5.} Configured versus realised tree depth, champion Random Forest.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Statistic & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Configured \texttt{max\_depth} & 79 \\
+Realised maximum depth & 20 \\
+Realised mean depth & 12.04 \\
+Realised median depth & 12.0 \\
+Realised minimum depth & 9 \\
+Constraint binding? & No \\
+\end{longtable}
+
+No tree approaches either bound. With 870 training samples, \texttt{min\_samples\_leaf=2} and \texttt{min\_samples\_split=4}, growth terminates naturally at a realised maximum of 20. The 79-versus-140 discrepancy is therefore \textbf{empirically immaterial on this dataset}: both settings produce identical fitted models. This resolves the question rather than merely flagging it, and it is the reason the deviation is documented rather than corrected.
+
+\textbf{Deviation §3 --- Ensemble type.} The paper uses Extremely Randomised Trees {[}82{]}, which draw split thresholds uniformly at random rather than optimising them. This work uses \texttt{RandomForestClassifier}, which selects the best threshold among a random feature subsample. The justification is downstream compatibility: the entire explanation and counterfactual chain --- TreeSHAP attribution, SHAP-driven feature selection, LIME direction, and the tier cascade --- was developed and tested against \texttt{RandomForestClassifier}. Substituting the ensemble type would require re-validating every downstream component, and the resulting risk of silent behavioural change in the counterfactual engine outweighs the benefit of exact ensemble-type correspondence with the reference.
+
+\textbf{Deviation §4 --- Features per split (equivalent).} The paper specifies int(ln(m) + 1) features per candidate split; scikit-learn's \texttt{max\_features=\textquotesingle{}sqrt\textquotesingle{}} uses int(√m). At m = 13: int(ln 13 + 1) = int(3.565) = 3, and int(√13) = int(3.606) = 3. The two formulae coincide \textbf{at this feature count specifically}. The equivalence is a property of m = 13 and would not hold generally --- at m = 20, for example, the paper's formula gives 3 and \texttt{\textquotesingle{}sqrt\textquotesingle{}} gives 4 --- so it is classified as equivalent for this dataset rather than as identical in general.
+
+\textbf{Deviation §5 --- Evaluation protocol.} The paper reports 95.04\% ± 1.26\% mean test accuracy from stratified five-fold cross-validation over all 1,451 samples. This work reports cross-validation accuracy within the training split only and a separate held-out test accuracy on n = 291. The denominators, train/test compositions, and averaging procedures all differ. \textbf{These two figures are not directly comparable}, and any statement placing them side by side must say so. The paper's 95.04\% is the reference point for the hyperparameter configuration; it is not a benchmark this work claims to match or beat. §4.2.5 repeats this caveat at the point of comparison.
+
+Hyperparameters for the five non-champion candidates are scikit-learn or XGBoost defaults except where the reference paper specifies otherwise. Since none is selected as champion, their configurations affect only the ranking, and the ranking's purpose is to justify the champion rather than to establish a definitive algorithm comparison.
+
+\hypertarget{why-cross-validation-mean-rather-than-single-split-accuracy}{%
+\subsection{3.4.4 Why Cross-Validation Mean Rather Than Single-Split Accuracy}\label{why-cross-validation-mean-rather-than-single-split-accuracy}}
+
+The selection criterion warrants its own justification, because the two available criteria disagree on this dataset. Table 3.6 gives the full comparison.
+
+\textbf{Table 3.6.} Six-algorithm comparison. CV statistics from stratified five-fold cross-validation within the training split; validation accuracy on n = 290. Source: \texttt{models/experiments.json}.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Algorithm & CV mean & CV std & Validation accuracy \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{RF} & \textbf{0.9471} & 0.0190 & 0.9310 \\
+XGB & 0.9425 & 0.0202 & \textbf{0.9414} \\
+GB & 0.9379 & 0.0168 & 0.9310 \\
+MLP & 0.9218 & 0.0240 & 0.8931 \\
+DT & 0.9023 & 0.0170 & 0.8966 \\
+KNN & 0.8839 & 0.0043 & 0.8828 \\
+\end{longtable}
+
+The two criteria point to different models. Random Forest achieves the highest cross-validation mean (0.9471); XGBoost achieves the highest single-split validation accuracy (0.9414 against RF's 0.9310).
+
+Cross-validation mean is used, for three reasons.
+
+First, \textbf{variance}. A single split of 290 samples carries substantial sampling variance. The gap between XGB and RF on the validation split is 0.0104 --- approximately three correctly classified samples. The observed cross-validation standard deviations (0.019--0.020 for both models) are of the same order as the difference being used to discriminate them, so a single-split comparison at this resolution is not measuring a stable property of the models. Kohavi's analysis of cross-validation and bootstrap for model selection {[}83{]} is the standard reference for preferring the averaged estimate in exactly this situation.
+
+Second, \textbf{selection bias}. Choosing the model that performs best on a particular held-out split makes that split's performance an optimistically biased estimate of the chosen model's generalisation, because the choice was conditioned on it. Cawley and Talbot {[}84{]} document how substantial this bias can be. Selecting on the cross-validation mean localises the selection decision within the training split and leaves both validation and test splits less contaminated by it.
+
+Third, \textbf{consistency with the criterion's purpose}. The selection is being made to obtain a model that will be used to generate counterfactual recommendations, not merely to classify. A model chosen because it happened to fit one particular arrangement of 290 samples is a weaker foundation for extrapolative reasoning than one chosen for stable average performance across five arrangements.
+
+The decision is recorded here rather than left implicit because it is exactly the kind of choice that, made silently, invites the question ``why not XGBoost?'' --- and because the answer is methodological rather than a matter of taste.
+
+A caveat worth stating: this reasoning justifies the \emph{criterion}, not a claim that Random Forest is the best available model for this problem. The CV means of RF, XGB and GB lie within roughly half a standard deviation of one another, which is consistent with the three being effectively indistinguishable on this dataset. The defensible claim is that Random Forest is a well-performing and appropriate champion, not that it is uniquely correct.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{explanation-layer}{%
+\section{3.5 Explanation Layer}\label{explanation-layer}}
+
+The explanation layer is implemented in \texttt{src/xai\_engine.py} as a single class, \texttt{XAIEngine}, that exposes both global and local explanation capabilities over the champion model. It serves two consumers: the operator-facing XAI page, where explanations are the product, and the counterfactual engine of §3.6, where explanations are an input to the search. The second consumer imposes requirements the first does not, and the design reflects that.
+
+\hypertarget{shap-treeexplainer-global-and-local-attribution}{%
+\subsection{3.5.1 SHAP TreeExplainer --- Global and Local Attribution}\label{shap-treeexplainer-global-and-local-attribution}}
+
+Attribution uses SHAP {[}25{]} via the \texttt{TreeExplainer} implementation {[}26{]}, which computes exact Shapley values for tree ensembles in polynomial time. Exactness matters here for a reason specific to this application: the counterfactual engine's Tier-1 feature selection depends on the \emph{rank order} of attributions, and a sampling-based approximation would make that ranking stochastic, so identical inputs could yield different repair recipes on different runs. TreeSHAP removes that source of non-determinism entirely.
+
+For a four-class model, \texttt{shap\_values} returns an array of shape (samples, features, classes). The engine extracts the slice corresponding to a fixed \textbf{target class index of 2 --- model class 2, raw label 3, \emph{Target}}. This choice is deliberate and is asserted in the test suite: attributions are computed with respect to movement toward the manufacturer's production target, which is the direction in which the counterfactual engine will attempt to move a defective cycle. Attributing with respect to the predicted class instead would produce explanations of why the part is bad rather than of what governs it becoming good --- informative for diagnosis, but the wrong signal for driving a corrective search.
+
+Global importance is obtained by aggregating mean absolute SHAP values across the training split, both overall and per class, and is exported to \texttt{thesis\_assets/data/shap\_global\_importance.json}. This global ranking supports two analyses in Chapter 4: comparison against the model's own impurity-based importances, and comparison against the Relief and ANOVA filter rankings reported by the reference study, which provides an external check on whether the explanation layer recovers process relationships that an independent method also finds.
+
+The engine additionally exposes a \textbf{differential diagnosis} method, which computes the element-wise absolute difference between the SHAP attributions of a defective cycle and those of a golden reference cycle, ranked by the magnitude of that difference. This answers a question an operator actually asks --- \emph{what is different about this part compared with a good one?} --- rather than the more abstract question of what the model weighted.
+
+\hypertarget{lime-tabular-local-surrogate-explanations}{%
+\subsection{3.5.2 LIME Tabular --- Local Surrogate Explanations}\label{lime-tabular-local-surrogate-explanations}}
+
+Local surrogate explanations use LIME {[}27{]} in its tabular form, fitted on the training split. For a given cycle, LIME perturbs the instance, queries the champion model, and fits a weighted sparse linear model in the neighbourhood, returning a signed coefficient per feature. A perturbation budget of \textbf{2,000 samples} is used, chosen as a compromise between coefficient stability and the latency budget of an interactive application; the empirical stability of the resulting explanations is measured across ten repeated runs on a fixed sample in Chapter 4.
+
+Coefficients are extracted for the same target class (label 2, \emph{Target}), with the sign carrying the operative meaning: a positive coefficient indicates that increasing the feature raises the probability of the target class, a negative coefficient that decreasing it does. LIME returns feature identifiers as human-readable interval expressions rather than bare names, so the engine performs a matching step to map each returned expression back to its source feature. Features that LIME omits from its sparse explanation are returned with a coefficient of 0.0, and the caller is expected to fall back to the SHAP sign --- a fallback that §3.6.2 makes explicit.
+
+\hypertarget{rationale-for-the-hybrid-approach}{%
+\subsection{3.5.3 Rationale for the Hybrid Approach}\label{rationale-for-the-hybrid-approach}}
+
+The two methods are not used redundantly. They occupy complementary roles, and the division is the central design decision of the explanation layer:
+
+\begin{quote}
+\textbf{SHAP selects \emph{which} parameters to adjust. LIME determines \emph{which direction} to adjust them.}
+\end{quote}
+
+The reasoning follows directly from what each method computes, as set out in §2.4.2 and §2.4.3. A SHAP value is a contribution attribution: it quantifies how much a feature moved the prediction away from the expected value, given the model and the background distribution. It is signed, but its sign describes a contribution already made, not the effect of an intervention. Ranking by \textbar SHAP\textbar{} identifies the parameters that matter most for this cycle, which is exactly what is needed to choose a small, actionable subset. Using the SHAP magnitude as a step size, by contrast, would be the category error identified in §2.4.2.
+
+A LIME coefficient is the slope of a local linear surrogate. Its sign is a statement about the direction of change that raises the target-class probability in the neighbourhood of this instance --- which is precisely the semantics a corrective adjustment requires. Its magnitude is less trustworthy, since it depends on the perturbation kernel and the sparse regression's regularisation, so only the sign is used.
+
+Combining them uses each method for the quantity it estimates most reliably and neither for a quantity it does not estimate at all. It also yields a built-in consistency check: where SHAP and LIME disagree about the direction implied for a feature, that disagreement is visible rather than hidden, and §4.3.3 reports the observed level of agreement across test cycles. Given the disagreement problem documented in the literature {[}73{]} and observed in injection molding specifically {[}47{]}, a hybrid whose components can be seen to agree or disagree is preferable to a single method whose errors are invisible.
+
+\hypertarget{caching-and-computational-cost}{%
+\subsection{3.5.4 Caching and Computational Cost}\label{caching-and-computational-cost}}
+
+TreeSHAP is fast for a 151-tree ensemble on 13 features; LIME is not, because each explanation requires 2,000 model queries plus a weighted regression. Since the counterfactual engine requests LIME directions for every non-conforming cycle it analyses, and the sensitivity sweep re-analyses the same 147 cycles under eight configurations, uncached LIME would dominate total runtime.
+
+The engine therefore caches LIME results in-process, keyed by the tuple of (rounded feature values, class label, perturbation budget). Feature values are rounded to eight decimal places before hashing so that floating-point representation differences do not produce spurious cache misses on identical inputs. A repeated request for the same cycle, label and budget returns the stored coefficient list without re-running the explainer.
+
+The cache is deliberately in-process rather than persisted to disk. A stale on-disk cache surviving a model retrain would silently serve explanations of a model that no longer exists --- a failure that would be invisible in the output and catastrophic for the integrity of any result computed from it. Discarding the cache on process exit trades some recomputation for the guarantee that every explanation in a given run corresponds to the model loaded in that run.
+
+Measured SHAP and LIME wall-clock timings and the realised cache hit rate are exported to \texttt{thesis\_assets/data/xai\_timing.json} and reported in §4.3.4.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{counterfactual-root-cause-analysis-engine}{%
+\section{3.6 Counterfactual Root-Cause Analysis Engine}\label{counterfactual-root-cause-analysis-engine}}
+
+This section describes the central artefact of the thesis. It is implemented in \texttt{src/counterfactual\_rca.py} as the class \texttt{CounterfactualRCA}, with the ablated comparison method in \texttt{src/greedy\_rca.py}.
+
+\hypertarget{problem-formulation-and-acceptance-criterion}{%
+\subsection{3.6.1 Problem Formulation and Acceptance Criterion}\label{problem-formulation-and-acceptance-criterion}}
+
+Given a non-conforming cycle \textbf{x} described in physical units, the engine seeks a modified parameter vector \textbf{x}\textquotesingle{} such that the champion model classifies \textbf{x}\textquotesingle{} as conforming, subject to \textbf{x}\textquotesingle{} remaining within physical bounds and differing from \textbf{x} in as few parameters and by as little as possible. This is the formulation of Wachter et al.~{[}28{]} specialised to a process-control setting, with the distance and sparsity objectives pursued through the structure of the search rather than through an explicit penalised loss.
+
+All search is conducted in the MinMax-scaled space of §3.3. Adjustments are translated back into physical units by inverse transformation only at the point of presentation, so the operator sees a recommendation in degrees Celsius, seconds, newtons and bar rather than in scaled coordinates.
+
+\textbf{Acceptance criterion.} A candidate \textbf{x}\textquotesingle{} is accepted if and only if
+
+\begin{quote}
+P(Acceptable \textbar{} \textbf{x}\textquotesingle{}) + P(Target \textbar{} \textbf{x}\textquotesingle{}) ≥ 0.55
+\end{quote}
+
+using the champion model's predicted class probabilities. The default threshold is 0.55, defined as \texttt{CONFIDENCE\_THRESHOLD} and asserted in the test suite.
+
+Two aspects of this criterion require justification.
+
+\emph{Why the summed probability of two classes rather than the argmax?} Because conformance is defined as membership in \{Acceptable, Target\} (§3.2.3), and a cycle whose probability mass is split --- say 0.30 \emph{Acceptable} and 0.30 \emph{Target} against 0.40 \emph{Waste} --- carries 0.60 total conforming mass while its argmax is \emph{Waste}. An argmax rule would reject such a candidate despite the model assigning conformance the majority of its belief. Summing over the conforming set matches the criterion to the operational definition.
+
+\emph{Why a margin above 0.5 rather than a bare majority?} A bare majority rule accepts a counterfactual the instant the decision function crosses zero. That is the worst possible place to stop. A point immediately at the boundary is maximally sensitive to small errors in the model's learned geometry, and --- as §2.7.2 argued --- it is precisely the region where a counterfactual is most likely to be an artefact of the boundary rather than a statement about the process. The 0.55 threshold requires the model to commit to conformance by a margin rather than merely to tip over.
+
+The margin is deliberately modest. It is not claimed that 0.55 is optimal, and no attempt is made to defend the specific value on principled grounds. Instead, the threshold is treated as a \textbf{designed operating parameter and swept systematically} across \{0.55, 0.65, 0.75, 0.85, 0.95\} in §3.9 and §4.6. That sweep --- rather than an argument about any single value --- is what characterises the engine's behaviour, and it produces one of the more consequential results of Chapter 4.
+
+\textbf{Bidirectional correction.} Because the non-conforming set contains both \emph{Waste} and \emph{Inefficient} cycles (§3.2.3), the criterion is symmetric with respect to the direction of correction: it asks for movement into the conforming band from either side. No separate logic is required for the two cases, since the direction is supplied per-cycle by the local explanation rather than by a fixed rule.
+
+\hypertarget{tier-1-shap-selected-lime-directed-local-search}{%
+\subsection{3.6.2 Tier 1 --- SHAP-Selected, LIME-Directed Local Search}\label{tier-1-shap-selected-lime-directed-local-search}}
+
+Tier 1 is the primary mechanism and implements the hybrid design of §3.5.3.
+
+\textbf{Feature selection.} SHAP values for the target class are computed for the cycle, and the \textbf{top 5 features by absolute SHAP value} are selected (\texttt{T1\_TOP\_K\ =\ 5}). Only these five parameters are eligible for adjustment; the remaining eight are frozen. This is where the sparsity objective enters the design --- not as a penalty term to be traded off against others during optimisation, but as a hard structural constraint that bounds the recipe at five parameters before the search begins.
+
+\textbf{Direction assignment.} LIME coefficients are obtained for the five selected features at the target class. Each feature's adjustment direction is the sign of its LIME coefficient. Where LIME returns a zero coefficient --- that is, where the feature was omitted from LIME's sparse explanation --- the engine falls back to the sign of the SHAP value; where both are zero, it defaults to +1. This fallback chain is a practical necessity of LIME's sparsity, and it is recorded here because a reader reproducing the method needs to know that the direction is not always LIME-derived.
+
+\textbf{Search.} From the original scaled vector, all five selected features are moved simultaneously by a fixed step of \textbf{0.02} in scaled units per iteration, each in its assigned direction. After each iteration the vector is clipped to {[}−1, 1{]} and the acceptance criterion is evaluated. The loop runs for at most \textbf{150 iterations} (\texttt{MAX\_ITER}). If the criterion is met, the counterfactual is returned with tier 1; otherwise Tier 1 fails and control passes to Tier 2.
+
+The maximum achievable movement in any feature is therefore 150 × 0.02 = 3.0 scaled units, which exceeds the width of the scaled space and means the iteration budget does not itself constrain reachability at the default setting --- a feature can traverse the full range and saturate at a bound. What the budget does control is how far the search proceeds before conceding. That control is not neutral, and §4.6 reports its effect: at a reduced budget of 10 iterations the tier distribution shifts substantially.
+
+Simultaneous rather than coordinate-wise movement is used because the process parameters are coupled (§2.2.2) and because a coordinate-wise search would produce a path-dependent recipe whose composition depended on the order in which features were considered.
+
+\hypertarget{tier-2-nearest-neighbour-anchored-search}{%
+\subsection{3.6.3 Tier 2 --- Nearest-Neighbour Anchored Search}\label{tier-2-nearest-neighbour-anchored-search}}
+
+Tier 2 addresses cycles for which the explanation-guided local search fails. Its design responds directly to the plausibility concern raised in §2.4.4 and §2.7.2: rather than following the model's local geometry, it moves toward a region where conforming cycles are known to have actually occurred.
+
+\textbf{Anchor construction.} The Euclidean distances from the cycle to every conforming training sample are computed. The \textbf{15 nearest} conforming samples are taken (\texttt{T2\_N\_NEIGHBORS\ =\ 15}) and their element-wise mean forms a local anchor centroid. This is a \emph{local} rather than global anchor: it represents the nearest achievable conforming operating point rather than the average conforming condition across the whole process.
+
+\textbf{Feature selection.} The absolute gap between the anchor and the current cycle is computed per feature, and the \textbf{7 features with the largest gaps} are selected (\texttt{T2\_TOP\_K\ =\ 7}). Tier 2 permits a wider recipe than Tier 1 because it is invoked only when the sparser Tier-1 attempt has already failed; the additional degrees of freedom are the price of a second attempt.
+
+\textbf{Search.} The selected features are moved toward the anchor at the same step size of 0.02, with direction given per iteration by the sign of the remaining gap, clipping to {[}−1, 1{]} after each iteration and testing the same acceptance criterion, for at most 150 iterations. If the criterion is met, the counterfactual is returned with tier 2.
+
+The tier is anchored to \textbf{real conforming training samples}, not to a synthetic optimum. Its target is therefore a point on the observed conforming manifold by construction --- which is the property Keane et al.~{[}36{]} and Laugel et al.~{[}62{]} argue counterfactual methods generally lack.
+
+\hypertarget{tier-3-escalation-and-non-resolution-reporting}{%
+\subsection{3.6.4 Tier 3 --- Escalation and Non-Resolution Reporting}\label{tier-3-escalation-and-non-resolution-reporting}}
+
+If both tiers fail, the engine returns tier 3 with status \texttt{escalate}, an empty adjustment list, and the message that no parameter adjustment can resolve the defect within physical bounds, indicating a structural root cause requiring manual inspection.
+
+Tier 3 is a designed output, not an error state. Section 2.2.3 established that a substantial group of defect causes --- material, mold-condition, and environmental --- is not represented in machine-parameter data at all. For a cycle whose true cause lies in that group, \emph{there is no correct parameter recommendation}, and a system that manufactures one anyway is worse than useless: it sends an operator to adjust settings that were never the problem. An engine that can decline to answer is therefore a safety property, and the escalation message directs attention to inspection rather than to the control panel.
+
+A \textbf{Tier 0} short-circuit precedes the cascade: if the incoming cycle already satisfies the acceptance criterion, it is returned immediately with status \texttt{already\_acceptable} and no adjustments. This prevents the engine from recommending changes to a cycle the model already regards as conforming. It has an analytically important consequence that §4.4.1 addresses: on the test split, seven cycles carry a ground-truth label of \emph{Waste} or \emph{Inefficient} yet already exceed the confidence threshold, so the engine never attempts a correction. These are classifier--label disagreements, not counterfactual search failures, and the reported resolution rate must be read accordingly.
+
+\textbf{Tier activation as an operating envelope.} At the default configuration the cascade resolves through Tier 1 alone, with Tiers 2 and 3 unactivated on both splits. This does not make them decorative. The sensitivity sweep of §4.6 shows both activating substantially as the acceptance threshold rises --- Tier 2 first appearing at threshold 0.65 on the validation split and 0.75 on the test split, and Tier 3 accounting for the majority of cases at 0.85 and above --- and also under a reduced iteration budget. The cascade is therefore an \textbf{active operating envelope} whose tiers engage as a function of how conservatively the engine is configured, not a set of unexercised fallbacks. §4.6 characterises the envelope across the swept configurations, and §5.3 discusses which operating point a deployment should choose.
+
+\hypertarget{physical-bound-enforcement}{%
+\subsection{3.6.5 Physical Bound Enforcement}\label{physical-bound-enforcement}}
+
+Every candidate vector is clipped to {[}−1, 1{]} in scaled space after every iteration of every tier.
+
+Because the scaler is fitted on the training split (§3.3), this interval corresponds exactly to the range of each parameter observed in training. The clip therefore enforces a concrete and defensible guarantee: \textbf{no recommendation ever falls outside the range of values the machine has actually been operated at.} An operator will never be told to set a melt temperature the process has never run, and no recommendation requires extrapolating the model beyond its training support.
+
+This is a deliberately conservative form of bound enforcement, and the trade-off should be stated. A per-feature engineering constraint file (\texttt{config/constraints.yaml}) exists in the implementation for the process-capability module (§3.7.1), but the counterfactual engine does not consult it, relying on the scaled-space clip instead. The consequence is that the engine cannot propose a setting outside historical operating experience even where the machine is physically capable of it --- trading some reachability for the guarantee that recommendations remain inside observed territory. Given that the thesis's central concern is the trustworthiness of extrapolated recommendations, that is the correct direction in which to err.
+
+What the clip does \emph{not} guarantee is that a recommendation is jointly plausible. Each parameter individually lies within its observed range, but the combination may be one the process has never produced. This is exactly the residual risk that motivates the nearest-neighbour distance metric (§3.9.2) and the independent verifier (§3.6.6), and it is why the bound enforcement is presented here as a necessary condition rather than a sufficient one.
+
+\hypertarget{the-independent-mlp-verifier}{%
+\subsection{3.6.6 The Independent MLP Verifier}\label{the-independent-mlp-verifier}}
+
+The verifier is the component that makes RQ4 answerable, and its independence properties are therefore specified precisely.
+
+\textbf{Architecture and training.} The verifier is a scikit-learn \texttt{MLPClassifier} with two hidden layers of 100 and 50 units, \texttt{max\_iter=1000}, early stopping enabled with \texttt{n\_iter\_no\_change=20}, and \textbf{\texttt{random\_state=7}}. It is fitted on the scaled training split and its labels --- the same data the champion saw, and nothing else.
+
+\textbf{Operation.} For every accepted counterfactual, the verifier is queried once. Its verdict is binary: \texttt{validator\_ok} is true if and only if the verifier's own predicted class falls in \{Acceptable, Target\}. The verdict is attached to the result object, surfaced in the user interface as a confirmation badge, written to the audit log, and included in the LLM shift report and the operator notification.
+
+\textbf{Independence.} Three distinct forms of independence are asserted, and each is separately enforced:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Model-family independence.} The verifier is a multilayer perceptron; the champion is a random forest. Their inductive biases are fundamentally different --- a global, smooth, differentiable function approximator against an ensemble of axis-aligned partitions. The specific way a random forest's decision boundary is shaped by its splits is not a way an MLP's boundary is shaped. Agreement between them is therefore substantially more informative than a random forest's agreement with itself. The test suite asserts that the verifier is an \texttt{MLPClassifier}.
+\item
+  \textbf{Seed independence.} The verifier uses \texttt{random\_state=7}; the champion and the data split use 42. The test suite asserts both that the verifier's seed differs from 42 and that it equals 7, so that a silent change to a shared seed cannot pass unnoticed.
+\item
+  \textbf{Process independence.} The verifier takes \textbf{no part whatsoever} in counterfactual generation. It contributes nothing to SHAP attribution, nothing to LIME direction, nothing to the acceptance criterion, nothing to the Tier-2 anchor, and nothing to the termination condition. It is called exactly once, after the search has already terminated. It cannot influence what it is asked to judge.
+\end{enumerate}
+
+\textbf{Leakage argument.} Every component that could carry information across the split boundary derives from the training split exclusively: the verifier is fitted on \texttt{X\_train} only; the Tier-2 conforming anchor pool is drawn from \texttt{X\_train} only; the ablation centroid (§3.6.7) is computed from \texttt{X\_train} only; and the scaler is fitted on \texttt{X\_train} only. The validation and test splits are used solely as evaluation targets and never participate in any fitting step. This guarantee is stated in the header of \texttt{scripts/compare\_rca\_methods.py} and holds for every result reported in Chapter 4.
+
+\textbf{What the verifier does and does not establish.} Confirmation by the verifier is evidence that the counterfactual satisfies a model that did not construct it, and therefore that its acceptance does not depend on one model's idiosyncratic boundary geometry. It is \emph{not} evidence that the recommendation would work on the machine. Both models were trained on the same 870 samples and share whatever biases that data carries; agreement bounds the risk of a model-specific artefact but cannot exclude a shared one. In the taxonomy of §2.7.3, this is second-model verification --- stronger than self-report, weaker than process verification, and honestly positioned as such. The verifier's own training accuracy is reported at initialisation and in §4.5.1, so that its agreement rate can be read against its competence rather than in isolation.
+
+\hypertarget{the-centroid-ablation-baseline}{%
+\subsection{3.6.7 The Centroid-Ablation Baseline}\label{the-centroid-ablation-baseline}}
+
+A single engine reporting a low confirmation rate is a fact about that engine. To establish whether the finding characterises a \emph{method class}, a structurally different search must be shown to behave the same way. That is the purpose of the ablation, implemented as \texttt{GreedyCounterfactual} in \texttt{src/greedy\_rca.py}.
+
+\textbf{What is ablated.} The baseline removes the two components that constitute this work's methodological contribution to the search itself --- SHAP-based feature selection and LIME-based directional guidance --- and replaces them with a single undifferentiated movement: \textbf{all 13 features are moved simultaneously toward the global centroid of conforming training samples}, at the same step size, until the acceptance criterion is met or the iteration budget is exhausted.
+
+\textbf{What is held constant.} The acceptance criterion is identical (P(Acceptable) + P(Target) ≥ 0.55). The step size (0.02), iteration budget (150), scaled search space, and physical clip to {[}−1, 1{]} are identical. The champion model queried is the same. The verifier is the same. The output schema is identical, so the comparison script treats the two methods interchangeably.
+
+Matching the acceptance criterion is a \textbf{design requirement, not a convenience}. If the two methods stopped at different confidence levels, any difference in resolution or confirmation rate would confound the effect of the search strategy with the effect of the threshold, and the comparison would answer no question at all.
+
+\textbf{Why this is an ablation rather than a competitor.} The baseline is not presented as a rival algorithm from the literature, and no claim is made that it represents the state of the art. It is a controlled removal of two specific components from an otherwise identical system. This framing determines how its results must be read: a difference between the two methods is attributable to SHAP selection and LIME guidance, while a \emph{similarity} between them --- particularly a similar independent-confirmation rate --- is evidence that the property in question does not depend on those components and is therefore a feature of the shared approach rather than of either implementation. The second reading is the one that matters for RQ4, and §4.5.3 and §4.5.4 develop it.
+
+\textbf{Expected structural asymmetries.} Two differences are predictable from the designs and are stated in advance so that the results of §4.5.5 are not over-interpreted. The ablation moves all 13 features, so it will produce denser recipes than a 5-feature Tier-1 search. And because it moves explicitly toward the conforming centroid, it will terminate closer to conforming samples in the nearest-neighbour sense --- a metric that structurally favours a centroid-seeking method. Neither asymmetry is a discovery; both follow from the construction, and Chapter 4 reports them as such.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{quality-4.0-supporting-modules}{%
+\section{3.7 Quality 4.0 Supporting Modules}\label{quality-4.0-supporting-modules}}
+
+The modules in this section support the framework's deployment as a working quality system. They are \textbf{infrastructure, not contributions}. Each is described at the level of detail needed to establish what it does, how it is implemented, and --- where relevant --- what its results can and cannot be taken to demonstrate. They are treated proportionately to that status; the substantive contribution of this thesis is §3.6 and the evaluation built on it.
+
+\hypertarget{iso-9001-process-capability-dashboard}{%
+\subsection{3.7.1 ISO 9001 Process Capability Dashboard}\label{iso-9001-process-capability-dashboard}}
+
+Implemented in \texttt{src/iso9001\_metrics.py}, this module computes the classical process capability indices {[}66{]} for each of the 13 parameters:
+
+\begin{quote}
+Cp = (USL − LSL) / 6σ and Cpk = min{[}(USL − μ)/3σ, (μ − LSL)/3σ{]}
+\end{quote}
+
+Cp measures whether the process spread fits inside the specification window; Cpk additionally penalises off-centre operation. Results are classified against the conventional thresholds and surfaced in a dashboard alongside a non-conformance register and control charts, supporting the ISO 9001:2015 {[}8{]} requirements for monitoring, measurement, and evidence-based decision-making discussed in §2.6.2. Formula correctness, edge cases, and threshold classification are covered by unit tests.
+
+\textbf{An honest limitation, stated prominently because it affects how these numbers may be used.} The specification limits are read from \texttt{config/constraints.yaml}, which that file's own header records as auto-generated from \texttt{raw\_data.csv} --- the USL and LSL values are the \textbf{observed minimum and maximum of the historical dataset, not sourced customer or engineering specification limits}. Capability indices computed against observed bounds are not capability indices in the ISO sense, because the specification window is not independent of the data being assessed. Every export of these figures is labelled ASSUMED, and Chapter 5 treats the module as a demonstration of a capability-monitoring mechanism awaiting real specification limits, not as a capability assessment of the iGuzzini process. Obtaining real limits requires the manufacturer's drawings and is outside the access available to this work.
+
+\hypertarget{sqlite-traceability-and-audit-log}{%
+\subsection{3.7.2 SQLite Traceability and Audit Log}\label{sqlite-traceability-and-audit-log}}
+
+Implemented in \texttt{src/cycle\_store.py}, this module persists one record per analysed cycle to a local SQLite database: timestamp, cycle identifier, predicted class, model confidence, RCA tier, RCA status, counterfactual confidence, and the verifier's verdict. It exposes recent-record retrieval and aggregate statistics including first-pass yield and tier counts, which feed the landing dashboard.
+
+The design intent is ISO 9001 traceability (§2.6.2): the clauses on control of nonconforming output and documented corrective action require a record of what was found, what was recommended, and on what basis. Recording the verifier's verdict alongside the recommendation is a deliberate choice --- the audit trail preserves not only what the system advised but whether that advice was independently corroborated, so that an unconfirmed recommendation cannot be silently indistinguishable from a confirmed one after the fact.
+
+The schema records only cycle and outcome fields; it contains no operator identity or personal data, so the audit trail raises no data-protection issue.
+
+\textbf{Provenance note.} The demonstration audit records exported for the thesis were produced by replaying genuine, already-computed RCA outcomes from \texttt{models/rca\_results\_test.csv} through the real \texttt{log\_cycle()} and \texttt{get\_recent()} functions against a throwaway database file, because no interactive session had populated the production database at export time. This is recorded in the exported artefact itself. No audit-trail values were fabricated.
+
+\hypertarget{drift-monitoring-psi-and-page-hinkley}{%
+\subsection{3.7.3 Drift Monitoring --- PSI and Page-Hinkley}\label{drift-monitoring-psi-and-page-hinkley}}
+
+Implemented in \texttt{src/drift\_detector.py}, this module addresses the concept-drift problem of §2.6.3 with two complementary detectors.
+
+\textbf{Population Stability Index.} For each feature, the reference distribution (training split) is discretised into 10 percentile-based bins, and the PSI is computed as the sum over bins of (actual\% − expected\%) × ln(actual\% / expected\%), with empty bins floored at 1 × $10^{-4}$ to avoid divergence. The conventional interpretation thresholds are applied: below 0.10 stable, 0.10--0.20 moderate, above 0.20 critical {[}69{]}. PSI is a distribution-based detector and therefore requires no labels, which is the property that makes it usable in production where photometric labels arrive late or not at all.
+
+\textbf{Page-Hinkley test.} A sequential change detector {[}85{]} is applied to the stream of model confidence values, P(Acceptable) + P(Target), accumulating deviations from a running mean and raising an alarm when the cumulative sum exceeds a threshold (δ = 0.005, λ = 50, EMA factor 0.9999). Where PSI detects a shift in the inputs, Page-Hinkley detects a shift in the model's own behaviour on the stream, which addresses the virtual/real drift distinction of §2.6.3.
+
+\textbf{An honest limitation, stated in the module and reproduced here.} The reference and current windows both derive from the same stratified random split of the same 1,451-cycle dataset. Their feature distributions are therefore expected to be nearly identical, and near-zero PSI values are the \emph{anticipated baseline}, not evidence that the process is stable or that the detector is insensitive. \textbf{This module demonstrates a detection mechanism; it does not report observed drift}, because no temporally separated production data were available.
+
+To establish that the mechanism works, \texttt{scripts/drift\_validation.py} performs a controlled sensitivity study: for each of the 13 features and each shift magnitude k $\in$ \{0, 1, 2, 3\}, the validation set is copied, the selected feature shifted by k × σ\_train and clipped to the scaled bounds, and the PSI recomputed against the training reference. This establishes at what magnitude of injected shift the detector crosses each threshold --- a statement about detector sensitivity, which is what can legitimately be claimed. The same injection capability is exposed interactively in the application. Results appear in §4.7.
+
+\hypertarget{oee-digital-twin}{%
+\subsection{3.7.4 OEE Digital Twin}\label{oee-digital-twin}}
+
+Implemented in \texttt{src/digital\_twin.py}, this module replays cycles through the champion model and maintains a running Overall Equipment Effectiveness estimate as the product of its three conventional components, OEE = Availability × Performance × Quality, with the quality component driven by the model's classification of each replayed cycle as conforming or not. The application streams cycles at a configurable rate, updates gauges live, and issues a notification when OEE first falls below a configurable threshold.
+
+The module is a \textbf{simulation over recorded data}, not a connection to a live machine. Availability and performance are modelled rather than measured, since the dataset records neither downtime nor cycle-rate deviation. Its function in this thesis is to demonstrate that per-cycle classification output can drive a plant-level KPI that management already uses --- connecting the model's output to an existing decision vocabulary --- not to report the OEE of the iGuzzini line.
+
+\hypertarget{llm-generated-shift-reporting}{%
+\subsection{3.7.5 LLM-Generated Shift Reporting}\label{llm-generated-shift-reporting}}
+
+Implemented in \texttt{src/llm\_wrapper.py}, this module generates a narrative shift report from structured system state using Llama-3.3-70B via the Groq inference API. The prompt is assembled from the z-score component-health summary, the current OEE, the list of critical sensor anomalies, and --- where a counterfactual analysis is available --- the tier, the ranked parameter adjustments in physical units, and \textbf{the verifier's confirmation status}. The model is instructed to produce an executive summary, three technical corrective actions grounded in the supplied adjustments, and an explicit statement of verification status.
+
+Two design decisions matter.
+
+First, the LLM is confined to \textbf{narration of computed results}. It performs no analysis, no diagnosis, and no numerical reasoning; every quantity in its prompt is computed by a deterministic module and passed in. This confines the well-known hallucination risk to the presentation layer, where an error is a wording problem rather than a wrong parameter value reaching an operator.
+
+Second, the verifier's verdict is \textbf{included in the prompt and required in the output}. A report that presented an unconfirmed recommendation in the same confident register as a confirmed one would undo, at the last step, the entire point of §3.6.6.
+
+If no API key is configured, the wrapper degrades to a deterministic mock mode rather than failing, so that the application remains usable without a third-party dependency. The single shift-report exhibit reproduced in the thesis is a verbatim generated output for a specific test cycle; where no API key was available at export time, the export script recorded that fact rather than fabricating a report.
+
+\hypertarget{operator-notification}{%
+\subsection{3.7.6 Operator Notification}\label{operator-notification}}
+
+Implemented in \texttt{src/telegram\_notifier.py}, this module pushes formatted alerts to a Telegram chat: RCA completion (with tier, counterfactual confidence, verification status, and the top adjustments), OEE threshold breach, process-capability alert, and shift report delivery. Telegram is used because it requires no additional client software on a device an operator already carries, and no plant network integration.
+
+The design rationale connects to gap G3 of §2.8: the RCA literature's weakest point is the delivery of root-cause information to the person who can act on it. A recommendation that reaches an operator on the floor within seconds is operationally different from one that reaches an analyst's dashboard.
+
+\textbf{Deployment caveat.} As noted in §3.2.5, process parameters are commercially sensitive, and this channel transmits them through a third-party service. For research use on a public benchmark dataset this is unproblematic. For a production deployment it would not be, and an on-premises messaging transport should replace it. The module's interface is transport-agnostic, so this is a substitution rather than a redesign.
+
+\hypertarget{role-based-access-control}{%
+\subsection{3.7.7 Role-Based Access Control}\label{role-based-access-control}}
+
+Implemented in \texttt{src/role\_manager.py}, the application defines three roles reflecting the distinct stakeholders identified in §2.4.5: \textbf{Operator} (Digital Twin, Smart Reports, Cycle History), \textbf{AI Engineer} (Model Forge, XAI Lab, RCA Investigator, Drift Monitor, Cycle History --- the only role permitted to train), and \textbf{Quality Manager} (ISO 9001 Dashboard, Smart Reports, RCA Investigator, Drift Monitor, Cycle History). The active role is selected in the sidebar and each page renders an access gate on load.
+
+The purpose is to demonstrate that the same underlying analysis serves three different information needs, and that explanation depth should be matched to the consumer: an operator needs the corrective recipe, an engineer needs the attribution behind it, a quality manager needs the compliance record.
+
+\textbf{This is a soft gate, not a security control.} Accessing a page outside the active role's scope raises a warning banner rather than blocking, since the application runs in demonstration mode with no authentication backend. The module implements \emph{role separation as an interface concept}; it does not implement access control, and it should not be described as doing so. A production deployment would require authenticated identity and enforced authorisation.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{implementation}{%
+\section{3.8 Implementation}\label{implementation}}
+
+\hypertarget{architecture-overview}{%
+\subsection{3.8.1 Architecture Overview}\label{architecture-overview}}
+
+The system is a layered application. A Streamlit presentation layer of eight pages sits above a core library of fourteen modules, which sits above a persistence layer of model checkpoints, processed data, JSON experiment and result records, and the SQLite audit database. Two external services --- Groq for report generation and Telegram for notification --- are optional, and the system degrades gracefully without either.
+
+Figure 3.1 shows the architecture and the principal data flows.
+
+\textbf{Figure 3.1.} System architecture. \emph{{[}Figure to be inserted: layered diagram showing Streamlit pages → core modules → persistence, with the RCA path highlighted --- raw cycle → scaler → champion RF → XAI engine (SHAP/LIME) → three-tier counterfactual search → independent MLP verifier → operator output, audit log, and notification.{]}}
+
+The path that matters for the contribution runs: a cycle in physical units → scaler → champion Random Forest → prediction and probability vector → if non-conforming, XAI engine for SHAP selection and LIME direction → tier cascade → accepted counterfactual → \textbf{independent verifier} → adjustments inverse-transformed to physical units → simultaneously to the operator interface, the audit log, the shift report, and the notification channel. The verifier sits on this path such that no output reaches an operator without carrying its verdict.
+
+\hypertarget{technology-stack}{%
+\subsection{3.8.2 Technology Stack}\label{technology-stack}}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Layer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Technology
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Role
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Language & Python 3 & Implementation language \\
+ML & scikit-learn {[}81{]} & Five of six candidates, scaler, verifier, CV \\
+ML & XGBoost {[}80{]} & Sixth candidate \\
+XAI & SHAP (TreeExplainer) {[}25{]}, {[}26{]} & Exact attribution for tree ensembles \\
+XAI & LIME (tabular) {[}27{]} & Local surrogate direction \\
+Statistics & statsmodels {[}86{]} & McNemar's exact test \\
+Statistics & SciPy & Distributional and rank statistics \\
+Data & pandas, NumPy & Data handling and numerics \\
+UI & Streamlit & Eight-page application \\
+Visualisation & Plotly, Matplotlib & Interactive and print figures \\
+Persistence & SQLite, joblib, JSON, CSV & Audit trail, checkpoints, results \\
+LLM & Groq API (Llama-3.3-70B) & Narrative shift reporting \\
+Notification & Telegram Bot API & Operator alerts \\
+Packaging & Docker, docker-compose & Reproducible runtime \\
+CI & GitHub Actions & Automated test execution \\
+\end{longtable}
+
+\hypertarget{reproducibility}{%
+\subsection{3.8.3 Reproducibility}\label{reproducibility}}
+
+Reproducibility is treated as a requirement rather than an aspiration, because the central finding of this thesis is a number that a sceptical reader should be able to regenerate.
+
+\textbf{Seeds.} Three seeds govern the system and are fixed and documented: 42 for the data split and the champion model, 7 for the independent verifier, and 42 for the SHAP beeswarm subsample. The distinctness of the verifier's seed is asserted in the test suite (§3.6.6).
+
+\textbf{Persisted splits.} The train/validation/test partitions are written to disk as CSVs and read by every downstream script, so no script regenerates a split and no divergence between scripts is possible.
+
+\textbf{Pinned dependencies.} All package versions are pinned in \texttt{requirements.txt}, and the Docker image fixes the runtime environment.
+
+\textbf{Non-overwriting outputs.} The evaluation scripts write to split-suffixed filenames (\texttt{rca\_evaluation\_test.json}, \texttt{tier\_sensitivity\_val.csv}, and so on) and do not overwrite existing results, so a re-run cannot silently replace a figure already cited in the thesis.
+
+\textbf{Orchestration.} \texttt{scripts/run\_all\_evaluations.sh} reproduces every result artefact from raw data in a fixed ten-stage order: data pipeline; training of all six algorithms; tree-depth verification; test-set evaluation; RCA batch evaluation on validation and test; tier sensitivity sweep on both splits; method comparison on both splits; and drift validation. Total runtime is approximately three to four hours on CPU, dominated by the sensitivity sweep and the method comparison. A companion script, \texttt{scripts/build\_thesis\_assets.sh}, regenerates every figure and table from those artefacts, and \texttt{thesis\_assets/MANIFEST.md} records for each asset its source script, its source data file, and the split it derives from.
+
+The consequence of this arrangement is that every number in Chapter 4 traces to a named file, and every such file traces to a named script and a named input.
+
+\hypertarget{testing-strategy}{%
+\subsection{3.8.4 Testing Strategy}\label{testing-strategy}}
+
+The test suite uses pytest with two markers: \texttt{unit} for tests requiring no model or data loading (fast, approximately six seconds) and \texttt{integration} for tests that load trained artefacts (approximately fourteen seconds). Both run in CI on every push.
+
+The suite's function in this work goes beyond defect detection: several tests \textbf{encode the thesis's methodological claims as executable assertions}, so that a change violating a claim made in this chapter fails the build rather than silently invalidating a reported result.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Data integrity} --- scaler type is \texttt{MinMaxScaler}, feature range is exactly (−1, 1), the scaler is fitted, feature count is 13, feature names match the specification exactly, training data lie within {[}−1, 1{]}, labels are within \{0, 1, 2, 3\}, and all four classes survive the stratified split.
+\item
+  \textbf{Model contract} --- the champion exposes four classes in the order {[}0, 1, 2, 3{]}, class index 2 corresponds to \emph{Target}, validation accuracy clears a 90\% floor, probability vectors sum to one, and all four classes are predicted at least once on the validation split.
+\item
+  \textbf{Explanation layer} --- SHAP output has shape (13,) and is finite, the target class index is 2, and attributions differ between a defective and a golden cycle (a guard against a silently broken explainer returning constants).
+\item
+  \textbf{Counterfactual engine} --- the acceptance threshold constant equals 0.55, a Tier-0 result's confidence exceeds the threshold, adjustment deltas equal suggested minus current, direction arrows are consistent with the sign of the delta, and Tier-3 results carry no adjustments.
+\item
+  \textbf{Verifier independence} --- the verifier is an \texttt{MLPClassifier}, its seed is not 42, and its seed is 7.
+\item
+  \textbf{Process capability} --- Cp and Cpk formulas, the centred-process identity Cpk ≤ Cp, off-centre behaviour, and threshold classification including the NaN case.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{evaluation-design}{%
+\section{3.9 Evaluation Design}\label{evaluation-design}}
+
+\hypertarget{classification-metrics-and-the-priority-of-waste-recall}{%
+\subsection{3.9.1 Classification Metrics and the Priority of Waste Recall}\label{classification-metrics-and-the-priority-of-waste-recall}}
+
+Classification performance is reported as overall accuracy, weighted and macro F1, a full 4 × 4 confusion matrix, and per-class precision, recall and support, all on the held-out test split (n = 291). Accuracy is a meaningful headline here because the classes are near-balanced (§3.2.4).
+
+Accuracy is nonetheless not the metric that matters operationally. \textbf{Recall on the \emph{Waste} class is the safety-critical measure}, and it is prioritised accordingly.
+
+The asymmetry is one of consequence. A \emph{Waste} lens misclassified as conforming is a false negative that leaves the plant: a lens with general uniformity below the UNI EN 13201-2:2016 requirement is fitted to a road luminaire and installed. The failure is discovered, if at all, by the customer, and it is a compliance failure rather than a cosmetic one. A conforming lens misclassified as \emph{Waste} is a false positive that costs one part and a few seconds of operator attention. These outcomes are not commensurable, and a metric that averages over them conceals the distinction. The reference study reaches the same conclusion, identifying \emph{Waste}/\emph{Acceptable} confusions as the consequential errors and the remaining confusions as internal to the compliant region.
+
+Two figures are therefore reported alongside overall accuracy: per-class recall on \emph{Waste}, and \textbf{non-conformance recall} --- the fraction of all truly non-conforming cycles (\emph{Waste} or \emph{Inefficient}) correctly identified as non-conforming. The second is the direct operational analogue of the system's screening function.
+
+Per-class results are additionally compared against the Random Forest row of the reference study's Table 10, with the protocol-difference caveat of §3.4.3 attached at the point of comparison. No claim of parity or superiority is made from that comparison; the figures are directionally indicative only.
+
+\hypertarget{counterfactual-metrics}{%
+\subsection{3.9.2 Counterfactual Metrics}\label{counterfactual-metrics}}
+
+Five metrics characterise counterfactual quality, computed for every resolved case and averaged. Each corresponds to a desideratum established in §2.4.4, and the correspondence is stated so that no metric appears in Chapter 4 without a literature grounding.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Definition
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Desideratum
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Direction
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Resolution rate & Fraction of non-conforming cycles for which a counterfactual is found & Coverage {[}36{]} & Higher better \\
+Validator rate & Fraction of resolved cases confirmed by the independent verifier & Independent validity {[}62{]} & Higher better \\
+Mean proximity & Mean L2 distance between original and counterfactual in scaled space & Proximity {[}28{]} & Lower better \\
+Mean sparsity & Mean count of features with abs(delta) \textgreater{} 1 × $10^{-4}$ & Sparsity {[}28{]} & Lower better \\
+Mean NN distance & Mean L2 distance from the counterfactual to its nearest conforming training sample, in scaled space & Plausibility / out-of-distribution {[}36{]}, {[}62{]} & Lower better \\
+\end{longtable}
+
+Three points about this metric set.
+
+\textbf{The set is reported in full, always.} §2.4.4 established that the desiderata conflict, so reporting the subset on which a method performs well is a form of selective reporting. Every comparison in Chapter 4 reports all five for both methods on both splits.
+
+\textbf{Resolution rate and validator rate are deliberately separated.} Resolution rate is what a conventional counterfactual study reports; validator rate is the quantity §2.7 argues is missing. Presenting them adjacently, computed over the same population, is the structural device by which the thesis's central finding is made visible rather than argued for.
+
+\textbf{Mean nearest-neighbour distance replaces an earlier plausibility measure.} An initial implementation used a metric that proved vacuous --- it could not distinguish counterfactuals of materially different quality. It was replaced with distance to the nearest conforming training sample, which is the out-of-distribution style of measure that Keane et al.~{[}36{]} recommend reporting alongside proximity and sparsity, and which operationalises the connectedness-to-data criterion of Laugel et al.~{[}62{]}. Its structural bias toward centroid-seeking methods is stated in advance in §3.6.7 and again where results are reported.
+
+\hypertarget{independent-validation-protocol}{%
+\subsection{3.9.3 Independent Validation Protocol}\label{independent-validation-protocol}}
+
+The protocol is as follows. For every non-conforming cycle in the evaluation split, the engine is run to termination. For every case it resolves, the verifier is queried once. The verifier's verdict is recorded per sample, not merely in aggregate, which is what permits the paired statistical test of §3.9.4.
+
+Two conventions must be stated because they determine how the reported rates are computed.
+
+\textbf{Denominator.} Validator rate is reported as confirmed cases divided by \textbf{resolved} cases, not by all non-conforming cases. The quantity of interest is the reliability of the recommendations the engine actually issues; cases it declines to answer are not recommendations and should not dilute the measure. Resolution rate, reported over all non-conforming cases, carries the complementary information.
+
+\textbf{Unresolved cases in the paired test.} The McNemar comparison operates on the raw per-sample verifier flag rather than on the resolved-only subset. A Tier-3 escalation carries a negative flag, since no recommendation was issued. A Tier-0 already-conforming cycle carries a \emph{positive} flag, because the engine returns a confirmed status for a cycle it declines to modify. Tier-0 cases therefore appear in the concordant cell for both methods and, since McNemar conditions only on discordant pairs, have no effect on the statistic. The aggregate rates of §3.9.3 and the contingency table of §4.5.4 consequently use different denominators, and both are reported so that the difference is visible rather than latent.
+
+\textbf{What this protocol establishes and what it does not.} Per §3.6.6, verifier confirmation establishes that a counterfactual satisfies a model of a different family, different seed, and no involvement in its generation. It does not establish that the recommendation would work on a machine. The two models share training data and therefore share whatever biases that data carries. The protocol is second-model verification in the terms of §2.7.3 --- a substantial strengthening over self-report, and a substantial weakening relative to physical trial. Chapter 4 reports its results in those terms, and Chapter 6 identifies physical validation as the necessary next step rather than as an optional extension.
+
+\hypertarget{statistical-testing}{%
+\subsection{3.9.4 Statistical Testing}\label{statistical-testing}}
+
+The comparison between the three-tier engine and the centroid ablation concerns \textbf{paired binary outcomes}: each non-conforming cycle is analysed by both methods, and each method's result for that cycle is either confirmed or not. The observations are paired by construction, so an unpaired test of two proportions would discard the pairing and misstate the variance.
+
+McNemar's test {[}87{]} is the appropriate instrument for exactly this design. It conditions on the discordant pairs --- cases where the two methods disagree --- and tests whether the split between the two directions of disagreement departs from chance. Dietterich {[}88{]} identifies it as an appropriate test for comparing classifiers evaluated on a common sample. The \textbf{exact, two-sided} variant is used, via statsmodels {[}86{]}, because the discordant counts are small and the χ² approximation is unreliable in that regime.
+
+The hypotheses are:
+
+\begin{itemize}
+\tightlist
+\item
+  H\textsubscript{0}: the probability that the three-tier engine's recommendation is confirmed equals the probability that the ablation's recommendation is confirmed.
+\item
+  H\textsubscript{1}: those probabilities differ.
+\end{itemize}
+
+Significance is assessed at α = 0.05. The full 2 × 2 contingency table is reported alongside the p-value in §4.5.4 rather than the p-value alone, so that the evidential basis is visible.
+
+\textbf{Interpretation of a non-significant result.} This requires care, and the care is exercised in advance rather than retrofitted. A non-significant McNemar result does not prove the two methods equivalent; absence of evidence for a difference is not evidence of absence, particularly at these sample sizes. What it licenses is a conditional statement: \emph{the observed confirmation rates of two structurally different search strategies are statistically indistinguishable on this data}. Combined with the ablation framing of §3.6.7 --- the two methods share an acceptance criterion, a champion model, and a search paradigm, and differ in feature selection and directional guidance --- that indistinguishability is consistent with the confirmation rate being a property of the shared approach rather than of either implementation. §4.5.4 and §5.2 state the conclusion in precisely those terms, and §5.5 records the statistical-power limitation.
+
+\hypertarget{split-discipline}{%
+\subsection{3.9.5 Split Discipline}\label{split-discipline}}
+
+The three splits have separate, non-overlapping functions, and the discipline governing them is stated as a rule because the credibility of the headline result depends on it having been followed.
+
+\textbf{Training split (n = 870).} Fits everything: the scaler, all six candidate models, the champion, the independent verifier, the Tier-2 conforming anchor pool, and the ablation centroid. Provides the reference distribution for drift detection and the background for SHAP.
+
+\textbf{Validation split (n = 290).} Model comparison, the single-split accuracy column of Table 3.6, interactive demonstration, and the validation arm of the tier sensitivity sweep and method comparison. Because it participated in selection decisions, \textbf{any performance figure computed on it is optimistically biased} and is reported as a comparison point, never as a headline.
+
+\textbf{Test split (n = 291).} Held out from every selection decision. Used once, for final reporting.
+
+\textbf{The reporting rule: test-split figures are the headline throughout Chapter 4; validation figures appear only as comparison.} This applies without exception, and most importantly to the finding that carries the thesis. The validator confirmation rate is higher on validation than on test; the test figure is the one reported as the result, and §4.5.1 explains the gap between them rather than presenting the more favourable number.
+
+This rule is the operational form of the argument in §3.4.4 and in Cawley and Talbot {[}84{]}: a figure computed on data that informed a choice is a measure of that choice's fit to those data as much as of generalisation. Applying the rule in the direction that makes the thesis's central number less flattering rather than more is the point of having the rule at all.
+
+\hypertarget{expert-evaluation-sub-study}{%
+\subsection{3.9.6 Expert Evaluation Sub-Study}\label{expert-evaluation-sub-study}}
+
+A secondary sub-study assesses whether the system's outputs are intelligible and credible to people with domain expertise --- a question none of the quantitative measures above addresses, and one that Nauta et al.~{[}70{]} and Keane et al.~{[}36{]} both identify as chronically neglected in the XAI literature (only one XAI paper in five conducts any user evaluation; only 21\% of counterfactual methods have been user-tested).
+
+\textbf{Design.} Domain experts are presented with a structured questionnaire containing embedded RCA cases drawn from the test split, including at least one verifier-confirmed and one unconfirmed case. For each, participants see the cycle's parameters, the model's classification, the explanation, and the recommended adjustments in physical units. Five-point Likert items assess clarity of the explanation, plausibility of the recommendation as a process intervention, whether the participant would act on it, and trust in the system overall, with free-text fields for reasoning.
+
+\textbf{Consent and data handling.} Participation is voluntary and informed. Responses are recorded without identifying information beyond a coarse role and experience band, are reported in aggregate, and are not linked to individuals.
+
+\textbf{Limitations, stated in advance.} The expert pool available in the local industrial context is small, so the sub-study is descriptive rather than inferential and no significance testing is performed on its results. More fundamentally, expert plausibility judgement and recommendation correctness are different constructs: an expert can find a recommendation plausible and be wrong, and can find a correct recommendation counter-intuitive. The sub-study therefore complements the independent-validation protocol of §3.9.3 and does not substitute for it. Its results are reported in §4.8 and discussed in §5.4.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{summary}{%
+\section{3.10 Summary}\label{summary}}
+
+This chapter has specified a design-science methodology built around an instrumented artefact.
+
+The dataset is 1,451 real road-lens cycles described by 13 machine-native process parameters and labelled by photometric analysis, split 870/290/291 by stratified sampling with a fixed seed and scaled to {[}−1, 1{]} with a scaler fitted on training data alone. Conformance is defined once, as \{Acceptable, Target\}, and used without variation thereafter.
+
+Six algorithms were compared by stratified five-fold cross-validation within the training split, and Random Forest selected on cross-validation mean rather than single-split accuracy --- a criterion that selects a different model from the one the single split would have chosen, and one justified on grounds of variance and selection bias. Its hyperparameters are adopted from the reference study with five documented deviations, one of which was resolved empirically by measuring realised tree depth.
+
+The explanation layer divides labour between SHAP, which selects which parameters to adjust, and LIME, which determines the direction. The counterfactual engine converts that division into a three-tier cascade --- explanation-guided local search, nearest-neighbour anchored search, and escalation --- with a confidence-margin acceptance criterion, physical bound enforcement by construction, and a tier structure that the sensitivity sweep shows to be an active operating envelope rather than a set of dormant fallbacks.
+
+Two components exist specifically to make the thesis's central question answerable. An independent MLP verifier, of a different model family and different seed and taking no part in counterfactual generation, adjudicates every recommendation. A centroid ablation, matched on acceptance criterion, step size, iteration budget and model, removes the SHAP and LIME components so that the confirmation rate can be tested for generality across a method class rather than characterising one implementation.
+
+The evaluation reports classification performance with priority on \emph{Waste} recall, five counterfactual metrics reported in full and grounded in the desiderata of §2.4.4, an independent validation protocol with explicitly stated denominators and conventions, McNemar's exact test on paired per-sample outcomes, and a split discipline under which test-split figures are the headline throughout --- including where that reports a less flattering number than the validation split would.
+
+Chapter 4 presents the results this design produces.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
