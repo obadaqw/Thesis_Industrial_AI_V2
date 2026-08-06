@@ -1,0 +1,332 @@
+% ============================================================
+%  paper1.tex -- Critical review manuscript
+%  "How Do We Know a Counterfactual Is Right?"
+%
+%  Compiles with pdfLaTeX OR XeLaTeX. No raw Unicode is used, so
+%  unlike the thesis this one does not require XeLaTeX.
+%  Overleaf: upload this single file, hit Recompile.
+%  Local:    pdflatex paper1.tex   (run twice for cross-refs)
+%
+%  Placeholders are marked \TODO{...} and render in red so they
+%  are impossible to miss in the PDF. Search the source for TODO.
+% ============================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlength{\parskip}{0.4em}
+
+% Visible placeholder marker
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+% Reference-number placeholder: confirm against thesis references.tex
+\newcommand{\refcheck}[1]{\textcolor{blue}{\textsuperscript{[#1]}}}
+
+\title{\bfseries How Do We Know a Counterfactual Is Right?\\
+A Critical Review of Validation Practice for Prescriptive\\
+Explainable AI in Manufacturing Quality Control}
+
+\author{%
+  Obadah AlQawasema\thanks{Correspondence: \TODO{email}}\ \ and \ \TODO{Supervisor name}\\[0.4em]
+  \small Intelligent Systems Master Program, Palestine Polytechnic University, Hebron, Palestine
+}
+\date{}
+
+\begin{document}
+\maketitle
+
+% ------------------------------------------------------------
+\begin{abstract}
+\noindent
+Explainable AI has moved in manufacturing quality control from describing why a part was classified as defective to prescribing what should be changed to fix it. Counterfactual explanation is the principal vehicle for this shift: when model inputs are settable process parameters, a counterfactual instance reads directly as a corrective recipe. This transition carries an evidential burden that the field has not confronted. A counterfactual is conventionally deemed valid when the model classifies it as the desired class --- but the counterfactual was produced by searching that same model's decision surface until it did. The criterion of judgement is identical to the objective of construction, so the reported validity rate measures the competence of the optimiser rather than the correctness of the recommendation. This review examines how prescriptive claims are actually validated in manufacturing quality control. We draw on systematic evidence that XAI evaluation practice remains predominantly anecdotal, on demonstrations that model-endorsed explanations can be artefacts of the model rather than knowledge in the data, and on the counterfactual literature's own account of unjustified explanations. We then distinguish three levels of validation independence --- distributional checks against the data, verification by a second independently trained model, and process verification on a physical machine --- and argue that the field concentrates at a fourth level below all of them. We conclude that the discrepancy between what a prescriptive system reports about itself and what an independent check confirms has never been quantified in an industrial process-control setting, and set out what such a quantification would require.
+\end{abstract}
+
+\noindent\textbf{Keywords:} counterfactual explanation; explainable artificial intelligence; validation; manufacturing quality control; injection molding; algorithmic recourse; Quality 4.0; prescriptive analytics
+
+\vspace{1em}\hrule\vspace{1em}
+
+% ------------------------------------------------------------
+\section{Introduction}
+
+Machine learning for manufacturing quality control has passed a threshold. Predicting whether a part will conform, from process parameters recorded by the machine controller, is a solved problem in the sense that matters: reported accuracies on public injection molding data exceed 93\%, and the marginal return to further algorithm comparison on that task is small~\cite{polenta2022,parizs2022}.
+
+The field's attention has consequently moved downstream, through two successive shifts.
+
+The first was toward explanation. As models moved from demonstration toward deployment, opacity became a practical obstacle rather than an ethical abstraction. An operator told that the next cycle will produce scrap, with no indication of why, has been given an alarm rather than information. Feature attribution methods --- principally SHAP~\cite{lundberg2017} and LIME~\cite{ribeiro2016} --- were introduced to close that gap.
+
+The second shift is more recent and less examined. Explanation answers \emph{what mattered}. It does not answer \emph{what to do}. Counterfactual explanation answers the second question, and in a manufacturing setting the answer is unusually direct: because the input features are quantities an operator can set, a counterfactual instance is not a description at all but an instruction. Set holding pressure to this value, reduce cooling time by that amount, and the part will conform.
+
+That directness is what makes the method attractive in this domain, and it is also where the problem lies. A prescriptive claim asserts something about the physical process. It can be wrong, and being wrong has cost --- scrapped material, lost cycles, and the erosion of exactly the operator trust that motivated introducing explainability in the first place.
+
+So how does anyone establish that such a recommendation is right?
+
+The conventional answer is that a counterfactual $\mathbf{x}'$ is valid when the model $f$ assigns it to the desired class. But $\mathbf{x}'$ was generated by searching $f$'s decision surface until $f$ did so. The criterion by which the recommendation is judged is identical to the objective by which it was constructed. A search that terminates when the model is satisfied will, by construction, produce instances the model is satisfied by. The resulting validity rate is a self-report.
+
+This would be a harmless tautology if trained models faithfully represented the processes they model. This review assembles the evidence that they do not, and argues that the manufacturing quality-control literature has adopted a prescriptive posture without adopting a corresponding evidential standard.
+
+We address four questions:
+
+\begin{itemize}
+\item \textbf{RQ1.} How is explanation quality evaluated in practice across the XAI literature, and what does the counterfactual sub-literature do specifically?
+\item \textbf{RQ2.} What is the structural nature of the circularity in model-referential validation, and what evidence establishes that it is consequential rather than theoretical?
+\item \textbf{RQ3.} What forms of independent verification exist, and how do they differ in what they can establish?
+\item \textbf{RQ4.} What remains unmeasured, and what would measuring it require?
+\end{itemize}
+
+Section~\ref{sec:scope} states the review's scope and method. Section~\ref{sec:setting} establishes the manufacturing setting. Section~\ref{sec:cfturn} covers the counterfactual turn and its desiderata. Section~\ref{sec:practice} reports the evidence on evaluation practice. Section~\ref{sec:circularity} develops the circularity argument. Section~\ref{sec:levels} sets out three levels of independence. Section~\ref{sec:gap} states the unquantified gap and a research agenda.
+
+% ------------------------------------------------------------
+\section{Scope and Method}\label{sec:scope}
+
+This is a \textbf{critical review} rather than a systematic one, and the distinction is deliberate.
+
+The literature examined spans three fields with incompatible vocabularies: manufacturing process engineering, machine-learning interpretability methodology, and quality management. The review's analytical object --- how prescriptive claims are justified --- is not a reported outcome in any primary study but a property recovered by reading how each study argues. A search protocol yielding exhaustive enumeration would not, on its own, produce that reading, and the argument this paper makes does not rest on completeness of coverage.
+
+Literature was gathered through structured searches of IEEE Xplore, ScienceDirect, SpringerLink and MDPI, supplemented by the ACM Digital Library for the explainability and counterfactual literature, and by forward and backward citation tracing from key papers. Representative strings combined terms across the contributing domains: (\emph{``injection molding''} OR \emph{``injection moulding''}) AND (\emph{``machine learning''} OR \emph{``quality prediction''}); (\emph{``explainable AI''} OR XAI OR SHAP OR LIME) AND (manufacturing OR \emph{``quality control''}); (\emph{``counterfactual explanation''} OR \emph{``algorithmic recourse''}) AND (evaluation OR validation OR plausibility); (\emph{``root cause analysis''}) AND (\emph{``machine learning''} OR \emph{``zero-defect manufacturing''}).
+
+Studies were included where they applied data-driven or interpretable methods to manufacturing quality control, with priority to injection molding, published principally between 2015 and 2025, with seminal earlier work retained where it remains foundational. For the counterfactual and explanation-evaluation literature the domain restriction was deliberately relaxed, because the methodological problem examined in Sections~\ref{sec:practice}--\ref{sec:levels} is not specific to manufacturing and the relevant work is concentrated in general machine-learning venues.
+
+\textbf{Screening counts are not reported, and this is a considered position rather than an omission.} The search was iterative rather than executed as a single frozen protocol. Reporting a PRISMA-style flow diagram would impose a retrospective precision the process did not have, and would misrepresent a critical review as a systematic one. Readers requiring exhaustive enumeration of machine learning methods for injection molding are directed to the existing systematic reviews~\cite{selvaraj2022,hoffmann2023}; this paper's contribution is orthogonal to theirs.
+
+% ------------------------------------------------------------
+\section{The Manufacturing Setting}\label{sec:setting}
+
+\subsection{Process and parameter coupling}
+
+Injection molding is a cyclic process of five stages: plasticizing, injection, packing, cooling, and ejection. Pellets are melted in a heated barrel by a rotating screw; the screw advances to force melt into the cavity under pressure; packing pressure compensates volumetric shrinkage during solidification; the part cools to handling rigidity; the mold opens for ejection. Cycle times range from seconds to minutes~\cite{kazmer2016,rosato2000}.
+
+Two properties of the resulting parameter space matter for everything that follows.
+
+\textbf{Parameters are coupled.} Raising melt temperature alters effective viscosity, which alters the pressure required to fill the cavity, which alters the material's shear history, which alters crystallisation during cooling. A model fitted to observational process data learns these couplings as correlations among features. A prescription that changes one parameter implicitly assumes the others hold --- an assumption the physics does not honour~\cite{zhao2020}.
+
+\textbf{Several instrumented quantities are outcomes, not setpoints.} Cycle time, plasticizing time, torque peaks and clamping-force peaks are joint consequences of the machine's configuration and the polymer's behaviour, not independently settable controls. A recipe specifying a particular combination of such quantities may name a state no setting of the actual controls produces. This distinction is routinely lost when a model's input vector is treated as an action space.
+
+\subsection{Predictive performance and the evaluation ceiling}
+
+Ribeiro's support-vector work established that learned models could detect molding faults at rates exceeding statistical process control~\cite{ribeiroB2005}. Ensemble methods now define the standard: Polenta et al.\ compared six classifiers on 1{,}451 injection-molded road-lens cycles described by 13 process parameters and four quality classes, reporting random forest at 95.04\% $\pm$ 1.26\% under stratified five-fold cross-validation~\cite{polenta2022}. Their release of both dataset and code makes the study one of very few reproducible benchmarks in the area. P\'{a}rizs et al.~\cite{parizs2022} and Ogorodnyk et al.~\cite{ogorodnyk2019} report comparable findings on related formulations.
+
+What unifies this literature is its evaluation apparatus: accuracy, F1, per-class recall, estimated by cross-validation or a held-out split. That apparatus is appropriate to the predictive claim, and it is inherited without modification when the claim becomes prescriptive. Section~\ref{sec:circularity} argues that it is structurally unable to detect the failure mode prescription introduces.
+
+% ------------------------------------------------------------
+\section{The Counterfactual Turn}\label{sec:cfturn}
+
+\subsection{From attribution to instruction}
+
+Feature attribution assigns each input a contribution to a prediction. SHAP and LIME dominate manufacturing applications, the former for its game-theoretic consistency properties and an exact polynomial-time algorithm for tree ensembles, the latter for cheap model-agnostic local surrogates~\cite{lundberg2017,ribeiro2016}.
+
+Counterfactual explanation asks a different question: what minimal change to the input would change the outcome~\cite{wachter2018}. The literature has since developed substantially --- diversity in the returned set~\cite{mothilal2020}, feasibility constraints keeping the counterfactual path on the data manifold~\cite{poyiadzi2020}, prototype guidance~\cite{vanlooveren2021}, actionability under user-specified constraints~\cite{ustun2019} --- and is surveyed comprehensively by Verma et al.~\cite{verma2024} and Guidotti~\cite{guidotti2024}.
+
+Karimi et al.\ draw the distinction that most matters here, separating counterfactual \emph{explanation} from algorithmic \emph{recourse}~\cite{karimi2021}: recommending an action requires causal assumptions that a purely predictive model does not supply. In the presence of causal dependencies among features, setting a feature to its counterfactual value does not produce the counterfactual world, because downstream features move too. In injection molding, where several attributed parameters are measured outcomes rather than controls, this objection is not a theoretical caveat but a description of the ordinary case.
+
+\subsection{The desiderata and what they omit}
+
+The standard desiderata for a counterfactual are validity, proximity, sparsity, plausibility, and actionability. Four of these are properties of the recommendation relative to the original instance or to the data. The first --- validity --- is defined relative to the model, and it is the only one that carries the claim the operator will act on.
+
+Plausibility measures partially address this. Nearest-neighbour distance, local outlier factor, density estimates, and the connectedness criterion of Laugel et al.~\cite{laugel2019} assess the counterfactual against the \emph{data} rather than the model. Section~\ref{sec:levels} returns to what this does and does not establish.
+
+% ------------------------------------------------------------
+\section{How Explanations Are Evaluated in Practice (RQ1)}\label{sec:practice}
+
+The most comprehensive evidence comes from Nauta et al.~\cite{nauta2023}, who reviewed evaluation practice across more than 300 papers introducing XAI methods, published over seven years at twelve flagship computer-science venues. Organising explanation quality into twelve conceptual properties, they find that \textbf{one paper in three evaluates its method exclusively with anecdotal evidence} --- a handful of illustrative examples presented for visual inspection --- and that \textbf{only one in five conducts any evaluation involving users}. Their conclusion is an explicit call for objective, quantifiable evaluation to replace prevailing practice.
+
+The counterfactual sub-literature has been audited in comparable terms. Keane et al.\ surveyed 100 distinct counterfactual explanation methods and found \textbf{only 21\% had been user-tested}~\cite{keane2021}. They identify five specific deficits and argue that the resulting inconsistency effectively blocks scientific progress, because methods cannot be meaningfully compared. Two of their recommendations bear directly on this review: that an out-of-distribution measure be reported alongside proximity and sparsity, and that coverage --- the proportion of test cases for which a method produces an acceptable counterfactual --- be reported as a global adequacy estimate rather than represented by selected successful examples.
+
+Guidotti reaches a compatible conclusion by benchmarking counterfactual explainers against one another, documenting how strongly reported performance depends on the metric chosen and the dataset used~\cite{guidotti2024}. Pawelczyk et al.'s CARLA framework~\cite{pawelczyk2021} is the closest infrastructural response, standardising conditions for recourse benchmarking across models.
+
+Doshi-Velez and Kim anticipated the shape of this problem in their framework for rigorous interpretability research~\cite{doshivelez2017}, distinguishing functionally-grounded evaluation (a proxy metric, no humans, no task), human-grounded evaluation (real humans, simplified task), and application-grounded evaluation (real humans, real task), and observing that the field concentrates overwhelmingly at the cheapest end. Self-reported validity is functionally-grounded evaluation of the least demanding kind available.
+
+% ------------------------------------------------------------
+\section{The Circularity of Model-Referential Validation (RQ2)}\label{sec:circularity}
+
+\subsection{The structure of the problem}
+
+Consider precisely what the validity criterion asserts. A counterfactual $\mathbf{x}'$ for an instance $\mathbf{x}$ is generated by searching the decision surface of a trained model $f$ for a point classified as the desired class $y'$. It is then declared valid because $f(\mathbf{x}') = y'$.
+
+This is circular in an exact sense: the criterion of judgement is identical to the objective of construction. A search procedure terminating when the model is satisfied will, by construction, produce counterfactuals that satisfy the model. The validity rate such a procedure reports measures the competence of the optimiser, not the correctness of the recommendation.
+
+The objection is easy to overstate, and precision helps. The model $f$ is not arbitrary: it was fitted to real process data and generalises to held-out cycles with measurable accuracy. In the neighbourhood of the observed data it is an informative estimate of conformance. The difficulty is that counterfactual generation deliberately moves away from the observed instance, and $f$'s accuracy is estimated on the data distribution --- not on the distribution of synthetic points the search induces. The figure that licenses trust in $f$ as a classifier does not transfer to trust in $f$ as a validator of its own counterfactuals. These are different claims about different distributions.
+
+\subsection{Why the models cannot be assumed faithful}
+
+The circularity would be benign if trained models faithfully represented their processes. A substantial body of work documents specific ways in which they do not.
+
+Laugel et al.\ state the problem for counterfactuals most directly~\cite{laugel2019}. Post-hoc explanation risks producing explanations that reflect artefacts learned by the model rather than knowledge present in the data. They introduce the notion of a \textbf{justified} counterfactual --- one continuously connected to ground-truth data rather than sitting in a region of feature space the classifier happens to label favourably but where no real observations exist. Investigating the local neighbourhoods of explained instances, they find the risk of generating unjustified counterfactuals to be high across several datasets, and show that most state-of-the-art methods do not distinguish justified from unjustified counterfactuals at all. A counterfactual can therefore be perfectly valid under the model and simultaneously be a point the process cannot produce.
+
+Related evidence converges from other directions. Rudin argues that post-hoc explanations of black-box models are approximations that can mislead precisely where it matters most~\cite{rudin2019}. Alvarez-Melis and Jaakkola show that LIME and SHAP can be unstable, returning materially different explanations for near-identical inputs~\cite{alvarezmelis2018}. Slack et al.\ demonstrate that both can be deliberately fooled by an adversarially constructed model~\cite{slack2020} --- which establishes the general point that agreement between a model and its explainer is not evidence of the explanation's correctness. Krishna et al.\ document the disagreement problem: different explanation methods applied to the same model and data routinely produce conflicting accounts with no principled basis for adjudication~\cite{krishna2022}, a finding echoed within injection molding specifically~\cite{muaz}. Adebayo et al.\ show, in the vision setting, that widely used saliency explanations can be independent of both model parameters and training labels, passing visual inspection while carrying no information about the model at all~\cite{adebayo2018}.
+
+The cumulative implication is that a model's endorsement of an explanation is weak evidence, and that a model's endorsement of its own counterfactual is weaker still.
+
+\subsection{Why the failure is invisible under current conventions}
+
+The failure mode is not a prediction error, which is why accuracy-based reporting cannot detect it. A system may be well calibrated on its evaluation distribution and simultaneously generate counterfactuals that no independent method would endorse. Both statements can hold at once, and only the first is reported.
+
+Held-out evaluation does not help: the held-out split tests generalisation of the classifier, not the validity of instances synthesised afterwards. Nor does cross-validation, for the same reason. The evaluation apparatus the field inherited from predictive modelling is structurally unable to see this failure, which offers an explanation for why a methodologically alert literature has not addressed it --- the instruments in routine use do not measure it.
+
+% ------------------------------------------------------------
+\section{Three Levels of Independent Verification (RQ3)}\label{sec:levels}
+
+A smaller body of work moves beyond model-referential validation. Three levels of independence are worth distinguishing, since they are not equivalent and are frequently conflated. Table~\ref{tab:levels} summarises them.
+
+\begin{table}[htbp]
+\centering
+\caption{Three levels of validation independence for a prescriptive recommendation.}
+\label{tab:levels}
+\small
+\begin{tabular}{@{}p{0.16\linewidth}p{0.38\linewidth}p{0.36\linewidth}@{}}
+\toprule
+\textbf{Level} & \textbf{Procedure} & \textbf{What it establishes} \\
+\midrule
+Self-report & The generating model is queried and its acceptance recorded. & That the search converged. \\
+\addlinespace
+1. Distributional & The counterfactual is compared against the training data: nearest-neighbour distance, local outlier factor, density, connectedness. & That the recommendation lands where real conforming production has been observed. \\
+\addlinespace
+2. Independent model & A second model, different family and seed, taking no part in generation, is queried once per recommendation. & That the recommendation survives a decision boundary other than the one that produced it. \\
+\addlinespace
+3. Process & The recommendation is enacted on the machine and the resulting part measured. & That the recommendation works. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Level 1 --- Distributional checks}
+
+Plausibility and justification measures assess the counterfactual against the \emph{data}: nearest-neighbour distance to a same-class training instance, local outlier factor, density estimates, or the connectedness criterion of Laugel et al.~\cite{laugel2019}. This is genuine independence from the model, and its cost is negligible --- a nearest-neighbour query per counterfactual.
+
+What it establishes is whether the recommendation lands where real conforming production has been observed. What it cannot establish is whether the recommendation would achieve the intended outcome. A counterfactual may sit comfortably inside the data manifold and still be the wrong instruction.
+
+\subsection*{Level 2 --- Independent model verification}
+
+A stronger test asks whether a model that took no part in generating the counterfactual also classifies it as conforming. Two models trained on the same data with different inductive biases are unlikely to share idiosyncratic boundary artefacts, so agreement is meaningfully more informative than self-assessment. Cost is one additional model fit and one prediction per recommendation.
+
+Its limitation must be stated with equal clarity: \textbf{both models are trained on the same data and share whatever biases that data carries.} Agreement bounds the risk of a model-specific artefact; it cannot exclude a shared one. A protocol wanting more should use an ensemble of verifiers spanning several families, a verifier trained on a disjoint data partition, or a physics-based simulation that does not learn from the data at all.
+
+\subsection*{Level 3 --- Process verification}
+
+The definitive test enacts the recommendation on the machine and measures the resulting part. It is the only test that consults the process rather than a model of it.
+
+A minimally adequate protocol would sample recommendations stratified across the verified and unverified groups, apply each recipe on a running machine, produce a defined number of cycles, measure the resulting parts by the same procedure that generated the training labels, and report the fraction that move the part into the conforming band. The stratification is essential: without it the trial cannot establish whether Level 2 verdicts predict physical success, which is the question determining whether Level 2 is a useful proxy at all.
+
+\textbf{We identified no study performing Level 3 verification for machine-parameter counterfactuals in injection molding.} The reason is not oversight. It requires access to an instrumented machine producing the same part, production time, measurement capability, and tolerance for deliberately producing scrap during the trial.
+
+% ------------------------------------------------------------
+\section{The Unquantified Gap and a Research Agenda (RQ4)}\label{sec:gap}
+
+\subsection{What the literature contains, and what it does not}
+
+The literature contains a well-developed set of counterfactual generation methods~\cite{wachter2018,mothilal2020,poyiadzi2020,vanlooveren2021}; a well-characterised set of desiderata~\cite{verma2024,guidotti2024}; documented evidence that evaluation practice is weak and predominantly self-referential~\cite{keane2021,nauta2023}; and specific demonstrations that model-endorsed explanations can be artefacts~\cite{laugel2019,slack2020,adebayo2018}.
+
+What it does not contain is a \textbf{quantification}, in an industrial process-control setting, of how large the discrepancy actually is between what a prescriptive system reports about its own success and what an independent check confirms. The critiques establish that the discrepancy exists in principle. They do not measure it in practice, on a real manufacturing dataset, with a defined independent criterion, across a full evaluation population rather than on selected illustrative cases.
+
+\subsection{Agenda}
+
+\textbf{A1 --- Measure the gap.} The minimum viable study trains a verifier of a different family on the same training partition, queries it once per issued recommendation, and reports the agreement rate over the entire evaluation population. Reporting on selected cases defeats the purpose; the interesting quantity is the population rate.
+
+\textbf{A2 --- Establish whether the gap is algorithm-specific or generic.} A single engine reporting a low confirmation rate is a fact about that engine. An ablation removing the components a given method contributes, while holding the acceptance criterion, search bounds, champion model and verifier constant, tests whether the finding generalises to the method class. Paired per-sample outcomes permit an appropriate statistical test.
+
+\textbf{A3 --- Adopt a reporting convention.} Any system reporting a resolution, correction, or repair rate should report alongside it the rate confirmed by an independently trained model, and should state the acceptance threshold at which both figures were obtained. This converts an unfalsifiable claim into a falsifiable one at the cost of one model fit.
+
+\textbf{A4 --- Treat the acceptance threshold as an operating characteristic.} The acceptance threshold governing counterfactual search is conventionally fixed at a permissive default and not reported as a design choice. Whether confirmation rate varies systematically with it --- and whether the resulting trade-off against coverage is monotonic --- is an empirical question that no published study has characterised.
+
+\textbf{A5 --- Perform Level 3 verification.} The field needs at least one study that applies counterfactual recommendations on a running machine and measures the parts, stratified so that the predictive value of Level 2 verification can itself be assessed.
+
+\textbf{A6 --- Report against under-digitised contexts.} The literature is drawn overwhelmingly from settings with mature sensing infrastructure. Manufacturing where quality control remains largely manual faces a different problem --- establishing a pipeline at all, under limited instrumentation and small datasets --- and the transfer question is unaddressed.
+
+% ------------------------------------------------------------
+\section{Conclusions}
+
+Manufacturing quality control has adopted a prescriptive posture. Systems now recommend corrective process changes, and counterfactual explanation is the principal method by which they do so.
+
+The evidential standard has not moved with the claim. A counterfactual is conventionally judged valid by the model that generated it, which is circular in an exact sense and measures the optimiser rather than the recommendation. Systematic evidence shows that XAI evaluation practice remains predominantly anecdotal, that most counterfactual methods have never been user-tested, and that model-endorsed explanations can be artefacts of the model rather than knowledge in the data. Independent verification exists at three distinguishable levels, and the manufacturing literature largely sits below all of them.
+
+The recommendation we draw is deliberately modest. Independent-model verification does not establish that a prescription will produce a conforming part; only a machine and a measurement do that. What it establishes is that the prescription survives contact with a decision boundary other than the one that produced it --- a weak test, but one a tautological protocol cannot pass, and one available to any group with the data it already holds.
+
+What remains missing is the number. Nobody has reported how far apart self-assessment and independent verification actually fall in an industrial setting. Until someone does, a practitioner deploying counterfactual root-cause analysis on a factory floor has no basis on which to calibrate trust in its output.
+
+% ------------------------------------------------------------
+\section*{Back Matter}
+
+\noindent\textbf{Author Contributions:} \TODO{CRediT statement}\\
+\textbf{Funding:} \TODO{funding statement}\\
+\textbf{Institutional Review Board Statement:} Not applicable.\\
+\textbf{Informed Consent Statement:} Not applicable.\\
+\textbf{Data Availability Statement:} No new data were created or analysed in this study.\\
+\textbf{Conflicts of Interest:} The authors declare no conflict of interest.\\
+\textbf{Use of Generative AI:} \TODO{Required by MDPI. Must be consistent with Appendix G of the associated thesis.}
+
+% ------------------------------------------------------------
+\begin{thebibliography}{99}
+\footnotesize
+
+% --- Verified against thesis references.tex ---
+\bibitem{polenta2022} A. Polenta, S. Tomassini, N. Falcionelli, P. Contardo, A. F. Dragoni, and P. Sernani, ``A comparison of machine learning techniques for the quality classification of molded products,'' \emph{Information}, vol. 13, no. 6, art. 272, Jun. 2022, doi: 10.3390/info13060272.
+
+\bibitem{kazmer2016} D. O. Kazmer, \emph{Injection Mold Design Engineering}, 2nd ed. Munich, Germany: Hanser, 2016.
+
+\bibitem{rosato2000} D. V. Rosato and M. G. Rosato, \emph{Injection Molding Handbook}, 3rd ed. Boston, MA, USA: Kluwer Academic, 2000.
+
+\bibitem{zhao2020} P. Zhao, H. Zhou, Y. Li, and D. Li, ``Intelligent injection molding on sensing, optimization, and control,'' \emph{Adv. Polym. Technol.}, vol. 2020, art. 7023616, pp. 1--22, 2020, doi: 10.1155/2020/7023616.
+
+\bibitem{ribeiroB2005} B. Ribeiro, ``Support vector machines for quality monitoring in a plastic injection molding process,'' \emph{IEEE Trans. Syst., Man, Cybern. C, Appl. Rev.}, vol. 35, no. 3, pp. 401--410, Aug. 2005, doi: 10.1109/TSMCC.2004.843228.
+
+\bibitem{parizs2022} R. D. P\'{a}rizs, D. T\"{o}r\"{o}k, T. Ageyeva, and J. G. Kov\'{a}cs, ``Machine learning in injection molding: An Industry 4.0 method of quality prediction,'' \emph{Sensors}, vol. 22, no. 7, art. 2704, Apr. 2022, doi: 10.3390/s22072704.
+
+\bibitem{ogorodnyk2019} O. Ogorodnyk, O. V. Lyngstad, M. Larsen, K. Wang, and K. Martinsen, ``Application of machine learning methods for prediction of parts quality in thermoplastics injection molding,'' in \emph{Advanced Manufacturing and Automation VIII}. Singapore: Springer, 2019, pp. 237--244, doi: 10.1007/978-981-13-2375-1\_30.
+
+\bibitem{ribeiro2016} M. T. Ribeiro, S. Singh, and C. Guestrin, ```Why should I trust you?': Explaining the predictions of any classifier,'' in \emph{Proc. 22nd ACM SIGKDD Int. Conf. Knowledge Discovery and Data Mining}, 2016, pp. 1135--1144, doi: 10.1145/2939672.2939778.
+
+\bibitem{wachter2018} S. Wachter, B. Mittelstadt, and C. Russell, ``Counterfactual explanations without opening the black box: Automated decisions and the GDPR,'' \emph{Harvard J. Law Technol.}, vol. 31, no. 2, pp. 841--887, 2018.
+
+\bibitem{mothilal2020} R. K. Mothilal, A. Sharma, and C. Tan, ``Explaining machine learning classifiers through diverse counterfactual explanations,'' in \emph{Proc. 2020 Conf. Fairness, Accountability, and Transparency (FAT* '20)}, 2020, pp. 607--617, doi: 10.1145/3351095.3372850.
+
+\bibitem{verma2024} S. Verma, V. Boonsanong, M. Hoang, K. Hines, J. Dickerson, and C. Shah, ``Counterfactual explanations and algorithmic recourses for machine learning: A review,'' \emph{ACM Comput. Surv.}, vol. 56, no. 12, art. 312, pp. 1--42, Dec. 2024, doi: 10.1145/3677119.
+
+\bibitem{guidotti2024} R. Guidotti, ``Counterfactual explanations and how to find them: Literature review and benchmarking,'' \emph{Data Min. Knowl. Discov.}, vol. 38, no. 5, pp. 2770--2824, 2024, doi: 10.1007/s10618-022-00831-6.
+
+\bibitem{poyiadzi2020} R. Poyiadzi, K. Sokol, R. Santos-Rodriguez, T. De Bie, and P. Flach, ``FACE: Feasible and actionable counterfactual explanations,'' in \emph{Proc. AAAI/ACM Conf. AI, Ethics, and Society (AIES)}, 2020, pp. 344--350, doi: 10.1145/3375627.3375850.
+
+\bibitem{vanlooveren2021} A. Van Looveren and J. Klaise, ``Interpretable counterfactual explanations guided by prototypes,'' in \emph{Machine Learning and Knowledge Discovery in Databases (ECML PKDD)}. Cham, Switzerland: Springer, 2021, pp. 650--665, doi: 10.1007/978-3-030-86520-7\_40.
+
+\bibitem{ustun2019} B. Ustun, A. Spangher, and Y. Liu, ``Actionable recourse in linear classification,'' in \emph{Proc. Conf. Fairness, Accountability, and Transparency (FAT* '19)}, 2019, pp. 10--19, doi: 10.1145/3287560.3287566.
+
+\bibitem{karimi2021} A.-H. Karimi, B. Sch\"{o}lkopf, and I. Valera, ``Algorithmic recourse: From counterfactual explanations to interventions,'' in \emph{Proc. ACM Conf. Fairness, Accountability, and Transparency (FAccT)}, 2021, pp. 353--362, doi: 10.1145/3442188.3445899.
+
+\bibitem{keane2021} M. T. Keane, E. M. Kenny, E. Delaney, and B. Smyth, ``If only we had better counterfactual explanations: Five key deficits to rectify in the evaluation of counterfactual XAI techniques,'' in \emph{Proc. 30th Int. Joint Conf. Artificial Intelligence (IJCAI-21)}, Survey Track, 2021, pp. 4466--4474, doi: 10.24963/ijcai.2021/609.
+
+\bibitem{laugel2019} T. Laugel, M.-J. Lesot, C. Marsala, X. Renard, and M. Detyniecki, ``The dangers of post-hoc interpretability: Unjustified counterfactual explanations,'' in \emph{Proc. 28th Int. Joint Conf. Artificial Intelligence (IJCAI-19)}, 2019, pp. 2801--2807, doi: 10.24963/ijcai.2019/388.
+
+\bibitem{nauta2023} M. Nauta, J. Trienes, S. Pathak, E. Nguyen, M. Peters, Y. Schmitt, J. Schl\"{o}tterer, M. van Keulen, and C. Seifert, ``From anecdotal evidence to quantitative evaluation methods: A systematic review on evaluating explainable AI,'' \emph{ACM Comput. Surv.}, vol. 55, no. 13s, art. 295, pp. 1--42, Jul. 2023, doi: 10.1145/3583558.
+
+\bibitem{alvarezmelis2018} D. Alvarez-Melis and T. S. Jaakkola, ``On the robustness of interpretability methods,'' arXiv:1806.08049, Jun. 2018.
+
+\bibitem{slack2020} D. Slack, S. Hilgard, E. Jia, S. Singh, and H. Lakkaraju, ``Fooling LIME and SHAP: Adversarial attacks on post hoc explanation methods,'' in \emph{Proc. AAAI/ACM Conf. AI, Ethics, and Society (AIES)}, 2020, pp. 180--186, doi: 10.1145/3375627.3375830.
+
+\bibitem{krishna2022} S. Krishna, T. Han, A. Gu, J. Pombra, S. Jabbari, S. Wu, and H. Lakkaraju, ``The disagreement problem in explainable machine learning: A practitioner's perspective,'' arXiv:2202.01602, Feb. 2022.
+
+\bibitem{adebayo2018} J. Adebayo, J. Gilmer, M. Muelly, I. Goodfellow, M. Hardt, and B. Kim, ``Sanity checks for saliency maps,'' in \emph{Advances in Neural Information Processing Systems (NeurIPS)}, vol. 31, 2018, pp. 9505--9515.
+
+\bibitem{doshivelez2017} F. Doshi-Velez and B. Kim, ``Towards a rigorous science of interpretable machine learning,'' arXiv:1702.08608, Mar. 2017.
+
+\bibitem{pawelczyk2021} M. Pawelczyk, S. Bielawski, J. van den Heuvel, T. Richter, and G. Kasneci, ``CARLA: A Python library to benchmark algorithmic recourse and counterfactual explanation algorithms,'' arXiv:2108.00783, Aug. 2021.
+
+\bibitem{lundberg2017} S. M. Lundberg and S.-I. Lee, ``A unified approach to interpreting model predictions,'' in \emph{Advances in Neural Information Processing Systems (NeurIPS)}, vol. 30, 2017, pp. 4765--4774.
+
+\bibitem{rudin2019} C. Rudin, ``Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead,'' \emph{Nat. Mach. Intell.}, vol. 1, no. 5, pp. 206--215, May 2019, doi: 10.1038/s42256-019-0048-x.
+
+\bibitem{muaz} M. Muaz, S. Sajid, T. Schulze, C. Liu, N. Klasen, and B. Drescher, ``Explainable AI for correct root cause analysis of product quality in injection moulding,'' \emph{J. Manuf. Process.}, vol. 145, pp. 371--380, Jul. 2025, doi: 10.1016/j.jmapro.2025.03.114.
+
+% --- Not in the thesis bibliography; needed to position against existing reviews ---
+\bibitem{selvaraj2022} S. K. Selvaraj, A. Raj, R. Rishikesh Mahadevan, U. Chadha, and V. Paramasivam, ``A review on machine learning models in injection molding machines,'' \emph{Adv. Mater. Sci. Eng.}, vol. 2022, art. 1949061, 2022, doi: 10.1155/2022/1949061.
+
+\bibitem{hoffmann2023} R. Hoffmann and C. Reich, ``A systematic literature review on artificial intelligence and explainable artificial intelligence for visual quality assurance in manufacturing,'' \emph{Electronics}, vol. 12, no. 22, art. 4572, 2023, doi: 10.3390/electronics12224572.
+
+\end{thebibliography}
+
+\end{document}

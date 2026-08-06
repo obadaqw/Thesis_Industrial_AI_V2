@@ -24,3 +24,12 @@ thesis_latex/*.fdb_latexmk
 thesis_latex/*.synctex.gz
 thesis_latex/*.bbl
 thesis_latex/*.blg
+papers_latex/*.aux
+papers_latex/*.log
+papers_latex/*.out
+papers_latex/*.toc
+papers_latex/*.fls
+papers_latex/*.fdb_latexmk
+papers_latex/*.synctex.gz
+papers_latex/*.bbl
+papers_latex/*.blg
